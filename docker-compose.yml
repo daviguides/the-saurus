@@ -1,0 +1,42 @@
+services:
+  assistant-ws:
+    build: ./assistant-ws
+    ports:
+      - "8001:8001"
+    env_file: ./assistant-ws/.env
+    depends_on:
+      - qdrant
+      - papers-mcp
+    restart: unless-stopped
+
+  papers-mcp:
+    build: ./papers-mcp
+    ports:
+      - "8012:8012"
+    env_file: ./papers-mcp/.env
+    depends_on:
+      - qdrant
+    restart: unless-stopped
+
+  assistant-ui:
+    build:
+      context: ./assistant-ui
+      args:
+        VITE_SOCKET_URL: http://localhost:8001
+    ports:
+      - "3000:3000"
+    depends_on:
+      - assistant-ws
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+
+volumes:
+  qdrant_data:

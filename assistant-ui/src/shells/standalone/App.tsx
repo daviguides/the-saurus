@@ -1,0 +1,41 @@
+import { useWebSocket } from "../../core/hooks/useWebSocket";
+import { useChat } from "../../core/hooks/useChat";
+import Header from "../../ui/shared/Header";
+import MessageBubble from "../../ui/chat/MessageBubble";
+import ChatInput from "../../ui/components/ChatInput";
+
+export default function App() {
+  const { socket, status } = useWebSocket();
+  const { messages, isStreaming, currentStep, sendMessage } = useChat(socket);
+
+  return (
+    <div className="flex flex-col h-screen bg-gray-950">
+      <Header status={status} />
+
+      <main className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="max-w-3xl mx-auto">
+          {messages.length === 0 && (
+            <div className="text-center text-gray-500 mt-32">
+              <p className="text-2xl mb-2">Research smarter</p>
+              <p>Ask about scientific papers, topics, or paste an abstract to find similar work.</p>
+            </div>
+          )}
+
+          {messages.map((msg) => (
+            <MessageBubble key={msg.id} message={msg} />
+          ))}
+
+          {currentStep && (
+            <div className="text-sm text-gray-500 animate-pulse mb-2">
+              {currentStep}
+            </div>
+          )}
+        </div>
+      </main>
+
+      <div className="max-w-3xl mx-auto w-full">
+        <ChatInput onSend={sendMessage} isStreaming={isStreaming} />
+      </div>
+    </div>
+  );
+}

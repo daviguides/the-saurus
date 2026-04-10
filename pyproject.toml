@@ -1,0 +1,21 @@
+[project]
+name = "answerthis"
+version = "0.1.0"
+description = "AnswerThis - AI agents for scientific literature reviews"
+requires-python = ">=3.13"
+
+[tool.uv.workspace]
+members = [
+    "assistant-ws",
+    "papers-mcp",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.8.0",
+    "pre-commit>=4.0.0",
+]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
