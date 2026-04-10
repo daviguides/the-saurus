@@ -1,0 +1,31 @@
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/literata";
+@import "@fontsource-variable/fira-code";
+@import "tailwindcss";
+
+@theme {
+  /* Colors — warm academic palette */
+  --color-bg: #FAFAF7;
+  --color-surface: #FFFFFF;
+  --color-border: #E8E5DE;
+  --color-primary: #2D6A4F;
+  --color-primary-hover: #1B4332;
+  --color-accent: #D4AF37;
+  --color-text-primary: #2C2C2C;
+  --color-text-secondary: #6B7280;
+  --color-text-muted: #9CA3AF;
+
+  /* Typography */
+  --font-heading: 'Literata Variable', 'Literata', serif;
+  --font-body: 'Inter Variable', 'Inter', sans-serif;
+  --font-mono: 'Fira Code Variable', 'Fira Code', monospace;
+}
+
+:root {
+  --header-height: 48px;
+  --sidebar-width: 64px;
+}
+
+body {
+  font-family: var(--font-body);
+}
