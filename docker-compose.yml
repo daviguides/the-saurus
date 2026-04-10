@@ -18,6 +18,15 @@ services:
       - qdrant
     restart: unless-stopped
 
+  pipeline:
+    build: ./pipeline
+    ports:
+      - "8002:8002"
+    env_file: ./pipeline/.env
+    depends_on:
+      - qdrant
+    restart: unless-stopped
+
   assistant-ui:
     build:
       context: ./assistant-ui
