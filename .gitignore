@@ -16,6 +16,8 @@ assistant-ui/dist/
 *.sqlite3
 data/
 
+docs/
+
 .DS_Store
 .idea/
 .vscode/
