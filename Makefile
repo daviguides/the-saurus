@@ -1,4 +1,4 @@
-.PHONY: dev dev-ws dev-mcp dev-ui up down lint test
+.PHONY: dev dev-ws dev-mcp dev-pipeline dev-ui up down lint test
 
 # Development (run each service individually)
 dev-ws:
@@ -6,6 +6,9 @@ dev-ws:
 
 dev-mcp:
 	cd papers-mcp && uv run python scripts/run_server.py
+
+dev-pipeline:
+	cd pipeline && uv run python scripts/run_server.py
 
 dev-ui:
 	cd assistant-ui && pnpm dev
@@ -24,13 +27,16 @@ down:
 lint:
 	cd assistant-ws && uv run ruff check .
 	cd papers-mcp && uv run ruff check .
+	cd pipeline && uv run ruff check .
 
 test:
 	cd assistant-ws && uv run pytest tests/ -v
 	cd papers-mcp && uv run pytest tests/ -v
+	cd pipeline && uv run pytest tests/ -v
 
 # Setup
 setup:
 	cd assistant-ws && uv sync
 	cd papers-mcp && uv sync
+	cd pipeline && uv sync
 	cd assistant-ui && pnpm install
