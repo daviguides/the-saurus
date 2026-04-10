@@ -27,6 +27,16 @@ services:
       - qdrant
     restart: unless-stopped
 
+  app:
+    build:
+      context: ./app
+    ports:
+      - "5173:5173"
+    depends_on:
+      - pipeline
+      - assistant-ws
+    restart: unless-stopped
+
   assistant-ui:
     build:
       context: ./assistant-ui
