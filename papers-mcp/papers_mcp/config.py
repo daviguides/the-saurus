@@ -9,15 +9,15 @@ LITERATURE_REVIEW = "literature_review"
 
 
 class RetrievalSettings(BaseSettings):
-    model_config = {"env_prefix": "PAPERS_"}
+    model_config = {"env_prefix": "PAPERS_", "env_file": ".env", "env_file_encoding": "utf-8"}
 
     # Qdrant
     qdrant_url: str = "http://localhost:6333"
     qdrant_api_key: str | None = None
 
-    # Embeddings
-    embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
-    embedding_dimension: int = 384
+    # Embeddings (Gemini API via Agno GeminiEmbedder)
+    embedding_model: str = "gemini-embedding-001"
+    embedding_api_key: str = ""  # PAPERS_EMBEDDING_API_KEY (Google API key)
 
     # Retrieval
     min_score_threshold: float = 0.3

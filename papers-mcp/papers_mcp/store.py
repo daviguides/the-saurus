@@ -2,9 +2,9 @@
 
 import logging
 
+from agno.knowledge.embedder.google import GeminiEmbedder
 from qdrant_client import QdrantClient
 from qdrant_client.models import FieldCondition, Filter, MatchValue
-from sentence_transformers import SentenceTransformer
 
 from papers_mcp.config import (
     LITERATURE_REVIEW,
@@ -34,7 +34,10 @@ class PapersStore:
             url=settings.qdrant_url,
             api_key=settings.qdrant_api_key,
         )
-        self._encoder = SentenceTransformer(settings.embedding_model)
+        self._embedder = GeminiEmbedder(
+            model=settings.embedding_model,
+            api_key=settings.embedding_api_key or None,
+        )
 
     def _scroll(
         self,
@@ -56,7 +59,7 @@ class PapersStore:
             return []
 
     def _embed(self, text: str) -> list[float]:
-        return self._encoder.encode(text).tolist()
+        return self._embedder.get_embedding(text)
 
     def get_paper_themes(self, paper_id: str) -> list[ThemeResult]:
         payloads = self._scroll(
