@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from tests.conftest import mock_streaming_arun
+
 import pytest
 
 from pipeline.agents.aggregator import (
@@ -386,7 +388,7 @@ class TestAggregatorAgentRun:
             agent = AggregatorAgent()
 
         agent._agent = AsyncMock()
-        agent._agent.arun = AsyncMock(return_value=fake_output)
+        agent._agent.arun = mock_streaming_arun(fake_output)
 
         result = await agent.run(input_data)
 
@@ -402,7 +404,7 @@ class TestAggregatorAgentRun:
             agent = AggregatorAgent()
 
         agent._agent = AsyncMock()
-        agent._agent.arun = AsyncMock(return_value=fake_output)
+        agent._agent.arun = mock_streaming_arun(fake_output)
 
         result = await agent.run(input_data)
 
@@ -422,7 +424,7 @@ class TestAggregatorAgentRun:
             agent = AggregatorAgent()
 
         agent._agent = AsyncMock()
-        agent._agent.arun = AsyncMock(return_value=fake_output)
+        agent._agent.arun = mock_streaming_arun(fake_output)
 
         result = await agent.run(input_data)
 
@@ -438,7 +440,7 @@ class TestAggregatorAgentRun:
             agent = AggregatorAgent()
 
         agent._agent = AsyncMock()
-        agent._agent.arun = AsyncMock(return_value=fake_output)
+        agent._agent.arun = mock_streaming_arun(fake_output)
 
         result = await agent.run(input_data)
 
@@ -459,7 +461,7 @@ class TestAggregatorAgentRun:
             agent = AggregatorAgent()
 
         agent._agent = AsyncMock()
-        agent._agent.arun = AsyncMock(return_value=fake_output)
+        agent._agent.arun = mock_streaming_arun(fake_output)
 
         result = await agent.run(input_data)
 
@@ -479,7 +481,7 @@ class TestAggregatorAgentRun:
             agent = AggregatorAgent()
 
         agent._agent = AsyncMock()
-        agent._agent.arun = AsyncMock(return_value=fake_output)
+        agent._agent.arun = mock_streaming_arun(fake_output)
 
         await agent.run(input_data)
 
@@ -504,7 +506,7 @@ class TestAggregatorAgentRun:
             agent = AggregatorAgent()
 
         agent._agent = AsyncMock()
-        agent._agent.arun = AsyncMock(return_value=fake_output)
+        agent._agent.arun = mock_streaming_arun(fake_output)
 
         result = await agent.run({"theme_reviews": [{"theme_id": "t1", "label": "Theme", "review": "Text."}]})
 

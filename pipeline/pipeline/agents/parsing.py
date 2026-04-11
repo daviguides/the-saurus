@@ -3,6 +3,10 @@
 Agno's result.content may be the Pydantic model directly (structured output worked)
 or a raw string (LLM returned text). This module handles both cases and provides
 retry logic for transient LLM failures.
+
+Uses Agno streaming mode (arun with stream=True, stream_events=True) to capture
+granular agent lifecycle events (RunStarted, RunContent, ToolCall, RunCompleted, etc.)
+while preserving identical retry, timeout, and parse behavior.
 """
 
 from __future__ import annotations
@@ -11,8 +15,10 @@ import asyncio
 import logging
 import re
 import time
+from collections.abc import Awaitable, Callable
 from typing import Any, TypeVar
 
+from agno.agent import RunCompletedEvent
 from pydantic import BaseModel
 
 T = TypeVar("T", bound=BaseModel)
@@ -65,8 +71,11 @@ async def run_agent_with_retry(
     retry_delay: float | None = None,
     timeout: float = LLM_TIMEOUT,
     context: dict[str, Any] | None = None,
+    on_event: Callable[[Any], Awaitable[None]] | None = None,
 ) -> T:
     """Run an Agno agent with retry logic, timeout, and response parsing.
+
+    Uses streaming mode to capture granular Agno events during execution.
 
     Args:
         agent: Agno Agent instance.
@@ -76,6 +85,7 @@ async def run_agent_with_retry(
         retry_delay: Base delay between retries (multiplied by attempt number).
         timeout: Max seconds to wait for a single LLM call.
         context: Optional dict with debug info (paper_id, stage, etc.) for logging.
+        on_event: Optional async callback invoked for each Agno stream event.
     """
     from pipeline.agents.models import llm_semaphore
     from pipeline.config import settings
@@ -91,7 +101,7 @@ async def run_agent_with_retry(
     msg_tokens = estimate_tokens(message)
 
     logger.info(
-        "[%s] Starting | input_chars=%d input_tokens=~%d schema=%s %s",
+        "[%s] Starting (stream) | input_chars=%d input_tokens=~%d schema=%s %s",
         agent_name,
         msg_chars,
         msg_tokens,
@@ -110,18 +120,34 @@ async def run_agent_with_retry(
                     agent_name, attempt, max_retries,
                     " ".join(f"{k}={v}" for k, v in ctx.items()) if ctx else "",
                 )
-                result = await asyncio.wait_for(
-                    agent.arun(message, output_schema=output_schema),
-                    timeout=timeout,
-                )
+                raw = None
+                async with asyncio.timeout(timeout):
+                    async for event in agent.arun(
+                        message,
+                        stream=True,
+                        stream_events=True,
+                        output_schema=output_schema,
+                    ):
+                        if on_event is not None:
+                            try:
+                                await on_event(event)
+                            except Exception:
+                                logger.warning(
+                                    "[%s] on_event callback error for %s",
+                                    agent_name,
+                                    type(event).__name__,
+                                    exc_info=True,
+                                )
+                        if isinstance(event, RunCompletedEvent):
+                            raw = event.content
+
             elapsed = time.monotonic() - t0
 
             # Log raw response type and size
-            raw = result.content
             raw_type = type(raw).__name__
             raw_len = len(str(raw)) if raw else 0
             logger.info(
-                "[%s] LLM responded | attempt=%d/%d elapsed=%.1fs response_type=%s response_len=%d %s",
+                "[%s] LLM responded | attempt=%d/%d elapsed=%.1fs type=%s len=%d %s",
                 agent_name,
                 attempt,
                 max_retries,
