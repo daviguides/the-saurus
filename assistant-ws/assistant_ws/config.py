@@ -12,8 +12,8 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000,http://localhost:5173,http://localhost:5174"
 
     # LLM
-    llm_provider: str = "anthropic"  # anthropic | openai
-    llm_model_id: str = "claude-sonnet-4-20250514"
+    llm_provider: str = "openai"  # openai | anthropic
+    llm_model_id: str = "gpt-4o-mini"
     llm_api_key: str = ""
 
     # MCP Servers
