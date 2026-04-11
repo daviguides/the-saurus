@@ -10,9 +10,9 @@ from typing import Any
 from pipeline.agents import (
     ClaimExtractorAgent,
     StubAggregator,
-    StubThemeReviewer,
     ThemeDedupAgent,
     ThemeExtractorAgent,
+    ThemeReviewerAgent,
 )
 from pipeline.core import (
     EventEmitter,
@@ -133,7 +133,7 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         for result in claim_results:
             all_claims.extend(result.get("claims", []))
 
-        theme_reviewer = StubThemeReviewer()
+        theme_reviewer = ThemeReviewerAgent()
         await tracker.stage_start(Stage.THEME_REVIEW, len(canonical_themes))
         review_results = await _run_parallel_per_theme(
             canonical_themes, all_claims, theme_reviewer, tracker, Stage.THEME_REVIEW, job_path, job_id
