@@ -11,6 +11,12 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
 )
 
+# Silence noisy Agno/Gemini generic error logs — our parsing.py handles these
+logging.getLogger("agno").setLevel(logging.CRITICAL)
+logging.getLogger("google_genai").setLevel(logging.WARNING)
+# Reduce httpx noise (every HuggingFace/Gemini/Qdrant request logged at INFO)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
 
 def main():
     uvicorn.run(
