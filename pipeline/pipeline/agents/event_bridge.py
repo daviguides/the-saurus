@@ -21,6 +21,7 @@ from agno.agent import (
     ToolCallStartedEvent,
 )
 
+from pipeline.agents.step_messages import get_step_message, get_technical_message, is_internal_tool
 from pipeline.core.events import EventEmitter, EventType
 
 logger = logging.getLogger(__name__)
@@ -39,6 +40,7 @@ def create_agent_event_callback(
     agent_name: str,
     stage: str,
     paper_id: str | None = None,
+    context: dict[str, Any] | None = None,
 ) -> Callable[[Any], Awaitable[None]]:
     """Build an on_event callback that forwards Agno events to the pipeline emitter.
 
@@ -47,8 +49,11 @@ def create_agent_event_callback(
         agent_name: Name of the agent (e.g. "PaperAnalyzer").
         stage: Pipeline stage (e.g. "paper_analysis").
         paper_id: Optional paper ID for per-paper stages.
+        context: Optional dict with runtime values for message interpolation
+                 (e.g. paper_title, theme_count).
     """
     state: dict[str, Any] = {}
+    ctx = context or {}
 
     def _base_payload() -> dict[str, Any]:
         payload: dict[str, Any] = {"agent_name": agent_name, "stage": stage}
@@ -56,37 +61,54 @@ def create_agent_event_callback(
             payload["paper_id"] = paper_id
         return payload
 
+    def _enrich(payload: dict[str, Any], event_type: str) -> None:
+        """Add human-readable and technical messages to payload."""
+        payload["message"] = get_step_message(event_type, agent_name, ctx)
+        payload["technical_message"] = get_technical_message(
+            event_type, agent_name, payload,
+        )
+
     async def on_event(event: Any) -> None:
         try:
             if isinstance(event, RunStartedEvent):
                 state["t0"] = time.monotonic()
                 payload = _base_payload()
                 payload["model"] = getattr(event, "model", "")
+                _enrich(payload, "agent_started")
                 await emitter.emit(EventType.AGENT_STARTED, payload)
 
             elif isinstance(event, ToolCallStartedEvent):
                 tool = getattr(event, "tool", None)
                 if tool is None:
                     return
+                tool_name = getattr(tool, "tool_name", "") or ""
+                if is_internal_tool(tool_name):
+                    return
                 state["tool_t0"] = time.monotonic()
                 payload = _base_payload()
-                payload["tool_name"] = getattr(tool, "tool_name", "") or ""
+                payload["tool_name"] = tool_name
                 raw_args = getattr(tool, "tool_args", None)
                 if raw_args:
                     payload["tool_args_preview"] = _truncate(str(raw_args))
+                _enrich(payload, "agent_tool_call")
                 await emitter.emit(EventType.AGENT_TOOL_CALL, payload)
 
             elif isinstance(event, ToolCallCompletedEvent):
                 tool = getattr(event, "tool", None)
                 if tool is None:
                     return
+                tool_name = getattr(tool, "tool_name", "") or ""
+                if is_internal_tool(tool_name):
+                    state.pop("tool_t0", None)
+                    return
                 payload = _base_payload()
-                payload["tool_name"] = getattr(tool, "tool_name", "") or ""
+                payload["tool_name"] = tool_name
                 result = getattr(tool, "result", None)
                 payload["result_len"] = len(str(result)) if result else 0
                 tool_t0 = state.pop("tool_t0", None)
                 if tool_t0 is not None:
                     payload["elapsed_ms"] = int((time.monotonic() - tool_t0) * 1000)
+                _enrich(payload, "agent_tool_result")
                 await emitter.emit(EventType.AGENT_TOOL_RESULT, payload)
 
             elif isinstance(event, RunContentEvent):
@@ -96,6 +118,7 @@ def create_agent_event_callback(
                 payload = _base_payload()
                 payload["content_len"] = len(str(content))
                 payload["content_type"] = getattr(event, "content_type", "text")
+                _enrich(payload, "agent_content")
                 await emitter.emit(EventType.AGENT_CONTENT, payload)
 
             elif isinstance(event, RunCompletedEvent):
@@ -103,6 +126,7 @@ def create_agent_event_callback(
                 t0 = state.get("t0")
                 if t0 is not None:
                     payload["elapsed_ms"] = int((time.monotonic() - t0) * 1000)
+                _enrich(payload, "agent_completed")
                 await emitter.emit(EventType.AGENT_COMPLETED, payload)
 
             elif isinstance(event, RunErrorEvent):
@@ -114,6 +138,7 @@ def create_agent_event_callback(
                 t0 = state.get("t0")
                 if t0 is not None:
                     payload["elapsed_ms"] = int((time.monotonic() - t0) * 1000)
+                _enrich(payload, "agent_error")
                 await emitter.emit(EventType.AGENT_ERROR, payload)
 
         except Exception:
