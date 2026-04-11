@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from typing import Any
 from uuid import uuid4
 
@@ -48,7 +49,12 @@ class ThemeDedupAgent:
             structured_outputs=True,
         )
 
-    async def run(self, input: dict[str, Any]) -> dict[str, Any]:
+    async def run(
+        self,
+        input: dict[str, Any],
+        *,
+        on_event: Callable[[Any], Awaitable[None]] | None = None,
+    ) -> dict[str, Any]:
         all_themes: list[dict[str, Any]] = input["themes"]
 
         # Build numbered list for LLM
@@ -64,6 +70,7 @@ class ThemeDedupAgent:
         dedup = await run_agent_with_retry(
             self._agent, message, ThemeDedupResult,
             context={"stage": "theme_dedup", "raw_theme_count": len(all_themes)},
+            on_event=on_event,
         )
 
         # Map LLM groups back to concrete theme data
