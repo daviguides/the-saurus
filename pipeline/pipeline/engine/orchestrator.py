@@ -139,7 +139,10 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
 
         theme_dedup = ThemeDedupAgent()
         await tracker.stage_start(Stage.THEME_DEDUP, 1)
-        dedup_cb = create_agent_event_callback(emitter, "ThemeDedup", Stage.THEME_DEDUP)
+        dedup_cb = create_agent_event_callback(
+            emitter, "ThemeDedup", Stage.THEME_DEDUP,
+            context={"theme_count": len(all_themes)},
+        )
         dedup_result = await theme_dedup.run({"themes": all_themes}, on_event=dedup_cb)
         await write_yaml(job_path / "theme_map.yaml", dedup_result, job_id=job_id)
         if indexer:
@@ -160,7 +163,10 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
 
         theme_reviewer = ThemeReviewerAgent()
         await tracker.stage_start(Stage.THEME_REVIEW, len(canonical_themes))
-        review_cb = create_agent_event_callback(emitter, "ThemeReviewer", Stage.THEME_REVIEW)
+        review_cb = create_agent_event_callback(
+            emitter, "ThemeReviewer", Stage.THEME_REVIEW,
+            context={"theme_count": len(canonical_themes)},
+        )
         review_results = await theme_reviewer.run_batch(
             canonical_themes, all_claims, on_event=review_cb,
         )
@@ -183,7 +189,10 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         # --- Stage 4: Aggregation (single pass) ---
         aggregator = AggregatorAgent()
         await tracker.stage_start(Stage.AGGREGATION, 1)
-        agg_cb = create_agent_event_callback(emitter, "Aggregator", Stage.AGGREGATION)
+        agg_cb = create_agent_event_callback(
+            emitter, "Aggregator", Stage.AGGREGATION,
+            context={"theme_count": len(review_results)},
+        )
         review = await aggregator.run({
             "theme_reviews": review_results,
             "claims": all_claims,
@@ -272,6 +281,7 @@ async def _run_parallel_per_paper(
             if emitter is not None:
                 kwargs["on_event"] = create_agent_event_callback(
                     emitter, agent_name, stage, paper_id=paper.paper_id,
+                    context={"paper_title": paper.title},
                 )
             result = await agent.run(input_dict, **kwargs)
             await tracker.stage_item_done(stage, paper.paper_id)
