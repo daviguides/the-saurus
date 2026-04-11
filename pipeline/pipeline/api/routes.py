@@ -29,6 +29,7 @@ from pipeline.ws.stream import register_emitter
 
 from .schemas import (
     CreateJobResponse,
+    EnrichedPaper,
     EventsResponse,
     HealthResponse,
     PapersResponse,
@@ -166,12 +167,29 @@ async def get_events(job_id: str, after_event_id: str | None = None) -> EventsRe
 
 @router.get("/jobs/{job_id}/papers", response_model=PapersResponse)
 async def get_papers(job_id: str) -> PapersResponse:
-    _get_job_dir(job_id)
-    data = await read_yaml(_jobs_dir() / job_id / "papers.yaml")
+    job_path = _get_job_dir(job_id)
+    data = await read_yaml(job_path / "papers.yaml")
     if data is None:
         return PapersResponse(papers=[])
     papers = [PaperEntry.model_validate(p) for p in data]
-    return PapersResponse(papers=papers)
+
+    # Enrich each paper with themes and claims from per-paper YAML files
+    enriched: list[EnrichedPaper] = []
+    for paper in papers:
+        themes_data = await read_yaml(job_path / "themes" / f"{paper.paper_id}.yaml")
+        claims_data = await read_yaml(job_path / "claims" / f"{paper.paper_id}.yaml")
+        enriched.append(
+            EnrichedPaper(
+                paper_id=paper.paper_id,
+                filename=paper.filename,
+                title=paper.title,
+                authors=paper.authors,
+                page_count=paper.page_count,
+                themes=themes_data.get("themes", []) if themes_data else [],
+                claims=claims_data.get("claims", []) if claims_data else [],
+            )
+        )
+    return PapersResponse(papers=enriched)
 
 
 @router.get("/jobs/{job_id}/review", response_model=ReviewResponse)

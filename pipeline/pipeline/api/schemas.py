@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from pipeline.core import Event, JobStatus, PaperEntry
 
@@ -23,8 +23,20 @@ class EventsResponse(BaseModel):
     events: list[Event]
 
 
+class EnrichedPaper(BaseModel):
+    """Paper with merged themes and claims from pipeline output."""
+
+    paper_id: str
+    filename: str
+    title: str = ""
+    authors: list[str] = Field(default_factory=list)
+    page_count: int = 0
+    themes: list[dict[str, Any]] = Field(default_factory=list)
+    claims: list[dict[str, Any]] = Field(default_factory=list)
+
+
 class PapersResponse(BaseModel):
-    papers: list[PaperEntry]
+    papers: list[EnrichedPaper]
 
 
 class ReviewResponse(BaseModel):
