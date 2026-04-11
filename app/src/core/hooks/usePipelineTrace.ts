@@ -64,15 +64,14 @@ function pipelineReducer(state: PipelineState, action: PipelineAction): Pipeline
           ? { ...s, processedPapers: [...s.processedPapers, paperId] }
           : s,
       );
-      const totalProcessed = newStages.reduce(
-        (sum, s) => sum + s.processedPapers.length,
-        0,
-      );
-      const totalExpected = newStages.length * state.progress.total;
+      const activeStage = newStages.find((s) => s.id === stage);
       return {
         ...state,
         stages: newStages,
-        progress: { completed: totalProcessed, total: totalExpected },
+        progress: {
+          completed: activeStage?.processedPapers.length ?? 0,
+          total: activeStage?.totalPapers ?? state.progress.total,
+        },
       };
     }
 
