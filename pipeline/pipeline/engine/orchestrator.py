@@ -116,12 +116,16 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         # --- Stage 2: Claim Extraction (per-paper, parallel) ---
         claim_extractor = ClaimExtractorAgent()
         themes_by_paper = {
-            paper.paper_id: result.get("themes", [])
-            for paper, result in zip(papers, theme_results)
+            paper.paper_id: result.get("themes", []) for paper, result in zip(papers, theme_results)
         }
         await tracker.stage_start(Stage.CLAIM_EXTRACTION, len(papers))
         claim_results = await _run_parallel_per_paper(
-            papers, paper_contents, claim_extractor, tracker, Stage.CLAIM_EXTRACTION, job_path,
+            papers,
+            paper_contents,
+            claim_extractor,
+            tracker,
+            Stage.CLAIM_EXTRACTION,
+            job_path,
             extra_inputs={"themes": themes_by_paper},
         )
         # Persist per-paper claims
@@ -169,8 +173,15 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         theme_reviewer = ThemeReviewerAgent()
         await tracker.stage_start(Stage.THEME_REVIEW, len(canonical_themes))
         review_results = await _run_parallel_per_theme(
-            canonical_themes, all_claims, theme_reviewer, tracker, Stage.THEME_REVIEW,
-            job_path, job_id, indexer, _fire_qdrant,
+            canonical_themes,
+            all_claims,
+            theme_reviewer,
+            tracker,
+            Stage.THEME_REVIEW,
+            job_path,
+            job_id,
+            indexer,
+            _fire_qdrant,
         )
         await tracker.stage_complete(Stage.THEME_REVIEW)
 

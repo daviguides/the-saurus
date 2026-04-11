@@ -66,13 +66,9 @@ class QdrantIndexer:
 
     async def _upsert(self, collection: str, points: list[PointStruct]) -> None:
         """Upsert points to a collection in a thread."""
-        await asyncio.to_thread(
-            self._client.upsert, collection_name=collection, points=points
-        )
+        await asyncio.to_thread(self._client.upsert, collection_name=collection, points=points)
 
-    async def index_themes(
-        self, job_id: str, paper_id: str, result: dict[str, Any]
-    ) -> None:
+    async def index_themes(self, job_id: str, paper_id: str, result: dict[str, Any]) -> None:
         """Index per-paper themes to paper_themes collection."""
         themes = result.get("themes", [])
         if not themes:
@@ -97,9 +93,7 @@ class QdrantIndexer:
         ]
         await self._upsert(PAPER_THEMES, points)
 
-    async def index_claims(
-        self, job_id: str, paper_id: str, result: dict[str, Any]
-    ) -> None:
+    async def index_claims(self, job_id: str, paper_id: str, result: dict[str, Any]) -> None:
         """Index per-paper claims to paper_claims collection."""
         claims = result.get("claims", [])
         if not claims:
