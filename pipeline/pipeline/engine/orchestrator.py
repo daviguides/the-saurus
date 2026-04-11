@@ -10,8 +10,8 @@ from pathlib import Path
 from typing import Any
 
 from pipeline.agents import (
+    AggregatorAgent,
     ClaimExtractorAgent,
-    StubAggregator,
     ThemeDedupAgent,
     ThemeExtractorAgent,
     ThemeReviewerAgent,
@@ -188,9 +188,16 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         # === SYNC BARRIER: all theme reviews complete ===
 
         # --- Stage 5: Aggregation (single pass) ---
-        aggregator = StubAggregator()
+        aggregator = AggregatorAgent()
         await tracker.stage_start(Stage.AGGREGATION, 1)
-        review = await aggregator.run({"theme_reviews": review_results})
+        review = await aggregator.run({
+            "theme_reviews": review_results,
+            "claims": all_claims,
+            "papers": [
+                {"paper_id": p.paper_id, "title": p.title, "authors": p.authors}
+                for p in papers
+            ],
+        })
         await write_yaml(job_path / "review.yaml", review, job_id=job_id)
         if indexer:
             _fire_qdrant(indexer.index_review(job_id, review))
