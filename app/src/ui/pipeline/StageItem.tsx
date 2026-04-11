@@ -53,8 +53,8 @@ export default function StageItem({ stage, lastProcessedTitle }: Props) {
           <Circle size={18} className="text-text-muted/40" />
         )}
         {stage.status === "failed" && (
-          <div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center">
-            <Circle size={14} className="text-red-500" />
+          <div className="w-6 h-6 rounded-full bg-error/10 flex items-center justify-center">
+            <Circle size={14} className="text-error" />
           </div>
         )}
       </div>
