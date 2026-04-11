@@ -1,8 +1,0 @@
-job_id: 8286df0d-55a6-48e0-8202-42c2d73133ab
-status: failed
-stage: paper_analysis
-progress: 0.125
-paper_count: 2
-created_at: '2026-04-11T06:33:58.281580Z'
-updated_at: '2026-04-11T06:37:04.683022Z'
-error: "Pipeline server restarted \u2014 job was interrupted. Upload again to retry."
