@@ -14,5 +14,13 @@ export default defineConfig({
   },
   html: {
     title: "The Saurus",
+    tags: [
+      {
+        tag: "script",
+        children: `(function(){var t=localStorage.getItem('thesaurus:theme');if(t==='light')return;if(t==='dark'||window.matchMedia('(prefers-color-scheme:dark)').matches||!window.matchMedia('(prefers-color-scheme:light)').matches){document.documentElement.classList.add('dark')}})()`,
+        append: false,
+        head: true,
+      },
+    ],
   },
 });
