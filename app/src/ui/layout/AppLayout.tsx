@@ -3,7 +3,7 @@ import clsx from "clsx";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import { AssistantProvider, useAssistant } from "../../core/context/AssistantContext";
-import AssistantDrawer from "../assistant/AssistantDrawer";
+import FederatedAssistant from "../assistant/FederatedAssistant";
 
 function LayoutInner() {
   const { isOpen } = useAssistant();
@@ -22,7 +22,7 @@ function LayoutInner() {
           <Outlet />
         </main>
       </div>
-      <AssistantDrawer />
+      <FederatedAssistant />
     </div>
   );
 }
