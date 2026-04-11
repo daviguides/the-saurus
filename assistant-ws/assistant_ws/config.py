@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    model_config = {"env_prefix": "AT_"}
+    model_config = {"env_prefix": "AT_", "env_file": ".env", "env_file_encoding": "utf-8"}
 
     # Server
     host: str = "0.0.0.0"
