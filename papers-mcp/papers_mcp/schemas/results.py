@@ -1,35 +1,50 @@
 from pydantic import BaseModel
 
 
-class SearchResultWithReference(BaseModel):
-    content: str
+class ThemeResult(BaseModel):
+    paper_id: str
+    name: str
+    description: str = ""
+    positions: list[dict] = []
+
+
+class ClaimResult(BaseModel):
+    paper_id: str
+    theme_id: str = ""
+    theme_name: str = ""
+    text: str
+    page: int = 0
+    paragraph: int = 0
+    deep: str = ""
+    summary: str = ""
+    source: dict = {}
+
+
+class ClaimSearchResult(BaseModel):
+    claim: ClaimResult
     score: float
-    rank: int
-    title: str
-    authors: list[str] = []
-    year: int | None = None
-    doi: str | None = None
-    journal: str | None = None
-    abstract: str = ""
-    section_title: str | None = None
 
-    def to_result_dict(self) -> dict:
-        return {
-            "content": self.content,
-            "score": self.score,
-            "rank": self.rank,
-            "source": f"{self.title} ({self.year})" if self.year else self.title,
-        }
 
-    def to_reference_dict(self) -> dict:
-        return {
-            "title": self.title,
-            "authors": self.authors,
-            "year": self.year,
-            "doi": self.doi,
-            "journal": self.journal,
-            "abstract": self.abstract,
-            "section_title": self.section_title,
-            "content": self.content,
-            "score": self.score,
-        }
+class ThemeMapEntry(BaseModel):
+    name: str
+    description: str = ""
+    paper_ids: list[str] = []
+    aliases: list[str] = []
+
+
+class ThemeReviewResult(BaseModel):
+    theme_id: str
+    label: str = ""
+    review: str = ""
+    consensus: list[str] = []
+    disagreements: list[str] = []
+    gaps: list[str] = []
+    key_claims: list[dict] = []
+
+
+class ReviewSection(BaseModel):
+    title: str = ""
+    theme_id: str
+    label: str = ""
+    content: str = ""
+    claim_ids: list[str] = []

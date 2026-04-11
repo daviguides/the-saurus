@@ -1,5 +1,12 @@
 from pydantic_settings import BaseSettings
 
+# Collection names — must match pipeline.core.qdrant constants.
+PAPER_THEMES = "paper_themes"
+PAPER_CLAIMS = "paper_claims"
+THEME_MAP = "theme_map"
+THEME_REVIEWS = "theme_reviews"
+LITERATURE_REVIEW = "literature_review"
+
 
 class RetrievalSettings(BaseSettings):
     model_config = {"env_prefix": "PAPERS_"}
@@ -7,7 +14,6 @@ class RetrievalSettings(BaseSettings):
     # Qdrant
     qdrant_url: str = "http://localhost:6333"
     qdrant_api_key: str | None = None
-    qdrant_collection: str = "papers"
 
     # Embeddings
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
@@ -15,7 +21,7 @@ class RetrievalSettings(BaseSettings):
 
     # Retrieval
     min_score_threshold: float = 0.3
-    default_top_k: int = 5
+    default_top_k: int = 10
 
     # MCP Server
     mcp_host: str = "0.0.0.0"
