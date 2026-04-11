@@ -91,7 +91,7 @@ export default function WelcomeContent({
     <div className="flex flex-col items-center px-4 py-8">
       {/* Welcome header — dino face */}
       <div className="mb-4">
-        <DinoFace size={56} className="text-primary" />
+        <DinoFace size={88} className="text-primary" />
       </div>
 
       <h2 className="text-xl font-heading font-semibold text-text-primary mb-2">
