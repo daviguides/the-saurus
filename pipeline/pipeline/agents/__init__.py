@@ -8,10 +8,12 @@ from .stubs import (
     StubThemeExtractor,
     StubThemeReviewer,
 )
+from .claim_extractor import ClaimExtractorAgent
 from .theme_extractor import ThemeExtractorAgent
 
 __all__ = [
     "Agent",
+    "ClaimExtractorAgent",
     "StubAggregator",
     "StubClaimExtractor",
     "StubThemeDedup",
