@@ -15,6 +15,7 @@ from pipeline.agents import (
     ThemeDedupAgent,
     ThemeReviewerAgent,
 )
+from pipeline.agents.event_bridge import create_agent_event_callback
 from pipeline.core import (
     EventType,
     JobState,
@@ -99,7 +100,8 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         analyzer = PaperAnalyzerAgent()
         await tracker.stage_start(Stage.PAPER_ANALYSIS, len(papers))
         analysis_results = await _run_parallel_per_paper(
-            papers, paper_contents, analyzer, tracker, Stage.PAPER_ANALYSIS, job_path
+            papers, paper_contents, analyzer, tracker, Stage.PAPER_ANALYSIS, job_path,
+            emitter=emitter,
         )
         # Persist per-paper themes and claims (split from unified result)
         for paper, result in zip(papers, analysis_results):
@@ -137,7 +139,8 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
 
         theme_dedup = ThemeDedupAgent()
         await tracker.stage_start(Stage.THEME_DEDUP, 1)
-        dedup_result = await theme_dedup.run({"themes": all_themes})
+        dedup_cb = create_agent_event_callback(emitter, "ThemeDedup", Stage.THEME_DEDUP)
+        dedup_result = await theme_dedup.run({"themes": all_themes}, on_event=dedup_cb)
         await write_yaml(job_path / "theme_map.yaml", dedup_result, job_id=job_id)
         if indexer:
             _fire_qdrant(indexer.index_theme_map(job_id, dedup_result))
@@ -157,7 +160,10 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
 
         theme_reviewer = ThemeReviewerAgent()
         await tracker.stage_start(Stage.THEME_REVIEW, len(canonical_themes))
-        review_results = await theme_reviewer.run_batch(canonical_themes, all_claims)
+        review_cb = create_agent_event_callback(emitter, "ThemeReviewer", Stage.THEME_REVIEW)
+        review_results = await theme_reviewer.run_batch(
+            canonical_themes, all_claims, on_event=review_cb,
+        )
         # Persist per-theme reviews
         for review_out in review_results:
             theme_id = review_out.get("theme_id", "")
@@ -177,6 +183,7 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         # --- Stage 4: Aggregation (single pass) ---
         aggregator = AggregatorAgent()
         await tracker.stage_start(Stage.AGGREGATION, 1)
+        agg_cb = create_agent_event_callback(emitter, "Aggregator", Stage.AGGREGATION)
         review = await aggregator.run({
             "theme_reviews": review_results,
             "claims": all_claims,
@@ -184,7 +191,7 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
                 {"paper_id": p.paper_id, "title": p.title, "authors": p.authors}
                 for p in papers
             ],
-        })
+        }, on_event=agg_cb)
         await write_yaml(job_path / "review.yaml", review, job_id=job_id)
         if indexer:
             _fire_qdrant(indexer.index_review(job_id, review))
@@ -237,6 +244,7 @@ async def _run_parallel_per_paper(
     stage: str,
     job_path: Path,
     extra_inputs: dict[str, dict[str, Any]] | None = None,
+    emitter: Any | None = None,
 ) -> list[dict[str, Any]]:
     """Run an agent in parallel across all papers.
 
@@ -244,7 +252,10 @@ async def _run_parallel_per_paper(
         extra_inputs: Optional mapping of {key: {paper_id: value}} to merge
             into each agent call. For example, {"themes": {pid: [...]}} adds
             input["themes"] per paper.
+        emitter: Optional EventEmitter for agent-level event forwarding.
     """
+    agent_name = getattr(agent, "_agent", None)
+    agent_name = getattr(agent_name, "name", agent.__class__.__name__) if agent_name else agent.__class__.__name__
 
     async def process_one(paper: PaperEntry) -> dict[str, Any] | Exception:
         content = paper_contents.get(paper.paper_id, "")
@@ -257,7 +268,12 @@ async def _run_parallel_per_paper(
             for key, mapping in extra_inputs.items():
                 input_dict[key] = mapping.get(paper.paper_id, [])
         try:
-            result = await agent.run(input_dict)
+            kwargs: dict[str, Any] = {}
+            if emitter is not None:
+                kwargs["on_event"] = create_agent_event_callback(
+                    emitter, agent_name, stage, paper_id=paper.paper_id,
+                )
+            result = await agent.run(input_dict, **kwargs)
             await tracker.stage_item_done(stage, paper.paper_id)
             return result
         except Exception as exc:
