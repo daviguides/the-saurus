@@ -149,7 +149,7 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
 
         # === SYNC BARRIER: dedup complete ===
 
-        # --- Stage 3: Theme Review (per-theme, parallel) ---
+        # --- Stage 3: Theme Review (batched — 5 themes per LLM call) ---
         canonical_themes = dedup_result.get("themes", [])
         all_claims = []
         for result in analysis_results:
@@ -157,17 +157,19 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
 
         theme_reviewer = ThemeReviewerAgent()
         await tracker.stage_start(Stage.THEME_REVIEW, len(canonical_themes))
-        review_results = await _run_parallel_per_theme(
-            canonical_themes,
-            all_claims,
-            theme_reviewer,
-            tracker,
-            Stage.THEME_REVIEW,
-            job_path,
-            job_id,
-            indexer,
-            _fire_qdrant,
-        )
+        review_results = await theme_reviewer.run_batch(canonical_themes, all_claims)
+        # Persist per-theme reviews
+        for review_out in review_results:
+            theme_id = review_out.get("theme_id", "")
+            if theme_id:
+                await write_yaml(
+                    job_path / "theme_reviews" / f"{theme_id}.yaml",
+                    review_out,
+                    job_id=job_id,
+                )
+                if indexer:
+                    _fire_qdrant(indexer.index_theme_review(job_id, review_out))
+                await tracker.stage_item_done(Stage.THEME_REVIEW, theme_id)
         await tracker.stage_complete(Stage.THEME_REVIEW)
 
         # === SYNC BARRIER: all theme reviews complete ===
