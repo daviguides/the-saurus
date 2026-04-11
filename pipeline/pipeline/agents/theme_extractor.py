@@ -9,7 +9,7 @@ from agno.agent import Agent as AgnoAgent
 from pydantic import BaseModel, Field
 
 from pipeline.agents.models import create_model
-from pipeline.agents.parsing import parse_agent_response
+from pipeline.agents.parsing import run_agent_with_retry
 from pipeline.agents.prompts.theme_extractor import THEME_EXTRACTOR_PROMPT
 
 # --- Pydantic output models ---
@@ -57,12 +57,9 @@ class ThemeExtractorAgent:
         paper_id = input["paper_id"]
         content = input["content"]
 
-        result = await self._agent.arun(
-            content,
-            output_schema=ThemeExtractionResult,
+        extraction = await run_agent_with_retry(
+            self._agent, content, ThemeExtractionResult,
         )
-
-        extraction = parse_agent_response(result.content, ThemeExtractionResult)
         return {
             "themes": [
                 {

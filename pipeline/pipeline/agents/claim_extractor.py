@@ -9,7 +9,7 @@ from agno.agent import Agent as AgnoAgent
 from pydantic import BaseModel, Field
 
 from pipeline.agents.models import create_model
-from pipeline.agents.parsing import parse_agent_response
+from pipeline.agents.parsing import run_agent_with_retry
 from pipeline.agents.prompts.claim_extractor import CLAIM_EXTRACTOR_PROMPT
 
 # --- Pydantic output models ---
@@ -70,12 +70,9 @@ class ClaimExtractorAgent:
 
         message = f"{theme_lines}\n\n{content}"
 
-        result = await self._agent.arun(
-            message,
-            output_schema=ClaimExtractionResult,
+        extraction = await run_agent_with_retry(
+            self._agent, message, ClaimExtractionResult,
         )
-
-        extraction = parse_agent_response(result.content, ClaimExtractionResult)
         return {
             "claims": [
                 {
