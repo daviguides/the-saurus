@@ -1,18 +1,67 @@
-import TheSaurusMascot from "../shared/TheSaurusMascot";
+import { useEffect, useState } from "react";
+import { usePapers } from "../../core/hooks/usePapers";
+import UploadModal from "../papers/UploadModal";
+import EmptyState from "../papers/EmptyState";
+import PaperList from "../papers/PaperList";
+import PaperCards from "../papers/PaperCards";
 
 export default function PapersView() {
+  const {
+    papers,
+    viewState,
+    selectedIds,
+    addPapers,
+    removePaper,
+    toggleSelect,
+  } = usePapers();
+
+  const [modalOpen, setModalOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setModalOpen(true);
+    window.addEventListener("open-upload-modal", handler);
+    return () => window.removeEventListener("open-upload-modal", handler);
+  }, []);
+
+  const handleGenerate = () => {
+    // Pipeline trigger — wired in pipeline-trace-view task
+  };
+
+  if (viewState === "empty") {
+    return (
+      <>
+        <EmptyState
+          onUpload={() => setModalOpen(true)}
+          onFilesAdded={addPapers}
+        />
+        <UploadModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          onFilesAdded={addPapers}
+        />
+      </>
+    );
+  }
+
+  if (viewState === "complete") {
+    return <PaperCards papers={papers} />;
+  }
+
   return (
-    <div className="flex flex-col items-center justify-center h-full gap-6 text-center px-4">
-      <TheSaurusMascot size={140} className="text-primary/40" />
-      <div>
-        <h2 className="text-xl font-heading font-semibold text-text-primary mb-2">
-          Feed The Saurus your papers
-        </h2>
-        <p className="text-text-secondary max-w-md">
-          Upload scientific PDFs to build your corpus. The Saurus will extract
-          themes, claims, and generate a literature review.
-        </p>
-      </div>
-    </div>
+    <>
+      <PaperList
+        papers={papers}
+        selectedIds={selectedIds}
+        onToggle={toggleSelect}
+        onRemove={removePaper}
+        onAddMore={() => setModalOpen(true)}
+        onGenerate={handleGenerate}
+      />
+      <UploadModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onFilesAdded={addPapers}
+      />
+    </>
   );
 }
