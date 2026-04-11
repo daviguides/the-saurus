@@ -12,6 +12,7 @@ import { useWebSocket } from "../../core/hooks/useWebSocket";
 import { useChat } from "../../core/hooks/useChat";
 import MessageBubble from "../../ui/chat/MessageBubble";
 import ChatInput from "../../ui/components/ChatInput";
+import WelcomeContent from "../../ui/components/WelcomeContent";
 
 export interface EmbeddedAppProps {
   isOpen?: boolean;
@@ -74,12 +75,7 @@ export default function EmbeddedApp({
       >
         <div className="max-w-3xl mx-auto">
           {messages.length === 0 && isConnected && (
-            <div className="text-center text-text-muted mt-16">
-              <p className="text-lg mb-1">Research smarter</p>
-              <p className="text-sm">
-                Ask about scientific papers, topics, or paste an abstract.
-              </p>
-            </div>
+            <WelcomeContent onSuggestionClick={handleSend} />
           )}
 
           {messages.map((msg) => (

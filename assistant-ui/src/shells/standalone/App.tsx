@@ -3,6 +3,7 @@ import { useChat } from "../../core/hooks/useChat";
 import Header from "../../ui/shared/Header";
 import MessageBubble from "../../ui/chat/MessageBubble";
 import ChatInput from "../../ui/components/ChatInput";
+import WelcomeContent from "../../ui/components/WelcomeContent";
 
 export default function App() {
   const { socket, status } = useWebSocket();
@@ -15,10 +16,7 @@ export default function App() {
       <main className="flex-1 overflow-y-auto px-6 py-4">
         <div className="max-w-3xl mx-auto">
           {messages.length === 0 && (
-            <div className="text-center text-text-muted mt-32">
-              <p className="text-2xl mb-2">Research smarter</p>
-              <p>Ask about scientific papers, topics, or paste an abstract to find similar work.</p>
-            </div>
+            <WelcomeContent onSuggestionClick={sendMessage} />
           )}
 
           {messages.map((msg) => (
