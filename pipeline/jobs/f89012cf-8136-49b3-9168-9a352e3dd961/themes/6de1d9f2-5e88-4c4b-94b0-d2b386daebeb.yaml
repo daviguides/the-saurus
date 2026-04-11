@@ -1,0 +1,625 @@
+themes:
+- id: deab669a-bb7b-426a-9af4-a5bf8375d3cd
+  name: Editorial Publication Details
+  description: Metadata about the journal, publication date, and DOI of the editorial.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 1
+    paragraph: 1
+  - page: 1
+    paragraph: 2
+  - page: 1
+    paragraph: 6
+  - page: 1
+    paragraph: 7
+  - page: 2
+    paragraph: 12
+  - page: 3
+    paragraph: 8
+- id: 129c5324-92b7-450c-87e7-92903944d07a
+  name: Authorship and Affiliations
+  description: Information about the editorial authors and their respective institutional
+    ties.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 1
+    paragraph: 3
+  - page: 1
+    paragraph: 4
+  - page: 1
+    paragraph: 9
+  - page: 1
+    paragraph: 10
+  - page: 1
+    paragraph: 11
+  - page: 2
+    paragraph: 8
+  - page: 2
+    paragraph: 9
+- id: b6799159-7c79-4bd9-9396-2a0211d43889
+  name: Research Topic Keywords
+  description: Explicitly listed terms summarizing the core concepts covered in the
+    special issue.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 1
+    paragraph: 12
+- id: 4e6db335-a60d-4261-bda8-cb4fdda28666
+  name: Physical Activity Effects on Brain and Cognition
+  description: The central focus of the research topic, investigating how exercise
+    impacts brain function and various cognitive abilities across the lifespan.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 1
+    paragraph: 14
+  - page: 1
+    paragraph: 15
+  - page: 1
+    paragraph: 17
+  - page: 2
+    paragraph: 2
+  - page: 2
+    paragraph: 3
+  - page: 2
+    paragraph: 4
+  - page: 2
+    paragraph: 5
+  - page: 2
+    paragraph: 7
+  - page: 3
+    paragraph: 3
+  - page: 3
+    paragraph: 4
+- id: ecbac3af-b3cc-42b1-8b61-7cf31afb349e
+  name: Lifespan Perspective
+  description: The examination of physical activity's effects across different age
+    groups, from children to older adults.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 1
+    paragraph: 12
+  - page: 1
+    paragraph: 15
+  - page: 1
+    paragraph: 16
+  - page: 2
+    paragraph: 5
+  - page: 2
+    paragraph: 7
+  - page: 3
+    paragraph: 4
+- id: b5b3a9e9-9753-4bdf-aab2-59e6803e7faf
+  name: Active vs. Sedentary Lifestyles
+  description: The comparison of health and cognitive outcomes associated with physically
+    active habits versus prolonged sedentary behavior.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 1
+    paragraph: 12
+  - page: 1
+    paragraph: 15
+  - page: 2
+    paragraph: 4
+  - page: 2
+    paragraph: 6
+- id: ec0fd2da-29e1-437c-bacc-967b7c0fe4bc
+  name: Brain Plasticity
+  description: The brain's inherent ability to adapt, reorganize, and modify its structure
+    and function in response to environmental changes and interventions like physical
+    activity.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 1
+    paragraph: 12
+  - page: 1
+    paragraph: 15
+  - page: 2
+    paragraph: 3
+  - page: 3
+    paragraph: 3
+  - page: 3
+    paragraph: 4
+- id: 06581b20-fcee-4a57-81eb-22c6481b6838
+  name: Cognitive Training as Intervention
+  description: An intervention strategy, often combined with physical activity, specifically
+    designed to improve particular cognitive functions.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 1
+    paragraph: 15
+  - page: 2
+    paragraph: 7
+  - page: 3
+    paragraph: 3
+- id: 94b88d45-04d1-4a88-9cac-ffcd7e22c124
+  name: Social Engagement as Intervention
+  description: An intervention approach, alongside physical activity and cognitive
+    training, emphasized for improving brain health and well-being.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 1
+    paragraph: 15
+  - page: 2
+    paragraph: 4
+  - page: 2
+    paragraph: 7
+- id: e5415414-ff33-4d66-ad58-33f8ecca3e43
+  name: Age-Related Cognitive Decline
+  description: The natural reduction in cognitive abilities that occurs with aging,
+    which physical activity and other interventions aim to protect against or mitigate.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 1
+    paragraph: 15
+  - page: 2
+    paragraph: 7
+- id: 9f9191a8-57fd-4b2b-8c68-345bd60aaffe
+  name: Executive Functions
+  description: A set of higher-level cognitive processes, including inhibitory control,
+    mental flexibility, attention, and processing speed, frequently targeted and enhanced
+    by physical activity interventions.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 1
+    paragraph: 15
+  - page: 1
+    paragraph: 17
+  - page: 2
+    paragraph: 3
+  - page: 2
+    paragraph: 4
+  - page: 2
+    paragraph: 7
+  - page: 3
+    paragraph: 4
+- id: 134ffda8-dca4-4640-934b-d889162fa936
+  name: Memory Function
+  description: Specific cognitive abilities, including long-term explicit memory and
+    working memory, that are influenced by physical activity and often affected in
+    conditions like T2DM.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 1
+    paragraph: 15
+  - page: 2
+    paragraph: 3
+  - page: 2
+    paragraph: 4
+  - page: 2
+    paragraph: 7
+  - page: 3
+    paragraph: 4
+- id: 795087b9-f704-4574-ab2d-e76664620530
+  name: Research Methodologies (Types of Studies)
+  description: The different types of research designs and studies, such as original
+    research articles, systematic reviews, and meta-analyses, included in the research
+    topic.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 1
+    paragraph: 15
+  - page: 2
+    paragraph: 2
+  - page: 2
+    paragraph: 3
+  - page: 2
+    paragraph: 4
+  - page: 2
+    paragraph: 7
+- id: abdfe4fc-5943-48f2-bffa-4952cf3eedc4
+  name: Type 2 Diabetes Mellitus (T2DM) and Cognition
+  description: The focus on a specific patient population with T2DM to examine the
+    associated cognitive decline and the benefits of exercise interventions.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 1
+    paragraph: 15
+  - page: 2
+    paragraph: 5
+  - page: 2
+    paragraph: 7
+  - page: 3
+    paragraph: 3
+  - page: 3
+    paragraph: 4
+- id: 6a0c929a-5142-448a-97cc-8d7de43524cd
+  name: Brain Network Modularity
+  description: A specific neuroscientific measure of brain organization used to predict
+    training outcomes and understand the brain's response to physical activity.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 1
+    paragraph: 16
+  - page: 1
+    paragraph: 17
+  - page: 2
+    paragraph: 2
+- id: 36541ac4-63b2-44ec-ba55-25c72797a78f
+  name: Children (8-9 years old) and PA Effects
+  description: Research specifically investigating the impact of physical activity
+    on cognitive development and brain organization in young children.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 1
+    paragraph: 16
+  - page: 1
+    paragraph: 17
+  - page: 2
+    paragraph: 2
+- id: f871f703-125c-474e-b10b-7daf11796eb6
+  name: Adolescents (10-18 years old) and PA Effects
+  description: Studies exploring the relationship between sport participation and
+    cognitive functions, including fluid reasoning and soft skills, during adolescence.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 1
+    paragraph: 16
+  - page: 1
+    paragraph: 17
+  - page: 2
+    paragraph: 2
+- id: fd63ae42-e7ac-4463-9766-b06ed4f9ffdc
+  name: College Students and PA Effects
+  description: Research focusing on the association between physical activity and
+    cognitive functions, particularly executive functions and memory, in young adults.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 1
+    paragraph: 16
+  - page: 2
+    paragraph: 3
+- id: e900e201-2ea7-4234-9bbc-03400b4f8bc7
+  name: Middle-Aged Adults and PA Effects
+  description: Investigations into the sustained effects of various physical activity
+    interventions on cognitive performance and brain measures in middle-aged individuals.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 1
+    paragraph: 16
+  - page: 2
+    paragraph: 4
+- id: 321d8165-e684-401d-82c1-743bad130f86
+  name: Older Adults and PA Effects
+  description: Research examining the benefits of physical activity, including aerobic
+    and combined training, on brain structure, cognitive function, and maintenance
+    in older populations.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 1
+    paragraph: 15
+  - page: 2
+    paragraph: 5
+  - page: 2
+    paragraph: 6
+  - page: 2
+    paragraph: 7
+  - page: 3
+    paragraph: 3
+  - page: 3
+    paragraph: 4
+- id: 575dee95-9689-4af2-ac45-4800594b3b92
+  name: Fluid Reasoning
+  description: A specific cognitive ability related to problem-solving, abstract thinking,
+    and adapting to new situations, shown to be positively affected by physical activity.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 1
+    paragraph: 17
+  - page: 2
+    paragraph: 2
+- id: 7845ddc6-51d8-4333-9412-d7e82faae1fe
+  name: Soft Skills Development
+  description: Non-cognitive attributes, such as social and emotional competencies,
+    that are influenced by regular participation in sports.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 1
+    paragraph: 17
+  - page: 2
+    paragraph: 2
+- id: e1a198a0-686a-44d1-ab22-e84cc39579d9
+  name: IPAQ-SF Questionnaire
+  description: "A specific self-report tool (International Physical Activity Questionnaire\
+    \ \u2013 Short Form) utilized to assess levels of physical activity in research\
+    \ studies."
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 3
+- id: 58f3f77b-4566-48c1-8aa7-8250ed7e937e
+  name: Activation Likelihood Estimation (ALE) Meta-analysis
+  description: A quantitative neuroimaging meta-analysis technique employed to identify
+    consistent patterns of brain activation across multiple fMRI studies, specifically
+    concerning motor decision making.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 3
+- id: f108a260-7001-4abb-ba22-bd4582f15985
+  name: Motor Decision Making
+  description: The cognitive processes involved in selecting and executing motor actions,
+    examined in the context of differences between motor experts and novices.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 3
+- id: 99f3891f-c0e7-45ac-8463-cafa8dc1141c
+  name: Neural Mechanisms of Motor Learning
+  description: The underlying brain processes and functional reorganization that occur
+    as individuals acquire and refine motor skills through long-term practice.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 3
+- id: 4ff7be41-0b8e-4fca-a33d-45bca9a8a00e
+  name: Neural Efficiency
+  description: A concept where less brain activation is required to achieve a particular
+    cognitive or motor performance level, often observed with expertise, improved
+    fitness, or after certain interventions.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 3
+  - page: 2
+    paragraph: 4
+- id: e4eb3dfe-af65-4043-b2e5-3fce58cffedf
+  name: Acute Resistance Training
+  description: A specific type of physical exercise intervention involving short-term,
+    intense muscle work, studied for its immediate effects on inhibition and executive
+    functions.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 4
+- id: b2b944bf-76bb-4b51-a62f-015eb7e4cdbe
+  name: Stroop Test
+  description: A common neuropsychological test administered to measure selective
+    attention, cognitive flexibility, and processing speed, particularly inhibitory
+    control.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 4
+- id: d82539e9-5835-4e15-9661-a9fd5f0aef5b
+  name: Sedentary Behavior's Negative Effects
+  description: The detrimental impact of prolonged sitting on cognitive performance
+    and overall health.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 1
+    paragraph: 15
+  - page: 2
+    paragraph: 4
+- id: 113fe768-f7f9-46c6-9eb9-e00eea7166ba
+  name: Physical Activity Breaks
+  description: Short, frequent interruptions of sedentary periods with light physical
+    activity, studied for their positive effects on cognitive task performance, mood,
+    and alertness.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 4
+- id: 6e3ba403-3bb7-4abb-9ff6-5a9b743ba539
+  name: Randomized Crossover Study Design
+  description: A specific experimental design where all participants receive every
+    intervention treatment in a random order, allowing for within-subject comparisons.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 4
+- id: d7217ab9-1c60-4673-a73f-6330d160132e
+  name: Prefrontal Cortex Activation
+  description: A specific measure of brain activity in the prefrontal cortex, often
+    assessed during cognitive tasks, which is associated with executive functions.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 4
+- id: e2973033-8b12-4013-bfbe-8088e5f2633c
+  name: Cerebral Blood Flow
+  description: A physiological measure indicating neural activity, which can change
+    in response to physical activity and cognitive demands.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 4
+- id: c4a73cad-5099-42f8-bdd7-20287b390fb7
+  name: Working Memory
+  description: A cognitive system responsible for temporarily holding and manipulating
+    information, shown to improve with short physical activity breaks.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 4
+- id: 80e3cff5-a309-49d6-8299-6702e04afddc
+  name: Mood and Alertness
+  description: Psychological outcomes, alongside cognitive improvements, that can
+    be positively influenced by physical activity breaks.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 4
+- id: 75898a8a-f334-4d12-89f3-cc00337b0488
+  name: Combined Multi-Domain Interventions
+  description: Interventions that integrate multiple components, such as physical
+    and cognitive training, to collectively enhance brain and cognitive health.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 5
+  - page: 2
+    paragraph: 7
+  - page: 3
+    paragraph: 3
+- id: 24e3d4c2-0678-49d9-8ec7-ca73c07ce396
+  name: Aerobic Training Effects
+  description: A type of physical activity that improves cardiovascular fitness and
+    is studied for its positive effects on regional gray-matter structural integrity
+    in older adults.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 6
+- id: 8da7c64b-b72d-4ecb-9a3d-fa645a4785fa
+  name: Multimodal Modeling Approach
+  description: An analytical strategy that integrates data from different modalities,
+    such as behavioral measures and structural neuroimaging, to understand complex
+    relationships.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 6
+- id: d4b3445f-3721-4640-8e88-b7bb151f126b
+  name: Gray-Matter Structural Integrity
+  description: A measure of the health and volume of gray matter in the brain, which
+    can be maintained or improved by physical activity interventions.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 6
+- id: 5dd74358-6f57-492d-9c67-009976b714fd
+  name: Cardiovascular Fitness
+  description: A physiological measure of the body's ability to supply oxygen to muscles
+    during sustained physical activity, which is improved by aerobic exercise.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 6
+- id: b6225346-c057-4bb5-ae7f-a418b3ebc641
+  name: Brain Maintenance
+  description: The concept that lifestyle factors, particularly aerobic exercise,
+    can help preserve brain structure and function, contributing to healthier aging.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 6
+- id: 4f271ff6-3b41-4f81-b347-b39b79ead324
+  name: Systematic Review and Multilevel Meta-analysis
+  description: A rigorous research methodology that systematically synthesizes findings
+    from multiple studies and uses advanced statistical techniques to account for
+    hierarchical data structures.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 1
+    paragraph: 15
+  - page: 2
+    paragraph: 7
+- id: 24b7bdab-a2d8-4edb-95ef-6c601f0c97c7
+  name: Attention Function
+  description: A cognitive function, part of executive functions, that can be improved
+    by combined physical and cognitive training interventions.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 7
+- id: 70fd5628-4cc2-471c-91d2-4804cfa4fc19
+  name: Processing Speed
+  description: A basic cognitive function relating to how quickly mental tasks can
+    be performed, which benefits from combined training interventions.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 7
+- id: 7991b171-244c-4511-bfd5-394cda9217a5
+  name: Social Context of Interventions
+  description: The influence of group or individual settings on the effectiveness
+    of physical and cognitive training interventions.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 7
+- id: b3804d44-c313-495c-adf9-d5dbb17d709c
+  name: Balance (Physical Outcome)
+  description: A physical skill related to maintaining stability, mentioned as improving
+    with individual training in older adults.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 7
+- id: 70c81dd5-82eb-4572-a699-29ed8aecd57d
+  name: Global Cognition
+  description: An overall, comprehensive measure of cognitive functioning, shown to
+    improve with exercise in older patients with T2DM.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 7
+- id: 46396d8c-9a37-462a-8d04-be593eeaed2b
+  name: Future Research Directions
+  description: An encouragement for researchers to design and conduct new intervention
+    studies aimed at improving brain health, well-being, and cognition across all
+    ages.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 7
+- id: b82eca52-2a8b-4aa8-8f49-aaa100197029
+  name: Author Contributions
+  description: A standard section detailing the role and intellectual contribution
+    of each author to the published work.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 8
+  - page: 2
+    paragraph: 9
+- id: 6dc0e33b-4326-4e59-bf10-eede3d677ad2
+  name: Funding and Acknowledgments
+  description: Recognition of financial support received from grants and organizations,
+    as well as general acknowledgments.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 2
+    paragraph: 10
+  - page: 2
+    paragraph: 11
+- id: 1f41aba2-b9c3-43cc-8d66-8dc6b5b757eb
+  name: References and Related Work
+  description: The list of cited literature providing background, supporting evidence,
+    and theoretical foundations for the research topic discussed in the editorial.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 3
+    paragraph: 2
+  - page: 3
+    paragraph: 3
+  - page: 3
+    paragraph: 4
+- id: 9dcb4795-3f96-4cb8-a07e-8f0440dbee9c
+  name: Scaffolding Theory of Aging and Cognition (STAC)
+  description: A theoretical framework referenced in the paper explaining how the
+    brain adapts to age-related challenges through compensatory neural recruitment
+    to maintain cognitive function.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 1
+    paragraph: 15
+  - page: 3
+    paragraph: 3
+  - page: 3
+    paragraph: 4
+- id: 262dc2a4-973a-4903-b002-0fd8e1ceddb6
+  name: Conflict of Interest Disclosure
+  description: A standard ethical statement declaring the absence of any commercial
+    or financial relationships that could potentially influence the research findings.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 3
+    paragraph: 5
+- id: b84421d6-4306-4442-a4f5-0e72eb53ea44
+  name: Publisher's Disclaimer
+  description: A standard note clarifying that claims expressed in the article are
+    solely those of the authors and do not necessarily represent those of the publisher
+    or affiliated organizations.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 3
+    paragraph: 6
+- id: 347d8190-e64d-4e34-a90b-75611b9a4ef4
+  name: Copyright and Open Access
+  description: Information regarding the intellectual property rights and the terms
+    under which the open-access article can be used, distributed, or reproduced.
+  paper_id: 6de1d9f2-5e88-4c4b-94b0-d2b386daebeb
+  positions:
+  - page: 3
+    paragraph: 7

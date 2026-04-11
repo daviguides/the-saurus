@@ -1,0 +1,35 @@
+theme_id: 897bf229-e703-4575-aff9-e73468d00872
+label: Risks of Sedentary Behavior
+review: The claims directly highlight the detrimental health outcomes associated with
+  sedentary lifestyles, presenting them as a contrast to the benefits of physical
+  activity. Sedentary behavior is explicitly linked to an elevated risk of cardiovascular
+  diseases and earlier mortality. Furthermore, it is understood to negatively impact
+  cognitive performance. These findings underscore the importance of promoting physical
+  activity to counteract the pervasive risks of a sedentary existence on both physiological
+  health and cognitive function.
+consensus:
+- This single paper consistently links sedentary lifestyles to adverse health outcomes,
+  specifically an elevated risk of cardiovascular diseases and earlier mortality [a38466cc-68f4-4365-ae67-14a9efd7b611].
+- The claims clearly state that sedentary behavior negatively impacts cognitive performance
+  [44d1ac17-af63-4cfc-b648-1fb57f7481a9].
+disagreements:
+- No disagreements were identified within the claims of this single paper regarding
+  the risks of sedentary behavior.
+gaps:
+- The claims do not elaborate on the specific mechanisms by which sedentary behavior
+  negatively impacts cognitive performance.
+- There is no discussion on the duration or intensity of sedentary behavior required
+  to manifest these negative health and cognitive effects.
+- The claims do not explore specific intervention strategies aimed at reducing sedentary
+  behavior beyond the general encouragement of physical activity.
+claim_ids:
+- a38466cc-68f4-4365-ae67-14a9efd7b611
+- 44d1ac17-af63-4cfc-b648-1fb57f7481a9
+key_claims:
+- claim_id: a38466cc-68f4-4365-ae67-14a9efd7b611
+  paper_id: a57c9ea3-92d6-49f3-a285-33b45aac4d67
+  summary: Sedentary lifestyles are associated with an elevated risk of cardiovascular
+    diseases and earlier mortality.
+- claim_id: 44d1ac17-af63-4cfc-b648-1fb57f7481a9
+  paper_id: a57c9ea3-92d6-49f3-a285-33b45aac4d67
+  summary: Sedentary behavior is known to negatively impact cognitive performance.

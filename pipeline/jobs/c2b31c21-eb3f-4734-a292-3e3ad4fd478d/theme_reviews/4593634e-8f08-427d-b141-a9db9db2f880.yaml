@@ -1,0 +1,96 @@
+theme_id: 4593634e-8f08-427d-b141-a9db9db2f880
+label: Physical Activity and Cognitive Function Across the Lifespan
+review: Physical activity (PA) demonstrates varied but consistently positive effects
+  on cognitive functions across the lifespan, with benefits observed from childhood
+  to older adulthood. In children, PA effectiveness on cognition and scholastic performance
+  is linked to baseline brain organization, particularly network modularity predicting
+  gains in executive functions. Adolescents show improvements in fluid reasoning and
+  soft skills, while college students exhibit enhanced inhibitory control and mental
+  flexibility. For middle-aged adults, both moderate resistance training and short
+  walking breaks boost executive functions and support performance on demanding cognitive
+  tasks, alongside mood and alertness improvements. Finally, older adults benefit
+  from aerobic exercise in terms of cardiovascular fitness and the preservation of
+  gray-matter structural integrity, suggesting a role for PA in maintaining brain
+  health.
+consensus:
+- The single paper consistently shows that physical activity positively influences
+  executive functions across multiple age groups, specifically in children where it
+  correlates with improvements in executive functions [82f4b529-9eae-4741-9f94-b8e96deeb6f8],
+  in college students who show enhanced inhibitory control and mental flexibility
+  [5adef30f-4d28-4cf0-a463-9aa34ee01f0e], and in middle-aged adults through resistance
+  training [bda8e59b-dad9-4a6c-be5e-85cf8404f714].
+- The paper agrees that physical activity interventions are beneficial for brain health
+  across the lifespan, from influencing children's brain organization [e38d36a7-6ce6-4fd6-9e4b-7726ad7e6e97]
+  to preserving gray-matter integrity in older adults [572ce8bf-cc52-44c0-8ed9-47e4e18cb8e6].
+disagreements:
+- The paper reports that while walking breaks improved working memory performance
+  and neural efficiency [e84bcf05-c83e-4704-a284-6c25aaf8b8dc], cerebral blood flow
+  decreased during the most challenging memory task after such breaks [18158742-1cc7-48f8-9203-c2e0288372c1].
+gaps:
+- The claims do not extensively detail the long-term effects of sustained physical
+  activity across different age groups, nor do they explore the optimal types or durations
+  of activity required to elicit specific cognitive benefits.
+- The interplay between specific brain regions and cognitive functions targeted by
+  different PA interventions is not fully elaborated.
+claim_ids:
+- 82f4b529-9eae-4741-9f94-b8e96deeb6f8
+- e38d36a7-6ce6-4fd6-9e4b-7726ad7e6e97
+- 5ecf8912-85ab-4cc1-9f2a-03836792f195
+- 69614bc6-ffc5-421c-beca-38d35d1062d5
+- 5adef30f-4d28-4cf0-a463-9aa34ee01f0e
+- bda8e59b-dad9-4a6c-be5e-85cf8404f714
+- 18158742-1cc7-48f8-9203-c2e0288372c1
+- e84bcf05-c83e-4704-a284-6c25aaf8b8dc
+- 4b5afcfa-42b9-4f49-b17c-cc9864b04eb1
+- fb1fdf57-0515-4dcc-b8d4-caf1b29a3ea9
+- 572ce8bf-cc52-44c0-8ed9-47e4e18cb8e6
+- 5c97a3db-6042-4235-9a5f-acff34bcb924
+key_claims:
+- claim_id: 82f4b529-9eae-4741-9f94-b8e96deeb6f8
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  summary: Higher baseline brain network modularity predicted greater improvements
+    in executive functions, cognition, and mathematics in children undergoing physical
+    activity training.
+- claim_id: e38d36a7-6ce6-4fd6-9e4b-7726ad7e6e97
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  summary: The effectiveness of physical activity on children's cognition and scholastic
+    performance is shown for the first time to depend on their baseline brain organization.
+- claim_id: 5ecf8912-85ab-4cc1-9f2a-03836792f195
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  summary: Physical activity positively impacts fluid reasoning and soft skills in
+    adolescents.
+- claim_id: 69614bc6-ffc5-421c-beca-38d35d1062d5
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  summary: Physical activity correlated with various executive functions, particularly
+    inhibitory control, in college students.
+- claim_id: 5adef30f-4d28-4cf0-a463-9aa34ee01f0e
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  summary: Physical activity enhances inhibitory control and mental flexibility.
+- claim_id: bda8e59b-dad9-4a6c-be5e-85cf8404f714
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  summary: Moderate intensity resistance training is shown to improve executive functions
+    in healthy middle-aged adults.
+- claim_id: 18158742-1cc7-48f8-9203-c2e0288372c1
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  summary: Cerebral blood flow decreased during the most challenging memory task after
+    a walking break.
+- claim_id: e84bcf05-c83e-4704-a284-6c25aaf8b8dc
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  summary: Working memory performance improved in some areas, indicating a neural
+    efficiency effect.
+- claim_id: 4b5afcfa-42b9-4f49-b17c-cc9864b04eb1
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  summary: Walking breaks led to improvements in mood and alertness.
+- claim_id: fb1fdf57-0515-4dcc-b8d4-caf1b29a3ea9
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  summary: Short walking breaks beneficially support performance on cognitively demanding
+    tasks in middle-aged adults.
+- claim_id: 572ce8bf-cc52-44c0-8ed9-47e4e18cb8e6
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  summary: Six months of at-home aerobic exercise increased cardiovascular fitness
+    and preserved gray-matter structural integrity in specific brain regions in older
+    adults.
+- claim_id: 5c97a3db-6042-4235-9a5f-acff34bcb924
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  summary: Aerobic fitness interventions may help maintain brain health in sedentary
+    older adults.

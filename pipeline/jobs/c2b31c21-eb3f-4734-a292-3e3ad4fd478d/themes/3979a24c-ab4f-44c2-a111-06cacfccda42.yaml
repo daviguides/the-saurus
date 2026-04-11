@@ -1,0 +1,94 @@
+themes:
+- id: c7decd2d-208e-4daa-843b-57f4b9a99840
+  name: Research Topic Overview & Scope
+  description: This theme outlines the focus, aims, and structure of the Research
+    Topic on the effects of physical activity on brain and cognitive functions across
+    the lifespan.
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  positions:
+  - page: 1
+    paragraph: 15
+- id: 8b857c7c-7165-4657-a8de-456d4f10674c
+  name: General Benefits of Physical Activity
+  description: This theme encompasses broad claims about the positive impact of physical
+    activity on cognitive functions, brain health, and overall well-being, contrasted
+    with the risks of a sedentary lifestyle.
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  positions:
+  - page: 1
+    paragraph: 15
+  - page: 2
+    paragraph: 4
+- id: 69dd54a4-f518-4f52-9f87-5a338a363ea6
+  name: PA and Cognitive Function in Children & Adolescents
+  description: This theme explores the specific findings regarding how physical activity
+    influences cognitive functions like executive functions, fluid reasoning, and
+    soft skills in younger populations.
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  positions:
+  - page: 2
+    paragraph: 2
+- id: 99407291-11b2-4522-9ff8-4c2c344aeb3d
+  name: PA and Cognitive Function in College Students & Middle-Aged Adults
+  description: This theme highlights how physical activity influences memory, executive
+    functions, inhibitory control, and mood in college students and middle-aged adults,
+    including the benefits of short activity breaks.
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  positions:
+  - page: 2
+    paragraph: 3
+  - page: 2
+    paragraph: 4
+- id: 2c3f5cd1-a9ae-475a-8c8c-e4325c88cf88
+  name: Physical Activity and Brain Mechanisms
+  description: This theme focuses on the neural mechanisms underlying the effects
+    of physical activity, including brain plasticity, functional reorganization, and
+    neural efficiency across different age groups and training types.
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  positions:
+  - page: 1
+    paragraph: 15
+  - page: 2
+    paragraph: 2
+  - page: 2
+    paragraph: 3
+  - page: 2
+    paragraph: 4
+- id: d4855d37-0525-402b-9eaf-eb46d824c856
+  name: PA and Brain/Cognitive Maintenance in Older Adults
+  description: This theme addresses the role of physical activity, particularly aerobic
+    exercise, in preserving cognitive function and structural integrity of the brain
+    in healthy older adults.
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  positions:
+  - page: 2
+    paragraph: 6
+- id: 85e5298d-d82e-4c10-9623-c306ac16566b
+  name: Combined Multi-Domain Interventions
+  description: This theme evaluates the effectiveness of interventions that combine
+    physical activity with cognitive training, particularly for healthy older adults,
+    and highlights factors influencing their outcomes.
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  positions:
+  - page: 2
+    paragraph: 7
+- id: 3289c3f8-35c5-401e-80fd-ac2ecdafd3ef
+  name: Physical Activity for Type 2 Diabetes Mellitus (T2DM) Patients
+  description: This theme focuses on the specific findings regarding the cognitive
+    benefits of physical exercise for older patients diagnosed with Type 2 Diabetes
+    Mellitus (T2DM).
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  positions:
+  - page: 2
+    paragraph: 7
+- id: 4f487c88-e5f2-4166-adfd-de18b53e8cae
+  name: Challenges & Future Directions in PA Research
+  description: This theme acknowledges the current limitations and inconsistencies
+    in physical activity research and expresses hope for future studies to address
+    these gaps.
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  positions:
+  - page: 1
+    paragraph: 15
+  - page: 2
+    paragraph: 7

@@ -1,0 +1,52 @@
+theme_id: 29163818-2029-4e70-be2b-53c980f64825
+label: Research Topic Scope and Aims
+review: The Research Topic broadly investigates the impact of physical activity on
+  brain and cognitive functions across the entire human lifespan, including the psychological
+  benefits of an active lifestyle. Its primary aim is to consolidate the current state
+  of research concerning physical activity interventions on brain and cognition in
+  both healthy individuals and those with Type 2 Diabetes Mellitus. The topic comprises
+  nine diverse contributions, demonstrating that various physical activity interventions
+  can positively influence brain and cognitive functioning throughout life.
+consensus:
+- The single paper consistently outlines that the Research Topic focuses on the effects
+  of physical activity on brain and cognitive functions across the lifespan, including
+  the psychological benefits of an active lifestyle [a901fffb-9ea8-4617-8eca-6e86861bc96a,
+  2794a431-cffd-4987-adbe-c7dbe3fd79bf].
+- The paper demonstrates that the studies within the Research Topic collectively indicate
+  that diverse physical activity interventions positively alter brain and cognitive
+  functioning throughout life [91efa44c-37a1-4d79-993e-3939c41633b7].
+disagreements: []
+gaps:
+- The claims describe the scope and content but do not detail the specific methodologies
+  or participant demographics of the included papers beyond mentioning "healthy individuals
+  and T2DM patients."
+claim_ids:
+- a901fffb-9ea8-4617-8eca-6e86861bc96a
+- 2794a431-cffd-4987-adbe-c7dbe3fd79bf
+- ab99db53-88a1-4c15-b65f-637ab2b771b6
+- 76545efa-143e-4d33-b3d8-7d4e0d32790e
+- 91efa44c-37a1-4d79-993e-3939c41633b7
+key_claims:
+- claim_id: a901fffb-9ea8-4617-8eca-6e86861bc96a
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  summary: The Research Topic focuses on the effects of physical activity on brain
+    and cognitive functions throughout life.
+- claim_id: 2794a431-cffd-4987-adbe-c7dbe3fd79bf
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  summary: The Research Topic investigates how physical activity influences brain
+    and cognitive functioning and the psychological benefits of an active lifestyle
+    across all ages.
+- claim_id: ab99db53-88a1-4c15-b65f-637ab2b771b6
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  summary: The Research Topic comprises nine contributions, including five original
+    research articles, three systematic reviews/meta-analyses, and one brief research
+    report.
+- claim_id: 76545efa-143e-4d33-b3d8-7d4e0d32790e
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  summary: The Research Topic aims to present the current state of research on physical
+    activity interventions' effects on brain and cognition in healthy individuals
+    and T2DM patients across the lifespan.
+- claim_id: 91efa44c-37a1-4d79-993e-3939c41633b7
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  summary: The Research Topic's studies show that various physical activity interventions
+    can positively alter brain and cognitive functioning throughout life.

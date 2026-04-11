@@ -1,0 +1,280 @@
+themes:
+- id: 045b7f0f-b0ff-4fbd-8ddc-9d78b0d9253f
+  name: ASD and ADHD Comorbidity
+  description: The central theme investigating the co-occurrence of Autism Spectrum
+    Disorder and Attention Deficit Hyperactivity Disorder, questioning its true significance
+    and whether it represents distinct or overlapping conditions.
+  paper_id: 44cd0257-ec13-4e84-b6b8-c21c95f72cb6
+  positions:
+  - page: 1
+    paragraph: 9
+  - page: 1
+    paragraph: 12
+  - page: 1
+    paragraph: 15
+  - page: 2
+    paragraph: 2
+  - page: 2
+    paragraph: 4
+  - page: 2
+    paragraph: 7
+  - page: 2
+    paragraph: 8
+  - page: 3
+    paragraph: 4
+  - page: 3
+    paragraph: 5
+  - page: 3
+    paragraph: 7
+  - page: 4
+    paragraph: 2
+  - page: 4
+    paragraph: 3
+  - page: 5
+    paragraph: 4
+- id: 09e7c3e7-ba23-4981-8263-1a8cc70d81cf
+  name: Attentional Impairment in ASD
+  description: Exploration of the characteristic attentional profile, traits, or specific
+    impairments observed in individuals with Autism Spectrum Disorder, positing them
+    as inherent to ASD rather than indicative of comorbid ADHD.
+  paper_id: 44cd0257-ec13-4e84-b6b8-c21c95f72cb6
+  positions:
+  - page: 1
+    paragraph: 12
+  - page: 2
+    paragraph: 2
+  - page: 2
+    paragraph: 4
+  - page: 2
+    paragraph: 6
+  - page: 2
+    paragraph: 8
+  - page: 3
+    paragraph: 2
+  - page: 3
+    paragraph: 5
+  - page: 4
+    paragraph: 2
+  - page: 4
+    paragraph: 3
+  - page: 5
+    paragraph: 4
+  - page: 5
+    paragraph: 5
+- id: ee57523b-480b-4223-81cf-74a43e101f3b
+  name: Psychomotor Agitation and Restlessness
+  description: An analysis of whether agitation or restlessness observed in ASD patients
+    is a symptom of ADHD's inhibitory deficit, a manifestation of emotional dysregulation,
+    or a distinct trait related to cerebellar dysfunction in ASD.
+  paper_id: 44cd0257-ec13-4e84-b6b8-c21c95f72cb6
+  positions:
+  - page: 1
+    paragraph: 12
+  - page: 1
+    paragraph: 13
+  - page: 3
+    paragraph: 2
+  - page: 3
+    paragraph: 4
+  - page: 4
+    paragraph: 3
+- id: e18f46ce-93fe-4ed4-8201-e8ee3a89df38
+  name: Neurobiological Basis of Comorbidity
+  description: Investigation into the distinct or shared neurofunctional and structural
+    brain abnormalities underlying ASD, ADHD, and their comorbidity, including specific
+    brain regions and neural networks.
+  paper_id: 44cd0257-ec13-4e84-b6b8-c21c95f72cb6
+  positions:
+  - page: 1
+    paragraph: 12
+  - page: 3
+    paragraph: 4
+  - page: 3
+    paragraph: 5
+  - page: 4
+    paragraph: 2
+  - page: 5
+    paragraph: 2
+  - page: 5
+    paragraph: 4
+- id: 6c3f5c69-4c3c-4c38-a302-27ad0dd0b086
+  name: Amphetamine-based Treatment Effects
+  description: A discussion regarding the potentially paradoxical or undesirable effects
+    of amphetamine-based treatment in individuals with ASD, highlighting a concern
+    for dual diagnoses.
+  paper_id: 44cd0257-ec13-4e84-b6b8-c21c95f72cb6
+  positions:
+  - page: 1
+    paragraph: 12
+- id: 465a66cf-34c1-4c1b-9ac4-f2ad10e0e489
+  name: Diagnostic Criteria and Nosography
+  description: An examination of how different diagnostic manuals (DSM-4, ICD-10,
+    DSM-5) define and differentiate ASD and ADHD, and their implications for diagnosing
+    comorbidity.
+  paper_id: 44cd0257-ec13-4e84-b6b8-c21c95f72cb6
+  positions:
+  - page: 1
+    paragraph: 15
+  - page: 2
+    paragraph: 8
+  - page: 5
+    paragraph: 5
+- id: 1349c874-e75c-498f-acc6-a5bd06ac7c36
+  name: Prevalence and Variability of Findings
+  description: An analysis of the reported prevalence rates of ADHD in ASD, highlighting
+    the significant variability across studies and questioning the methodological
+    approaches used to obtain these figures.
+  paper_id: 44cd0257-ec13-4e84-b6b8-c21c95f72cb6
+  positions:
+  - page: 1
+    paragraph: 12
+  - page: 1
+    paragraph: 15
+  - page: 2
+    paragraph: 2
+- id: 1724f12c-7964-4937-86ac-05e9135a061f
+  name: Executive Functions in ASD/ADHD
+  description: The role of various executive functions, such as sustained attention,
+    inhibitory control, and cognitive flexibility, in differentiating or confounding
+    the diagnoses of ASD and ADHD.
+  paper_id: 44cd0257-ec13-4e84-b6b8-c21c95f72cb6
+  positions:
+  - page: 2
+    paragraph: 4
+  - page: 3
+    paragraph: 4
+  - page: 4
+    paragraph: 2
+  - page: 4
+    paragraph: 3
+- id: 6121ce5c-d7d9-4262-acc5-6eb35bffa995
+  name: Joint Attention Impairment
+  description: The specific deficit in joint attention observed in ASD, characterized
+    by difficulty in sharing focus with others, and its broader impact on social communication
+    and development.
+  paper_id: 44cd0257-ec13-4e84-b6b8-c21c95f72cb6
+  positions:
+  - page: 1
+    paragraph: 12
+  - page: 2
+    paragraph: 4
+  - page: 4
+    paragraph: 3
+  - page: 5
+    paragraph: 2
+- id: 94bdadd4-3553-4cf5-8330-b91fe3a6a8c4
+  name: Sensory Processing in ASD
+  description: The impact of sensory processing impairments, such as overreactivity
+    or seeking behaviors, in ASD on attentional processes, memory, and social deficits.
+  paper_id: 44cd0257-ec13-4e84-b6b8-c21c95f72cb6
+  positions:
+  - page: 3
+    paragraph: 5
+  - page: 4
+    paragraph: 3
+- id: 4d110595-a1b1-4f31-a21f-70fff3ea7153
+  name: Brain Imaging Techniques
+  description: The use of various neuroimaging methods like fMRI, MRI, EEG, and MEG
+    to identify structural and functional brain differences in ASD and ADHD, and in
+    comorbid presentations.
+  paper_id: 44cd0257-ec13-4e84-b6b8-c21c95f72cb6
+  positions:
+  - page: 3
+    paragraph: 3
+  - page: 3
+    paragraph: 4
+  - page: 3
+    paragraph: 5
+  - page: 4
+    paragraph: 3
+  - page: 5
+    paragraph: 2
+  - page: 5
+    paragraph: 5
+- id: d522a656-01eb-47ec-9f64-99707f08b0ff
+  name: Cerebellar Dysfunction in ASD
+  description: The significance of cerebellar alterations, such as hypoplasia, in
+    ASD and its proposed role in restlessness, learning processes, executive functions,
+    and overall cognitive traits.
+  paper_id: 44cd0257-ec13-4e84-b6b8-c21c95f72cb6
+  positions:
+  - page: 3
+    paragraph: 4
+  - page: 5
+    paragraph: 2
+- id: f96fd4de-4521-4640-9c1c-c8bf5814eb2e
+  name: Visuospatial Processing Abilities
+  description: Comparison of visuospatial processing speed and local-global processing
+    index between ASD, ADHD, and typically developing individuals as a means to better
+    understand their neurocognitive specificities.
+  paper_id: 44cd0257-ec13-4e84-b6b8-c21c95f72cb6
+  positions:
+  - page: 3
+    paragraph: 5
+- id: d2ae3442-04ff-4bee-a522-439cc6e70652
+  name: Emotional Dysregulation in ASD
+  description: The high prevalence of disruptive mood dysregulation disorder and oppositional
+    defiant disorder symptoms in ASD, linking externalizing behaviors and irritability
+    to emotional dysregulation rather than solely to ADHD.
+  paper_id: 44cd0257-ec13-4e84-b6b8-c21c95f72cb6
+  positions:
+  - page: 3
+    paragraph: 2
+  - page: 4
+    paragraph: 2
+  - page: 4
+    paragraph: 3
+- id: 18a42366-f8b4-4f03-81ff-31bbc1efdade
+  name: Overlapping vs. Discriminating Symptoms
+  description: A debate on whether reported symptomatic overlaps between ASD and ADHD
+    are true indicators of comorbidity or if severe ASD independently leads to symptoms
+    that mimic ADHD.
+  paper_id: 44cd0257-ec13-4e84-b6b8-c21c95f72cb6
+  positions:
+  - page: 2
+    paragraph: 8
+  - page: 3
+    paragraph: 5
+  - page: 3
+    paragraph: 7
+  - page: 4
+    paragraph: 2
+- id: 207fb983-4139-4497-aab1-55fc159738be
+  name: Hyperfocus in ASD
+  description: The concept of 'hyperfocus' or heightened attentional abilities in
+    ASD, especially on areas of interest, which can be mistakenly interpreted as ADHD
+    inattention and its implications for diagnostic criteria.
+  paper_id: 44cd0257-ec13-4e84-b6b8-c21c95f72cb6
+  positions:
+  - page: 4
+    paragraph: 2
+  - page: 4
+    paragraph: 3
+  - page: 5
+    paragraph: 2
+  - page: 5
+    paragraph: 5
+- id: c2ae04e9-fc06-4dd4-93d9-1afe6ee1e2e8
+  name: Neuropsychological Testing Limitations
+  description: Concerns about the limitations of neuropsychological tests, particularly
+    those solely assessing executive functions, in adequately discriminating between
+    ASD, ADHD, and other neurodevelopmental conditions.
+  paper_id: 44cd0257-ec13-4e84-b6b8-c21c95f72cb6
+  positions:
+  - page: 2
+    paragraph: 8
+  - page: 4
+    paragraph: 2
+  - page: 4
+    paragraph: 3
+- id: 840b59a9-f31f-4390-98b3-2913af1a64b0
+  name: Future Diagnostic and Research Tools
+  description: The urgent call for developing new clinical and electrophysiological
+    instruments to more precisely analyze neuropsychological features in ASD, optimize
+    treatments, and refine diagnostic models.
+  paper_id: 44cd0257-ec13-4e84-b6b8-c21c95f72cb6
+  positions:
+  - page: 3
+    paragraph: 5
+  - page: 5
+    paragraph: 5

@@ -1,0 +1,80 @@
+theme_map:
+  3e8eb242-4a26-4865-8556-38a164e3299c: &id001
+  - 186c0b70-e0f4-466a-abbc-ae2ce68336bb
+  - 4a333e62-5378-45da-b70f-a130d24a4df5
+  075e14fa-35a9-490e-a441-8c52ff8c80f0: &id002
+  - da82b968-1402-4892-ba06-109f493969ba
+  897bf229-e703-4575-aff9-e73468d00872: &id003
+  - 2ce457c8-584a-480f-b915-22dcf97f2f06
+  81b5c6bd-0259-4124-941e-c18d4cc886c8: &id004
+  - 75492e5f-fb37-4152-818f-97a8a3b964a6
+  20c43b1c-8345-4920-866f-401bc295f247: &id005
+  - ff626144-bedd-4a7c-a911-5288a75d6965
+  1a51d1eb-3a35-46ed-a104-628cc4619c91: &id006
+  - 0c8a27a0-85e2-4b20-b9fb-f2ddb8ee7198
+themes:
+- id: 3e8eb242-4a26-4865-8556-38a164e3299c
+  name: Physical Activity and Cognitive Health Across the Lifespan
+  label: Physical Activity and Cognitive Health Across the Lifespan
+  description: This theme encompasses the broad positive impacts of physical activity
+    on brain health and cognitive functions, detailing these benefits across different
+    populations and specific age groups, including children, adolescents, college
+    students, middle-aged adults, and older adults.
+  paper_ids:
+  - a57c9ea3-92d6-49f3-a285-33b45aac4d67
+  aliases:
+  - General Effects of Physical Activity
+  - Physical Activity Across Lifespan
+  source_theme_ids: *id001
+- id: 075e14fa-35a9-490e-a441-8c52ff8c80f0
+  name: Brain Plasticity and Neural Mechanisms of Physical Activity
+  label: Brain Plasticity and Neural Mechanisms of Physical Activity
+  description: This theme explores how physical activity influences brain structure,
+    function, and connectivity, detailing the underlying neural processes, including
+    findings on brain network modularity and functional reorganization.
+  paper_ids:
+  - a57c9ea3-92d6-49f3-a285-33b45aac4d67
+  aliases:
+  - Brain Plasticity and Neural Mechanisms
+  source_theme_ids: *id002
+- id: 897bf229-e703-4575-aff9-e73468d00872
+  name: Risks of Sedentary Behavior
+  label: Risks of Sedentary Behavior
+  description: This theme highlights the negative consequences associated with a sedentary
+    lifestyle, contrasting them with the benefits of physical activity.
+  paper_ids:
+  - a57c9ea3-92d6-49f3-a285-33b45aac4d67
+  aliases:
+  - Sedentary Behavior Risks
+  source_theme_ids: *id003
+- id: 81b5c6bd-0259-4124-941e-c18d4cc886c8
+  name: Physical Activity Intervention Modalities and Efficacy
+  label: Physical Activity Intervention Modalities and Efficacy
+  description: This theme examines the effectiveness of various physical activity
+    intervention types, such as resistance training, short breaks, aerobic exercise,
+    and combined physical and cognitive training.
+  paper_ids:
+  - a57c9ea3-92d6-49f3-a285-33b45aac4d67
+  aliases:
+  - Intervention Modalities and Efficacy
+  source_theme_ids: *id004
+- id: 20c43b1c-8345-4920-866f-401bc295f247
+  name: Physical Activity for Cognitive Improvement in Type 2 Diabetes Mellitus
+  label: Physical Activity for Cognitive Improvement in Type 2 Diabetes Mellitus
+  description: This theme focuses on the specific role of physical exercise in improving
+    cognitive functions in individuals diagnosed with Type 2 Diabetes Mellitus.
+  paper_ids:
+  - a57c9ea3-92d6-49f3-a285-33b45aac4d67
+  aliases:
+  - Physical Activity in T2DM Patients
+  source_theme_ids: *id005
+- id: 1a51d1eb-3a35-46ed-a104-628cc4619c91
+  name: Research Topic Scope and Organization
+  label: Research Topic Scope and Organization
+  description: This theme details the focus, content, and organization of the 'Effects
+    of Physical Exercise on Brain and Cognitive Functioning' Research Topic.
+  paper_ids:
+  - a57c9ea3-92d6-49f3-a285-33b45aac4d67
+  aliases:
+  - Research Topic Scope
+  source_theme_ids: *id006

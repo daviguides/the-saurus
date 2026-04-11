@@ -1,0 +1,39 @@
+theme_id: 8935f66b-9278-4af6-88f6-2a43ebe85af6
+label: Multi-Domain Interventions (Physical Activity & Cognitive Training)
+review: Multi-domain interventions, specifically those combining physical and cognitive
+  training, demonstrate a sustained, albeit small, advantage in improving overall
+  cognitive outcomes. These combined approaches are particularly beneficial over single
+  cognitive training alone for enhancing specific functions such as attention, executive
+  functions, and processing speed. The effectiveness of these interventions appears
+  to be influenced by the social context, with improvements maximized in social settings,
+  although the modality of training (individual vs. group) did not significantly differentiate
+  balance results.
+consensus:
+- The single paper consistently finds that combined physical and cognitive training
+  yields a small but sustained advantage on cognitive outcomes compared to single
+  cognitive training [86a905e2-5d46-4afb-97fe-2094243a0302, 5a21e4e9-155b-43b8-b5d6-3f6bb26f38a9].
+- The paper also agrees that intervention improvements are maximized in social contexts,
+  while noting similar balance results across individual and group training [ab5d3749-09e8-4e06-b0be-febfb093f130].
+disagreements: []
+gaps:
+- The claims do not specify the duration, intensity, or specific types of physical
+  and cognitive training modalities that constitute these combined interventions,
+  nor do they detail the age groups or specific populations beyond general "interventions"
+  to which these findings apply.
+claim_ids:
+- 86a905e2-5d46-4afb-97fe-2094243a0302
+- 5a21e4e9-155b-43b8-b5d6-3f6bb26f38a9
+- ab5d3749-09e8-4e06-b0be-febfb093f130
+key_claims:
+- claim_id: 86a905e2-5d46-4afb-97fe-2094243a0302
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  summary: Combined physical and cognitive training showed a small but sustained advantage
+    on cognitive outcomes.
+- claim_id: 5a21e4e9-155b-43b8-b5d6-3f6bb26f38a9
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  summary: Combined physical and cognitive training offered benefits over single cognitive
+    training for attention, executive functions, and processing speed.
+- claim_id: ab5d3749-09e8-4e06-b0be-febfb093f130
+  paper_id: 3979a24c-ab4f-44c2-a111-06cacfccda42
+  summary: Intervention improvements were maximized in social contexts, though individual
+    and group training showed similar balance results.

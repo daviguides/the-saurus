@@ -1,0 +1,98 @@
+theme_map:
+  29163818-2029-4e70-be2b-53c980f64825: &id001
+  - c7decd2d-208e-4daa-843b-57f4b9a99840
+  66114ad8-4db9-4c08-8c96-042cfb18d3e9: &id002
+  - 8b857c7c-7165-4657-a8de-456d4f10674c
+  4593634e-8f08-427d-b141-a9db9db2f880: &id003
+  - 69dd54a4-f518-4f52-9f87-5a338a363ea6
+  - 99407291-11b2-4522-9ff8-4c2c344aeb3d
+  - d4855d37-0525-402b-9eaf-eb46d824c856
+  0eccf2f2-f0cd-426c-b263-3afb9687ee72: &id004
+  - 2c3f5cd1-a9ae-475a-8c8c-e4325c88cf88
+  8935f66b-9278-4af6-88f6-2a43ebe85af6: &id005
+  - 85e5298d-d82e-4c10-9623-c306ac16566b
+  c52d879d-1e55-42ee-88de-361f5e3fc9d0: &id006
+  - 3289c3f8-35c5-401e-80fd-ac2ecdafd3ef
+  fbc02f67-47f2-43af-9c32-49d4c5071a3c: &id007
+  - 4f487c88-e5f2-4166-adfd-de18b53e8cae
+themes:
+- id: 29163818-2029-4e70-be2b-53c980f64825
+  name: Research Topic Scope and Aims
+  label: Research Topic Scope and Aims
+  description: This theme outlines the focus, aims, and structural organization of
+    the Research Topic on the effects of physical activity on brain and cognitive
+    functions across the lifespan.
+  paper_ids:
+  - 3979a24c-ab4f-44c2-a111-06cacfccda42
+  aliases:
+  - Research Topic Overview & Scope
+  source_theme_ids: *id001
+- id: 66114ad8-4db9-4c08-8c96-042cfb18d3e9
+  name: General Cognitive and Brain Benefits of Physical Activity
+  label: General Cognitive and Brain Benefits of Physical Activity
+  description: This theme encompasses the broad positive impacts of physical activity
+    on cognitive functions, brain health, and overall well-being, contrasting these
+    benefits with the negative effects of a sedentary lifestyle.
+  paper_ids:
+  - 3979a24c-ab4f-44c2-a111-06cacfccda42
+  aliases:
+  - General Benefits of Physical Activity
+  source_theme_ids: *id002
+- id: 4593634e-8f08-427d-b141-a9db9db2f880
+  name: Physical Activity and Cognitive Function Across the Lifespan
+  label: Physical Activity and Cognitive Function Across the Lifespan
+  description: This theme explores specific findings on how physical activity influences
+    cognitive functions, such as executive functions, memory, fluid reasoning, inhibitory
+    control, and soft skills, as well as brain structural integrity in populations
+    ranging from children and adolescents to college students, middle-aged adults,
+    and healthy older adults.
+  paper_ids:
+  - 3979a24c-ab4f-44c2-a111-06cacfccda42
+  aliases:
+  - PA and Cognitive Function in Children & Adolescents
+  - PA and Cognitive Function in College Students & Middle-Aged Adults
+  - PA and Brain/Cognitive Maintenance in Older Adults
+  source_theme_ids: *id003
+- id: 0eccf2f2-f0cd-426c-b263-3afb9687ee72
+  name: Neural Mechanisms of Physical Activity Effects
+  label: Neural Mechanisms of Physical Activity Effects
+  description: This theme focuses on the underlying neural mechanisms by which physical
+    activity impacts the brain, including concepts like brain plasticity, functional
+    reorganization, and neural efficiency across various age groups and training methodologies.
+  paper_ids:
+  - 3979a24c-ab4f-44c2-a111-06cacfccda42
+  aliases:
+  - Physical Activity and Brain Mechanisms
+  source_theme_ids: *id004
+- id: 8935f66b-9278-4af6-88f6-2a43ebe85af6
+  name: Multi-Domain Interventions (Physical Activity & Cognitive Training)
+  label: Multi-Domain Interventions (Physical Activity & Cognitive Training)
+  description: This theme evaluates the effectiveness and influencing factors of interventions
+    that combine physical activity with cognitive training, particularly as applied
+    to healthy older adults.
+  paper_ids:
+  - 3979a24c-ab4f-44c2-a111-06cacfccda42
+  aliases:
+  - Combined Multi-Domain Interventions
+  source_theme_ids: *id005
+- id: c52d879d-1e55-42ee-88de-361f5e3fc9d0
+  name: Physical Activity for Cognitive Benefits in Type 2 Diabetes Mellitus
+  label: Physical Activity for Cognitive Benefits in Type 2 Diabetes Mellitus
+  description: This theme addresses the specific cognitive benefits derived from physical
+    exercise for older patients diagnosed with Type 2 Diabetes Mellitus (T2DM).
+  paper_ids:
+  - 3979a24c-ab4f-44c2-a111-06cacfccda42
+  aliases:
+  - Physical Activity for Type 2 Diabetes Mellitus (T2DM) Patients
+  source_theme_ids: *id006
+- id: fbc02f67-47f2-43af-9c32-49d4c5071a3c
+  name: Future Directions and Challenges in Physical Activity Research
+  label: Future Directions and Challenges in Physical Activity Research
+  description: This theme acknowledges the current limitations, inconsistencies, and
+    methodological challenges within physical activity research, while also highlighting
+    areas for future studies to address these gaps.
+  paper_ids:
+  - 3979a24c-ab4f-44c2-a111-06cacfccda42
+  aliases:
+  - Challenges & Future Directions in PA Research
+  source_theme_ids: *id007
