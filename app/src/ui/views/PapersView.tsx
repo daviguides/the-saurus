@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { AlertCircle } from "lucide-react";
 import { usePapers } from "../../core/hooks/usePapers";
 import { useUpload } from "../../core/hooks/useUpload";
+import { useJobId, clearJobId } from "../../core/hooks/useJobId";
 import { usePipelineTrace } from "../../core/hooks/usePipelineTrace";
 import { useReview } from "../../core/hooks/useReview";
 import { fetchEnrichedPapers } from "../../core/services/api";
@@ -27,13 +29,16 @@ export default function PapersView() {
     status: uploadStatus,
     progress: uploadProgress,
     error: uploadError,
-    jobId,
+    jobId: uploadJobId,
     upload,
     reset: resetUpload,
   } = useUpload();
 
-  const { state: pipelineState, isRunning, isCompleted } =
-    usePipelineTrace(jobId);
+  const storedJobId = useJobId();
+  const effectiveJobId = uploadJobId ?? storedJobId;
+
+  const { state: pipelineState, isRecovering, isRunning, isCompleted, isFailed } =
+    usePipelineTrace(effectiveJobId);
 
   const { fetchAndLoad: fetchAndLoadReview } = useReview();
 
@@ -48,20 +53,20 @@ export default function PapersView() {
 
   // Fetch real data when pipeline completes
   useEffect(() => {
-    if (isCompleted && jobId && !fetchedRef.current) {
+    if (isCompleted && effectiveJobId && !fetchedRef.current) {
       fetchedRef.current = true;
       const timer = setTimeout(async () => {
         try {
-          const enriched = await fetchEnrichedPapers(jobId);
+          const enriched = await fetchEnrichedPapers(effectiveJobId);
           loadMockComplete(transformPapers(enriched));
-          fetchAndLoadReview(jobId);
+          fetchAndLoadReview(effectiveJobId);
         } catch {
           // Fall back gracefully — papers view stays in current state
         }
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [isCompleted, jobId, loadMockComplete, fetchAndLoadReview]);
+  }, [isCompleted, effectiveJobId, loadMockComplete, fetchAndLoadReview]);
 
   const handleFilesAdded = useCallback(
     (files: File[]) => {
@@ -72,9 +77,37 @@ export default function PapersView() {
 
   const isUploading = uploadStatus === "uploading";
 
-  // Show pipeline trace when upload succeeded or pipeline is actively running
-  if (uploadStatus === "processing" || isRunning) {
+  // Show pipeline trace during recovery or active processing
+  if (isRecovering || uploadStatus === "processing" || isRunning) {
     return <PipelineTrace state={pipelineState} />;
+  }
+
+  // Show error state for failed pipelines
+  if (isFailed && effectiveJobId) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-4 text-center px-4">
+        <AlertCircle size={48} className="text-red-500" />
+        <div>
+          <h2 className="text-xl font-heading font-semibold text-text-primary mb-2">
+            Pipeline failed
+          </h2>
+          <p className="text-text-secondary max-w-md text-sm">
+            Something went wrong during processing. Please try uploading your papers again.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => clearJobId()}
+          className="mt-2 px-4 py-2 text-sm rounded-lg border border-border text-text-secondary hover:text-primary hover:border-primary transition-colors"
+        >
+          Start New Review
+        </button>
+      </div>
+    );
+  }
+
+  if (viewState === "complete") {
+    return <PaperCards papers={papers} />;
   }
 
   if (viewState === "empty") {
@@ -95,10 +128,6 @@ export default function PapersView() {
         <Toast message={uploadError} onDismiss={resetUpload} />
       </>
     );
-  }
-
-  if (viewState === "complete") {
-    return <PaperCards papers={papers} />;
   }
 
   return (

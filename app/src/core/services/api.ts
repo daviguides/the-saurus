@@ -1,3 +1,5 @@
+import type { RawPipelineEvent } from "../types/pipeline";
+
 export const PIPELINE_API_URL =
   import.meta.env.VITE_PIPELINE_URL || "http://localhost:8002";
 
@@ -27,6 +29,30 @@ export interface RawReview {
   title: string;
   sections: { theme_id: string; label: string; content: string; claim_ids: string[] }[];
   references: unknown[];
+}
+
+export interface JobStatusResponse {
+  job_id: string;
+  status: "pending" | "running" | "completed" | "failed";
+  stage: string;
+  progress: number;
+  paper_count: number;
+  created_at: string;
+  updated_at: string;
+  error: string | null;
+}
+
+export async function fetchJobStatus(jobId: string): Promise<JobStatusResponse> {
+  const res = await fetch(`${PIPELINE_API_URL}/jobs/${jobId}/status`);
+  if (!res.ok) throw new Error(`Job not found (${res.status})`);
+  return res.json();
+}
+
+export async function fetchEvents(jobId: string): Promise<RawPipelineEvent[]> {
+  const res = await fetch(`${PIPELINE_API_URL}/jobs/${jobId}/events`);
+  if (!res.ok) throw new Error(`Failed to fetch events (${res.status})`);
+  const data = await res.json();
+  return data.events;
 }
 
 export async function fetchPapers(jobId: string): Promise<PaperInfo[]> {

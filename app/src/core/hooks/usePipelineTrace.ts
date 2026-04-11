@@ -7,7 +7,12 @@ import type {
   RawPipelineEvent,
 } from "../types/pipeline";
 import { PIPELINE_STAGES } from "../types/pipeline";
-import { PIPELINE_API_URL, fetchPapers } from "../services/api";
+import {
+  PIPELINE_API_URL,
+  fetchPapers,
+  fetchJobStatus,
+  fetchEvents,
+} from "../services/api";
 
 function createInitialStages(): PipelineStageState[] {
   return PIPELINE_STAGES.map((s) => ({
@@ -28,19 +33,24 @@ const INITIAL_STATE: PipelineState = {
 
 function pipelineReducer(state: PipelineState, action: PipelineAction): PipelineState {
   switch (action.type) {
+    case "RECOVERY_START":
+      return { ...state, status: "recovering" };
+
     case "START_PIPELINE":
       return {
         ...state,
         status: "running",
-        startedAt: Date.now(),
+        startedAt: state.startedAt ?? Date.now(),
         progress: { completed: 0, total: action.payload.totalPapers },
         stages: state.stages.map((s) => ({
           ...s,
           totalPapers: action.payload.totalPapers,
-          processedPapers: [],
-          status: "pending",
+          // Preserve processedPapers during recovery replay
+          processedPapers: state.status === "recovering" ? s.processedPapers : [],
+          status: state.status === "recovering" ? s.status : "pending",
         })),
-        events: [],
+        // Preserve events during recovery replay
+        events: state.status === "recovering" ? state.events : [],
       };
 
     case "STAGE_STARTED":
@@ -198,14 +208,30 @@ export function usePipelineTrace(jobId: string | null) {
   const terminalRef = useRef(false);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const paperLookupRef = useRef<Map<string, string>>(new Map());
+  const seenEventsRef = useRef(new Set<string>());
 
   useEffect(() => {
     if (!jobId) return;
 
     terminalRef.current = false;
     attemptRef.current = 0;
+    seenEventsRef.current.clear();
 
     let cancelled = false;
+
+    function dispatchEvent(raw: RawPipelineEvent) {
+      if (seenEventsRef.current.has(raw.event_id)) return;
+      seenEventsRef.current.add(raw.event_id);
+
+      const actions = mapEventToActions(raw, paperLookupRef.current);
+      for (const action of actions) {
+        dispatch(action);
+      }
+
+      if (raw.event_type === "job_completed" || raw.event_type === "job_failed") {
+        terminalRef.current = true;
+      }
+    }
 
     async function init() {
       // Fetch paper titles for lookup
@@ -217,6 +243,45 @@ export function usePipelineTrace(jobId: string | null) {
       }
       paperLookupRef.current = lookup;
 
+      // Check job status to determine recovery path
+      let status: Awaited<ReturnType<typeof fetchJobStatus>>;
+      try {
+        status = await fetchJobStatus(jobId!);
+      } catch {
+        // Job not found — clear and stay idle
+        return;
+      }
+      if (cancelled) return;
+
+      if (status.status === "completed") {
+        dispatch({ type: "PIPELINE_COMPLETED" });
+        terminalRef.current = true;
+        return;
+      }
+
+      if (status.status === "failed") {
+        dispatch({
+          type: "PIPELINE_FAILED",
+          payload: { message: status.error ?? "Pipeline failed" },
+        });
+        terminalRef.current = true;
+        return;
+      }
+
+      // Running or pending — recover: replay history then connect WS
+      dispatch({ type: "RECOVERY_START" });
+
+      try {
+        const events = await fetchEvents(jobId!);
+        if (cancelled) return;
+        for (const event of events) {
+          dispatchEvent(event);
+        }
+      } catch {
+        // If events fetch fails, still connect WS to get live events
+      }
+
+      if (cancelled) return;
       connect();
     }
 
@@ -237,13 +302,7 @@ export function usePipelineTrace(jobId: string | null) {
         } catch {
           return;
         }
-        const actions = mapEventToActions(raw, paperLookupRef.current);
-        for (const action of actions) {
-          dispatch(action);
-        }
-        if (raw.event_type === "job_completed" || raw.event_type === "job_failed") {
-          terminalRef.current = true;
-        }
+        dispatchEvent(raw);
       };
 
       ws.onclose = () => {
@@ -277,6 +336,7 @@ export function usePipelineTrace(jobId: string | null) {
 
   return {
     state,
+    isRecovering: state.status === "recovering",
     isRunning: state.status === "running",
     isCompleted: state.status === "completed",
     isFailed: state.status === "failed",
