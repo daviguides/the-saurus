@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Upload, X } from "lucide-react";
+import { Loader2, Upload, X } from "lucide-react";
 
 interface Props {
   open: boolean;
   onClose(): void;
   onFilesAdded(files: File[]): void;
+  disabled?: boolean;
 }
 
-export default function UploadModal({ open, onClose, onFilesAdded }: Props) {
+export default function UploadModal({ open, onClose, onFilesAdded, disabled }: Props) {
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -30,24 +31,26 @@ export default function UploadModal({ open, onClose, onFilesAdded }: Props) {
     (e: React.DragEvent) => {
       e.preventDefault();
       setDragOver(false);
+      if (disabled) return;
       const files = Array.from(e.dataTransfer.files);
       if (files.length > 0) {
         onFilesAdded(files);
         onClose();
       }
     },
-    [onFilesAdded, onClose],
+    [onFilesAdded, onClose, disabled],
   );
 
   const handleFileInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (disabled) return;
       const files = Array.from(e.target.files || []);
       if (files.length > 0) {
         onFilesAdded(files);
         onClose();
       }
     },
-    [onFilesAdded, onClose],
+    [onFilesAdded, onClose, disabled],
   );
 
   if (!open) return null;
@@ -83,31 +86,44 @@ export default function UploadModal({ open, onClose, onFilesAdded }: Props) {
         <div
           onDragOver={(e) => {
             e.preventDefault();
-            setDragOver(true);
+            if (!disabled) setDragOver(true);
           }}
-          onDragEnter={() => setDragOver(true)}
+          onDragEnter={() => { if (!disabled) setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
           className={`flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-12 transition-colors ${
-            dragOver
-              ? "border-primary bg-primary/5"
-              : "border-border hover:border-primary/50"
+            disabled
+              ? "border-border opacity-60 cursor-not-allowed"
+              : dragOver
+                ? "border-primary bg-primary/5"
+                : "border-border hover:border-primary/50"
           }`}
         >
-          <Upload
-            size={36}
-            className={dragOver ? "text-primary" : "text-text-muted"}
-          />
-          <p className="text-text-secondary text-sm text-center">
-            Drag & drop PDF files here
-          </p>
-          <button
-            type="button"
-            onClick={() => inputRef.current?.click()}
-            className="mt-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover transition-colors"
-          >
-            Browse Files
-          </button>
+          {disabled ? (
+            <>
+              <Loader2 size={36} className="text-primary animate-spin" />
+              <p className="text-text-secondary text-sm text-center">
+                Uploading...
+              </p>
+            </>
+          ) : (
+            <>
+              <Upload
+                size={36}
+                className={dragOver ? "text-primary" : "text-text-muted"}
+              />
+              <p className="text-text-secondary text-sm text-center">
+                Drag & drop PDF files here
+              </p>
+              <button
+                type="button"
+                onClick={() => inputRef.current?.click()}
+                className="mt-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover transition-colors"
+              >
+                Browse Files
+              </button>
+            </>
+          )}
         </div>
 
         <input
