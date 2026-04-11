@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     port: int = 8002
     reload: bool = True
     workers: int = 1
-    cors_origins: str = "http://localhost:3000"
+    cors_origins: str = "http://localhost:3000,http://localhost:5173,http://localhost:5174"
 
     # LLM
     llm_provider: str = "google"
