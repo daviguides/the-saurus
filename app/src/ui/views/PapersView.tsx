@@ -1,14 +1,16 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePapers } from "../../core/hooks/usePapers";
 import { useUpload } from "../../core/hooks/useUpload";
 import { usePipelineTrace } from "../../core/hooks/usePipelineTrace";
+import { useReview } from "../../core/hooks/useReview";
+import { fetchEnrichedPapers } from "../../core/services/api";
+import { transformPapers } from "../../core/transforms/papers";
 import UploadModal from "../papers/UploadModal";
 import EmptyState from "../papers/EmptyState";
 import PaperList from "../papers/PaperList";
 import PaperCards from "../papers/PaperCards";
 import PipelineTrace from "../pipeline/PipelineTrace";
 import Toast from "../shared/Toast";
-import { MOCK_COMPLETE_PAPERS } from "../../mocks/papers";
 
 export default function PapersView() {
   const {
@@ -33,7 +35,10 @@ export default function PapersView() {
   const { state: pipelineState, isRunning, isCompleted } =
     usePipelineTrace(jobId);
 
+  const { fetchAndLoad: fetchAndLoadReview } = useReview();
+
   const [modalOpen, setModalOpen] = useState(false);
+  const fetchedRef = useRef(false);
 
   useEffect(() => {
     const handler = () => setModalOpen(true);
@@ -41,15 +46,22 @@ export default function PapersView() {
     return () => window.removeEventListener("open-upload-modal", handler);
   }, []);
 
-  // Transition to complete state when pipeline finishes
+  // Fetch real data when pipeline completes
   useEffect(() => {
-    if (isCompleted && jobId) {
-      const timer = setTimeout(() => {
-        loadMockComplete(MOCK_COMPLETE_PAPERS);
-      }, 1000);
+    if (isCompleted && jobId && !fetchedRef.current) {
+      fetchedRef.current = true;
+      const timer = setTimeout(async () => {
+        try {
+          const enriched = await fetchEnrichedPapers(jobId);
+          loadMockComplete(transformPapers(enriched));
+          fetchAndLoadReview(jobId);
+        } catch {
+          // Fall back gracefully — papers view stays in current state
+        }
+      }, 500);
       return () => clearTimeout(timer);
     }
-  }, [isCompleted, jobId, loadMockComplete]);
+  }, [isCompleted, jobId, loadMockComplete, fetchAndLoadReview]);
 
   const handleFilesAdded = useCallback(
     (files: File[]) => {

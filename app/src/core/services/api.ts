@@ -13,11 +13,41 @@ export interface PaperInfo {
   filename: string;
 }
 
+export interface EnrichedPaperResponse {
+  paper_id: string;
+  filename: string;
+  title: string;
+  authors: string[];
+  page_count: number;
+  themes: Record<string, unknown>[];
+  claims: Record<string, unknown>[];
+}
+
+export interface RawReview {
+  title: string;
+  sections: { theme_id: string; label: string; content: string; claim_ids: string[] }[];
+  references: unknown[];
+}
+
 export async function fetchPapers(jobId: string): Promise<PaperInfo[]> {
   const res = await fetch(`${PIPELINE_API_URL}/jobs/${jobId}/papers`);
   if (!res.ok) return [];
   const data = await res.json();
   return (data.papers ?? []) as PaperInfo[];
+}
+
+export async function fetchEnrichedPapers(jobId: string): Promise<EnrichedPaperResponse[]> {
+  const res = await fetch(`${PIPELINE_API_URL}/jobs/${jobId}/papers`);
+  if (!res.ok) throw new Error(`Failed to fetch papers (${res.status})`);
+  const data = await res.json();
+  return (data.papers ?? []) as EnrichedPaperResponse[];
+}
+
+export async function fetchReview(jobId: string): Promise<RawReview> {
+  const res = await fetch(`${PIPELINE_API_URL}/jobs/${jobId}/review`);
+  if (!res.ok) throw new Error(`Failed to fetch review (${res.status})`);
+  const data = await res.json();
+  return data.review as RawReview;
 }
 
 export function createJob(
