@@ -29,6 +29,12 @@ class EventType(StrEnum):
     THEME_DEDUPLICATED = "theme_deduplicated"
     CLAIM_EXTRACTED = "claim_extracted"
     REVIEW_GENERATED = "review_generated"
+    AGENT_STARTED = "agent_started"
+    AGENT_TOOL_CALL = "agent_tool_call"
+    AGENT_TOOL_RESULT = "agent_tool_result"
+    AGENT_CONTENT = "agent_content"
+    AGENT_COMPLETED = "agent_completed"
+    AGENT_ERROR = "agent_error"
 
 
 class Event(BaseModel):
