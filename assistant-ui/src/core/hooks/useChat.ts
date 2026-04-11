@@ -99,7 +99,7 @@ export function useChat(socket: Socket | null) {
   }, [socket]);
 
   const sendMessage = useCallback(
-    (text: string) => {
+    (text: string, context?: Record<string, unknown>) => {
       if (!socket || !text.trim()) return;
 
       const userMsg: Message = {
@@ -122,7 +122,7 @@ export function useChat(socket: Socket | null) {
       streamBuffer.current = "";
       refsBuffer.current = [];
 
-      socket.emit("message", { text });
+      socket.emit("message", { text, ...(context && { context }) });
     },
     [socket],
   );
