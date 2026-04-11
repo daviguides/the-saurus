@@ -34,3 +34,16 @@ class IngestedPaper(BaseModel):
                 lines.append(p.text)
             lines.append("")  # blank line between paragraphs
         return "\n".join(lines).rstrip("\n") + "\n"
+
+    def to_annotated_markdown(self) -> str:
+        """Render paragraphs as Markdown with [p.X,§Y] position annotations."""
+        lines: list[str] = []
+        for p in self.paragraphs:
+            tag = f"[p.{p.page},§{p.index}]"
+            if p.is_heading:
+                prefix = "#" * max(p.heading_level, 1)
+                lines.append(f"{prefix} {tag} {p.text}")
+            else:
+                lines.append(f"{tag} {p.text}")
+            lines.append("")  # blank line between paragraphs
+        return "\n".join(lines).rstrip("\n") + "\n"

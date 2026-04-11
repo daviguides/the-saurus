@@ -1715,6 +1715,7 @@ name = "pipeline"
 version = "0.1.0"
 source = { editable = "pipeline" }
 dependencies = [
+    { name = "agno" },
     { name = "claude-agent-sdk" },
     { name = "fastapi" },
     { name = "httpx" },
@@ -1744,6 +1745,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "agno", specifier = ">=2.5.10" },
     { name = "claude-agent-sdk", specifier = ">=0.1.0" },
     { name = "fastapi", specifier = ">=0.115.0" },
     { name = "httpx", specifier = ">=0.27.0" },

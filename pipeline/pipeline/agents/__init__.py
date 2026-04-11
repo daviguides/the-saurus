@@ -1,4 +1,4 @@
-"""Pipeline agents: protocol and stub implementations."""
+"""Pipeline agents: protocol, real implementations, and stubs."""
 
 from .protocol import Agent
 from .stubs import (
@@ -8,6 +8,7 @@ from .stubs import (
     StubThemeExtractor,
     StubThemeReviewer,
 )
+from .theme_extractor import ThemeExtractorAgent
 
 __all__ = [
     "Agent",
@@ -16,4 +17,5 @@ __all__ = [
     "StubThemeDedup",
     "StubThemeExtractor",
     "StubThemeReviewer",
+    "ThemeExtractorAgent",
 ]
