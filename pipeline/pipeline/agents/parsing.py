@@ -18,7 +18,7 @@ import time
 from collections.abc import Awaitable, Callable
 from typing import Any, TypeVar
 
-from agno.agent import RunCompletedEvent
+from agno.agent import RunCompletedEvent, RunErrorEvent
 from pydantic import BaseModel
 
 T = TypeVar("T", bound=BaseModel)
@@ -142,10 +142,18 @@ async def run_agent_with_retry(
                                     type(event).__name__,
                                     exc_info=True,
                                 )
+                        if isinstance(event, RunErrorEvent):
+                            error_msg = getattr(event, "error", None) or getattr(event, "message", None) or str(event)
+                            logger.error(
+                                "[%s] RunErrorEvent | error=%s event_attrs=%r %s",
+                                agent_name,
+                                str(error_msg)[:500],
+                                {k: str(v)[:200] for k, v in vars(event).items() if v is not None},
+                                " ".join(f"{k}={v}" for k, v in ctx.items()) if ctx else "",
+                            )
                         if isinstance(event, RunCompletedEvent):
                             raw = event.content
                             if raw is None:
-                                # Log the full event for debugging
                                 logger.warning(
                                     "[%s] RunCompletedEvent.content is None | event=%r %s",
                                     agent_name,
