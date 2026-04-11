@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from typing import Any
 from uuid import uuid4
 
@@ -65,13 +66,19 @@ class PaperAnalyzerAgent:
             structured_outputs=True,
         )
 
-    async def run(self, input: dict[str, Any]) -> dict[str, Any]:
+    async def run(
+        self,
+        input: dict[str, Any],
+        *,
+        on_event: Callable[[Any], Awaitable[None]] | None = None,
+    ) -> dict[str, Any]:
         paper_id = input["paper_id"]
         content = input["content"]
 
         analysis = await run_agent_with_retry(
             self._agent, content, PaperAnalysisResult,
             context={"paper_id": paper_id, "stage": "paper_analysis"},
+            on_event=on_event,
         )
 
         # Split into separate themes and claims outputs

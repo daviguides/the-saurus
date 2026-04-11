@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 from agno.agent import Agent as AgnoAgent
@@ -69,6 +70,8 @@ class ThemeReviewerAgent:
         self,
         themes: list[dict[str, Any]],
         all_claims: list[dict[str, Any]],
+        *,
+        on_event: Callable[[Any], Awaitable[None]] | None = None,
     ) -> list[dict[str, Any]]:
         """Process all themes in batches, return list of review dicts."""
         # Build claim index by theme_id
@@ -111,6 +114,7 @@ class ThemeReviewerAgent:
                     "themes_in_batch": len(batch),
                     "total_claims": sum(len(v) for v in batch_claims.values()),
                 },
+                on_event=on_event,
             )
 
             # Map results back to theme IDs

@@ -33,6 +33,25 @@ class TestEventModel:
         e = Event(event_type=EventType.JOB_CREATED, job_id="j1")
         assert e.event_type == "job_created"
 
+    def test_agent_event_types_exist(self):
+        assert EventType.AGENT_STARTED == "agent_started"
+        assert EventType.AGENT_TOOL_CALL == "agent_tool_call"
+        assert EventType.AGENT_TOOL_RESULT == "agent_tool_result"
+        assert EventType.AGENT_CONTENT == "agent_content"
+        assert EventType.AGENT_COMPLETED == "agent_completed"
+        assert EventType.AGENT_ERROR == "agent_error"
+
+    def test_agent_event_type_serializes(self):
+        e = Event(
+            event_type=EventType.AGENT_STARTED,
+            job_id="j1",
+            payload={"agent_name": "PaperAnalyzer", "stage": "paper_analysis"},
+        )
+        raw = e.model_dump_json()
+        restored = Event.model_validate_json(raw)
+        assert restored.event_type == "agent_started"
+        assert restored.payload["agent_name"] == "PaperAnalyzer"
+
 
 class TestEventEmitter:
     async def test_emit_appends_ndjson(self, jobs_dir: Path):

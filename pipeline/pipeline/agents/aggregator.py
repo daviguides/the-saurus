@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import re
 from collections import defaultdict
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 from agno.agent import Agent as AgnoAgent
@@ -62,7 +63,12 @@ class AggregatorAgent:
             structured_outputs=True,
         )
 
-    async def run(self, input: dict[str, Any]) -> dict[str, Any]:
+    async def run(
+        self,
+        input: dict[str, Any],
+        *,
+        on_event: Callable[[Any], Awaitable[None]] | None = None,
+    ) -> dict[str, Any]:
         theme_reviews: list[dict[str, Any]] = input["theme_reviews"]
         claims: list[dict[str, Any]] = input.get("claims", [])
         papers: list[dict[str, Any]] = input.get("papers", [])
@@ -77,6 +83,7 @@ class AggregatorAgent:
         llm_result = await run_agent_with_retry(
             self._agent, message, AggregatorResult,
             context={"stage": "aggregation", "themes": len(theme_reviews)},
+            on_event=on_event,
         )
 
         # Post-process: resolve [N] → [N](p.X,§Y) in section content
