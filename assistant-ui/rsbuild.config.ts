@@ -69,6 +69,6 @@ export default defineConfig({
   },
 
   html: {
-    title: "AnswerThis Assistant",
+    title: "The Saurus Assistant",
   },
 });

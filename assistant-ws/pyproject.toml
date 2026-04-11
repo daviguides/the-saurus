@@ -1,7 +1,7 @@
 [project]
 name = "assistant-ws"
 version = "0.1.0"
-description = "AnswerThis AI Assistant - WebSocket Backend"
+description = "The Saurus Assistant - WebSocket Backend"
 requires-python = ">=3.13"
 dependencies = [
     "agno>=2.5.10",

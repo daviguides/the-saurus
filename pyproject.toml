@@ -1,7 +1,7 @@
 [project]
-name = "answerthis"
+name = "the-saurus"
 version = "0.1.0"
-description = "AnswerThis - AI agents for scientific literature reviews"
+description = "The Saurus — Literature review pipeline. Feed The Saurus your papers."
 requires-python = ">=3.13"
 dependencies = [
     "anthropic>=0.94.0",

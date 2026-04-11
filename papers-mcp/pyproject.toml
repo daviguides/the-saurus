@@ -1,7 +1,7 @@
 [project]
 name = "papers-mcp"
 version = "0.1.0"
-description = "AnswerThis Papers RAG - MCP Server"
+description = "The Saurus Papers RAG - MCP Server"
 requires-python = ">=3.13"
 dependencies = [
     "fastmcp>=2.0.0",
