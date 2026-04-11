@@ -34,11 +34,11 @@ export interface PipelineStageConfig {
 }
 
 export const PIPELINE_STAGES: PipelineStageConfig[] = [
-  { id: "ingestion", label: "PDF Ingestion", icon: "FileText" },
   { id: "theme_extraction", label: "Theme Extraction", icon: "Tags" },
   { id: "claim_extraction", label: "Claim Extraction", icon: "Quote" },
   { id: "theme_dedup", label: "Theme Deduplication", icon: "GitMerge" },
-  { id: "review_generation", label: "Review Generation", icon: "BookOpen" },
+  { id: "theme_review", label: "Theme Review", icon: "BookOpen" },
+  { id: "aggregation", label: "Review Generation", icon: "FileText" },
 ];
 
 export interface PipelineStageState {
@@ -74,3 +74,12 @@ export type PipelineAction =
   | { type: "EVENT_RECEIVED"; payload: PipelineEvent }
   | { type: "PIPELINE_COMPLETED" }
   | { type: "PIPELINE_FAILED"; payload: { message: string } };
+
+/** Raw event JSON from the backend WebSocket. */
+export interface RawPipelineEvent {
+  event_id: string;
+  event_type: string;
+  timestamp: string;
+  job_id: string;
+  payload: Record<string, unknown>;
+}
