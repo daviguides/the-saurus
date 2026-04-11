@@ -1,0 +1,142 @@
+/* ============================================================
+ * The Saurus — Shared Design Tokens
+ * SSOT: docs/explorations/mvp/design-system.md
+ * ============================================================ */
+
+/* Class-based dark mode (Tailwind v4) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ============================================================
+ * Light Theme (default) — academic paper feel
+ * ============================================================ */
+
+:root {
+  /* Backgrounds — warm paper, not cold white */
+  --saurus-paper: #FAFAF7;
+  --saurus-surface: #F5F5F0;
+  --saurus-sidebar: #F0F0EB;
+
+  /* Border */
+  --saurus-border: #E8E5DE;
+
+  /* Text — ink on paper */
+  --saurus-ink: #1C1C1E;
+  --saurus-ink-secondary: #6B7280;
+  --saurus-ink-muted: #9CA3AF;
+
+  /* Primary — deep academic green */
+  --saurus-primary: #2D6A4F;
+  --saurus-primary-hover: #40916C;
+  --saurus-primary-bg: rgba(45, 106, 79, 0.08);
+
+  /* Accent — amber/gold */
+  --saurus-accent: #D4AF37;
+  --saurus-accent-bg: rgba(212, 175, 55, 0.10);
+
+  /* Status — pipeline stages */
+  --saurus-success: #40916C;
+  --saurus-error: #DC2626;
+  --saurus-pending: #9CA3AF;
+
+  /* Theme chips — muted academic colors */
+  --saurus-chip-1: #EDE9FE;
+  --saurus-chip-2: #DBEAFE;
+  --saurus-chip-3: #D1FAE5;
+  --saurus-chip-4: #FEF3C7;
+  --saurus-chip-5: #FCE7F3;
+  --saurus-chip-6: #E0E7FF;
+
+  /* Shadows */
+  --saurus-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --saurus-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* ============================================================
+ * Dark Theme — aged paper under candlelight
+ * Warm charcoal, never pure black
+ * ============================================================ */
+
+.dark {
+  /* Backgrounds */
+  --saurus-paper: #1A1D1E;
+  --saurus-surface: #242728;
+  --saurus-sidebar: #161819;
+
+  /* Border */
+  --saurus-border: #353838;
+
+  /* Text — warm off-white on dark */
+  --saurus-ink: #E8E4DD;
+  --saurus-ink-secondary: #9CA3AF;
+  --saurus-ink-muted: #6B7280;
+
+  /* Primary — lightened green for contrast */
+  --saurus-primary: #5BAB8A;
+  --saurus-primary-hover: #7CC4A5;
+  --saurus-primary-bg: rgba(91, 171, 138, 0.10);
+
+  /* Accent — slightly brighter gold */
+  --saurus-accent: #E5C349;
+  --saurus-accent-bg: rgba(229, 195, 73, 0.10);
+
+  /* Status */
+  --saurus-success: #5BAB8A;
+  --saurus-error: #F87171;
+  --saurus-pending: #6B7280;
+
+  /* Theme chips — muted dark */
+  --saurus-chip-1: #2D2640;
+  --saurus-chip-2: #1E2D3D;
+  --saurus-chip-3: #1A2E26;
+  --saurus-chip-4: #2E2A1A;
+  --saurus-chip-5: #2E1A24;
+  --saurus-chip-6: #1E2240;
+
+  /* Shadows — stronger on dark */
+  --saurus-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.20);
+  --saurus-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.30);
+}
+
+/* ============================================================
+ * Semantic Mapping → Tailwind Utilities
+ * Components use: bg-bg, bg-surface, text-primary, border-border, etc.
+ * ============================================================ */
+
+@theme inline {
+  /* Colors */
+  --color-bg: var(--saurus-paper);
+  --color-surface: var(--saurus-surface);
+  --color-sidebar: var(--saurus-sidebar);
+  --color-border: var(--saurus-border);
+  --color-primary: var(--saurus-primary);
+  --color-primary-hover: var(--saurus-primary-hover);
+  --color-primary-bg: var(--saurus-primary-bg);
+  --color-accent: var(--saurus-accent);
+  --color-accent-bg: var(--saurus-accent-bg);
+  --color-text-primary: var(--saurus-ink);
+  --color-text-secondary: var(--saurus-ink-secondary);
+  --color-text-muted: var(--saurus-ink-muted);
+  --color-success: var(--saurus-success);
+  --color-error: var(--saurus-error);
+  --color-pending: var(--saurus-pending);
+  --color-chip-1: var(--saurus-chip-1);
+  --color-chip-2: var(--saurus-chip-2);
+  --color-chip-3: var(--saurus-chip-3);
+  --color-chip-4: var(--saurus-chip-4);
+  --color-chip-5: var(--saurus-chip-5);
+  --color-chip-6: var(--saurus-chip-6);
+
+  /* Typography */
+  --font-heading: 'Literata Variable', 'Literata', serif;
+  --font-body: 'Inter Variable', 'Inter', sans-serif;
+  --font-mono: 'Fira Code Variable', 'Fira Code', monospace;
+
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Shadows */
+  --shadow-sm: var(--saurus-shadow-sm);
+  --shadow-md: var(--saurus-shadow-md);
+}
