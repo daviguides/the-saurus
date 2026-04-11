@@ -72,6 +72,7 @@ class ThemeReviewerAgent:
         all_claims: list[dict[str, Any]],
         *,
         on_event: Callable[[Any], Awaitable[None]] | None = None,
+        job_dir: str = "",
     ) -> list[dict[str, Any]]:
         """Process all themes in batches, return list of review dicts."""
         # Build claim index by theme_id
@@ -113,6 +114,7 @@ class ThemeReviewerAgent:
                     "batch": f"{batch_idx}/{len(batches)}",
                     "themes_in_batch": len(batch),
                     "total_claims": sum(len(v) for v in batch_claims.values()),
+                    "job_dir": job_dir,
                 },
                 on_event=on_event,
             )

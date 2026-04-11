@@ -77,7 +77,11 @@ class PaperAnalyzerAgent:
 
         analysis = await run_agent_with_retry(
             self._agent, content, PaperAnalysisResult,
-            context={"paper_id": paper_id, "stage": "paper_analysis"},
+            context={
+                "paper_id": paper_id,
+                "stage": "paper_analysis",
+                "job_dir": input.get("job_dir", ""),
+            },
             on_event=on_event,
         )
 

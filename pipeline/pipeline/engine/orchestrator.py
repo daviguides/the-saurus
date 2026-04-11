@@ -143,7 +143,7 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
             emitter, "ThemeDedup", Stage.THEME_DEDUP,
             context={"theme_count": len(all_themes)},
         )
-        dedup_result = await theme_dedup.run({"themes": all_themes}, on_event=dedup_cb)
+        dedup_result = await theme_dedup.run({"themes": all_themes, "job_dir": str(job_path)}, on_event=dedup_cb)
         await write_yaml(job_path / "theme_map.yaml", dedup_result, job_id=job_id)
         if indexer:
             _fire_qdrant(indexer.index_theme_map(job_id, dedup_result))
@@ -169,6 +169,7 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         )
         review_results = await theme_reviewer.run_batch(
             canonical_themes, all_claims, on_event=review_cb,
+            job_dir=str(job_path),
         )
         # Persist per-theme reviews
         for review_out in review_results:
@@ -200,6 +201,7 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
                 {"paper_id": p.paper_id, "title": p.title, "authors": p.authors}
                 for p in papers
             ],
+            "job_dir": str(job_path),
         }, on_event=agg_cb)
         await write_yaml(job_path / "review.yaml", review, job_id=job_id)
         if indexer:
@@ -272,6 +274,7 @@ async def _run_parallel_per_paper(
             "paper_id": paper.paper_id,
             "title": paper.title,
             "content": content,
+            "job_dir": str(job_path),
         }
         if extra_inputs:
             for key, mapping in extra_inputs.items():

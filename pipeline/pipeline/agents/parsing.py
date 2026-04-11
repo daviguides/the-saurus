@@ -16,6 +16,7 @@ import logging
 import re
 import time
 from collections.abc import Awaitable, Callable
+from pathlib import Path
 from typing import Any, TypeVar
 
 from agno.agent import RunCompletedEvent, RunErrorEvent
@@ -89,6 +90,11 @@ async def run_agent_with_retry(
     """
     from pipeline.agents.models import llm_semaphore
     from pipeline.config import settings
+
+    # Resolve raw response dump directory from context
+    job_dir: Path | None = None
+    if ctx.get("job_dir"):
+        job_dir = Path(ctx["job_dir"]) / "raw"
 
     if max_retries is None:
         max_retries = settings.llm_max_retries
@@ -193,6 +199,17 @@ async def run_agent_with_retry(
                     elapsed,
                     " ".join(f"{k}={v}" for k, v in ctx.items()) if ctx else "",
                 )
+
+            # Save raw response for debugging
+            if job_dir and raw is not None:
+                try:
+                    job_dir.mkdir(parents=True, exist_ok=True)
+                    paper_id = ctx.get("paper_id", "unknown")
+                    stage = ctx.get("stage", agent_name)
+                    filename = f"{paper_id}_{stage}_attempt{attempt}.txt"
+                    (job_dir / filename).write_text(str(raw)[:500_000])
+                except Exception:
+                    pass  # never fail on debug saves
 
             parsed = parse_agent_response(raw, output_schema)
             logger.info(
