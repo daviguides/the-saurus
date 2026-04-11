@@ -6,9 +6,9 @@ import asyncio
 import logging
 from typing import Any
 
+import google.genai as genai
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, PointStruct, VectorParams
-from sentence_transformers import SentenceTransformer
 
 from pipeline.config import settings
 
@@ -23,10 +23,14 @@ LITERATURE_REVIEW = "literature_review"
 
 ALL_COLLECTIONS = [PAPER_THEMES, PAPER_CLAIMS, THEME_MAP, THEME_REVIEWS, LITERATURE_REVIEW]
 
+# Gemini text-embedding-004 outputs 768 dimensions
+GEMINI_EMBEDDING_DIMENSION = 768
+
 
 class QdrantIndexer:
     """Embeds pipeline outputs and upserts to Qdrant collections.
 
+    Uses Gemini text-embedding-004 for embeddings via API (no local model).
     All methods are async and safe to call via asyncio.create_task().
     Failures are logged but never raised — Qdrant is a secondary index.
     """
@@ -36,8 +40,9 @@ class QdrantIndexer:
             url=settings.qdrant_url,
             api_key=settings.qdrant_api_key,
         )
-        self._encoder = SentenceTransformer(settings.qdrant_embedding_model)
-        self._dimension = settings.qdrant_embedding_dimension
+        self._genai_client = genai.Client(api_key=settings.llm_api_key)
+        self._embedding_model = settings.qdrant_embedding_model
+        self._dimension = GEMINI_EMBEDDING_DIMENSION
 
     async def ensure_collections(self) -> None:
         """Create all collections if they don't exist."""
@@ -57,12 +62,22 @@ class QdrantIndexer:
         await asyncio.to_thread(_sync)
 
     async def _embed(self, text: str) -> list[float]:
-        """Encode text to vector in a thread (sentence-transformers is sync)."""
-        return await asyncio.to_thread(lambda: self._encoder.encode(text).tolist())
+        """Embed a single text via Gemini API."""
+        result = await asyncio.to_thread(
+            self._genai_client.models.embed_content,
+            model=self._embedding_model,
+            contents=text,
+        )
+        return result.embeddings[0].values
 
     async def _embed_batch(self, texts: list[str]) -> list[list[float]]:
-        """Encode multiple texts in a single batch call."""
-        return await asyncio.to_thread(lambda: self._encoder.encode(texts).tolist())
+        """Embed multiple texts via Gemini API in a single batch call."""
+        result = await asyncio.to_thread(
+            self._genai_client.models.embed_content,
+            model=self._embedding_model,
+            contents=texts,
+        )
+        return [e.values for e in result.embeddings]
 
     async def _upsert(self, collection: str, points: list[PointStruct]) -> None:
         """Upsert points to a collection in a thread."""
@@ -184,7 +199,6 @@ class QdrantIndexer:
         texts = [s.get("content", "") for s in sections]
         vectors = await self._embed_batch(texts)
 
-        # Top-level citation and reference data (shared across all section points)
         citations = result.get("citations", [])
         references = result.get("references", [])
 
@@ -213,9 +227,17 @@ class QdrantIndexer:
 _indexer: QdrantIndexer | None = None
 
 
-def get_indexer() -> QdrantIndexer:
-    """Return singleton QdrantIndexer instance."""
+def get_indexer() -> QdrantIndexer | None:
+    """Return singleton QdrantIndexer, or None if init fails.
+
+    Qdrant is a secondary index — if it's not available, the pipeline
+    continues with YAML persistence as the source of truth.
+    """
     global _indexer
     if _indexer is None:
-        _indexer = QdrantIndexer()
+        try:
+            _indexer = QdrantIndexer()
+        except Exception:
+            logger.warning("Qdrant indexer init failed — indexing disabled for this session")
+            return None
     return _indexer

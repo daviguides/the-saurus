@@ -70,13 +70,17 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
 
         tracker = ProgressTracker(job_id, jobs_dir, emitter, len(papers))
 
-        # Initialize Qdrant collections (fire-and-forget)
-        try:
-            indexer = get_indexer()
-            await indexer.ensure_collections()
-        except Exception:
-            logger.warning("Qdrant init failed — writes will be skipped", exc_info=True)
-            indexer = None
+        # Initialize Qdrant (graceful — None if unavailable)
+        indexer = get_indexer()
+        if indexer:
+            try:
+                await indexer.ensure_collections()
+                logger.info("Qdrant initialized — indexing enabled")
+            except Exception:
+                logger.warning("Qdrant available but collection init failed — indexing disabled")
+                indexer = None
+        else:
+            logger.info("Qdrant not available — indexing disabled, YAML is source of truth")
 
         # Mark job as running
         now = datetime.now(UTC)
