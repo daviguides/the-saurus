@@ -9,6 +9,7 @@ from agno.agent import Agent as AgnoAgent
 from pydantic import BaseModel, Field
 
 from pipeline.agents.models import create_model
+from pipeline.agents.parsing import parse_agent_response
 from pipeline.agents.prompts.theme_dedup import THEME_DEDUP_PROMPT
 
 # --- Pydantic output models ---
@@ -65,7 +66,7 @@ class ThemeDedupAgent:
             output_schema=ThemeDedupResult,
         )
 
-        dedup: ThemeDedupResult = result.content
+        dedup = parse_agent_response(result.content, ThemeDedupResult)
 
         # Map LLM groups back to concrete theme data
         theme_map: dict[str, list[str]] = {}

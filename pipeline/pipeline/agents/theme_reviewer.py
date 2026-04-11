@@ -9,6 +9,7 @@ from agno.agent import Agent as AgnoAgent
 from pydantic import BaseModel, Field
 
 from pipeline.agents.models import create_model
+from pipeline.agents.parsing import parse_agent_response
 from pipeline.agents.prompts.theme_reviewer import THEME_REVIEWER_PROMPT
 
 # --- Pydantic output models ---
@@ -70,7 +71,7 @@ class ThemeReviewerAgent:
             output_schema=ThemeReviewResult,
         )
 
-        review: ThemeReviewResult = result.content
+        review = parse_agent_response(result.content, ThemeReviewResult)
 
         # Validate claim IDs — only keep those present in input
         valid_ids = {c["id"] for c in relevant_claims}
