@@ -1,0 +1,48 @@
+"""WebSocket endpoint for live event streaming and emitter registry."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+from fastapi import WebSocket, WebSocketDisconnect
+
+from pipeline.core import Event, EventEmitter
+
+_emitters: dict[str, EventEmitter] = {}
+
+
+def register_emitter(job_id: str, emitter: EventEmitter) -> None:
+    _emitters[job_id] = emitter
+
+
+def get_or_create_emitter(job_id: str, jobs_dir: Path) -> EventEmitter:
+    if job_id not in _emitters:
+        _emitters[job_id] = EventEmitter(job_id, jobs_dir)
+    return _emitters[job_id]
+
+
+async def websocket_stream(websocket: WebSocket, job_id: str, jobs_dir: Path) -> None:
+    """Handle a WebSocket connection for live event streaming."""
+    job_path = jobs_dir / job_id
+    if not job_path.is_dir():
+        await websocket.close(code=4004, reason="Job not found")
+        return
+
+    await websocket.accept()
+
+    emitter = get_or_create_emitter(job_id, jobs_dir)
+
+    async def on_event(event: Event) -> None:
+        try:
+            await websocket.send_json(event.model_dump(mode="json"))
+        except Exception:
+            pass
+
+    emitter.add_listener(on_event)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        pass
+    finally:
+        emitter.remove_listener(on_event)
