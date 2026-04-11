@@ -4,6 +4,8 @@ import type {
   PipelineAction,
   PipelineStageState,
   PipelineEvent,
+  AgentEvent,
+  AgentEventType,
   StagePipelineEvent,
   RawPipelineEvent,
 } from "../types/pipeline";
@@ -137,6 +139,62 @@ function humanMessage(raw: RawPipelineEvent): string {
   }
 }
 
+function mapAgentEvent(raw: RawPipelineEvent, paperLookup: Map<string, string>): AgentEvent {
+  const p = raw.payload;
+  const eventType = raw.event_type as AgentEventType;
+  const base = {
+    id: raw.event_id,
+    eventType,
+    timestamp: new Date(raw.timestamp).getTime(),
+    stage: (p.stage as string) ?? undefined,
+    paperId: (p.paper_id as string) ?? undefined,
+    paperTitle: paperLookup.get((p.paper_id as string) ?? ""),
+    message: (p.message as string) ?? raw.event_type,
+    agentName: (p.agent_name as string) ?? "Unknown",
+    humanMessage: (p.message as string) ?? raw.event_type,
+    technicalMessage: (p.technical_message as string) ?? raw.event_type,
+  };
+
+  switch (eventType) {
+    case "agent_started":
+      return { ...base, eventType: "agent_started", model: (p.model as string) ?? undefined };
+    case "agent_tool_call":
+      return {
+        ...base,
+        eventType: "agent_tool_call",
+        toolName: (p.tool_name as string) ?? "",
+        toolArgsPreview: (p.tool_args_preview as string) ?? undefined,
+      };
+    case "agent_tool_result":
+      return {
+        ...base,
+        eventType: "agent_tool_result",
+        toolName: (p.tool_name as string) ?? "",
+        resultLen: (p.result_len as number) ?? 0,
+        elapsedMs: (p.elapsed_ms as number) ?? undefined,
+      };
+    case "agent_content":
+      return {
+        ...base,
+        eventType: "agent_content",
+        contentLen: (p.content_len as number) ?? 0,
+        contentType: (p.content_type as string) ?? "text",
+      };
+    case "agent_completed":
+      return { ...base, eventType: "agent_completed", elapsedMs: (p.elapsed_ms as number) ?? undefined };
+    case "agent_error":
+      return {
+        ...base,
+        eventType: "agent_error",
+        error: (p.error as string) ?? "Unknown error",
+        errorType: (p.error_type as string) ?? "",
+        elapsedMs: (p.elapsed_ms as number) ?? undefined,
+      };
+    default:
+      return { ...base, eventType: "agent_completed" } as AgentEvent;
+  }
+}
+
 function mapEventToActions(
   raw: RawPipelineEvent,
   paperLookup: Map<string, string>,
@@ -144,6 +202,14 @@ function mapEventToActions(
   const actions: PipelineAction[] = [];
   const p = raw.payload;
 
+  // Agent-level events: construct typed AgentEvent, no reducer side-effects
+  if (raw.event_type.startsWith("agent_")) {
+    const agentEvent = mapAgentEvent(raw, paperLookup);
+    actions.push({ type: "EVENT_RECEIVED", payload: agentEvent });
+    return actions;
+  }
+
+  // Stage-level events: existing behavior
   const streamEvent: StagePipelineEvent = {
     id: raw.event_id,
     eventType: raw.event_type as StagePipelineEvent["eventType"],
