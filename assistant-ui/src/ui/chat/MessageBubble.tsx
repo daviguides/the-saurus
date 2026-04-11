@@ -16,38 +16,38 @@ export default function MessageBubble({ message }: Props) {
         className={`max-w-[80%] rounded-2xl px-4 py-3 ${
           isUser
             ? "bg-primary text-white"
-            : "bg-surface text-text-primary"
+            : "bg-bg text-text-primary"
         }`}
       >
         {isUser ? (
           <p className="whitespace-pre-wrap">{message.content}</p>
         ) : (
-          <ReactMarkdown
-            components={{
-              code({ className, children, ...props }) {
-                const match = /language-(\w+)/.exec(className || "");
-                const inline = !match;
-                return inline ? (
-                  <code
-                    className="bg-bg px-1.5 py-0.5 rounded text-sm"
-                    {...props}
-                  >
-                    {children}
-                  </code>
-                ) : (
-                  <SyntaxHighlighter
-                    style={oneDark}
-                    language={match[1]}
-                    PreTag="div"
-                  >
-                    {String(children).replace(/\n$/, "")}
-                  </SyntaxHighlighter>
-                );
-              },
-            }}
-          >
-            {message.content}
-          </ReactMarkdown>
+          <div className="prose-content">
+            <ReactMarkdown
+              components={{
+                code({ className, children, ...props }) {
+                  const match = /language-(\w+)/.exec(className || "");
+                  const inline = !match;
+                  return inline ? (
+                    <code {...props}>
+                      {children}
+                    </code>
+                  ) : (
+                    <SyntaxHighlighter
+                      style={oneDark}
+                      language={match[1]}
+                      PreTag="div"
+                      customStyle={{ background: "transparent" }}
+                    >
+                      {String(children).replace(/\n$/, "")}
+                    </SyntaxHighlighter>
+                  );
+                },
+              }}
+            >
+              {message.content}
+            </ReactMarkdown>
+          </div>
         )}
 
         {message.references && message.references.length > 0 && (
