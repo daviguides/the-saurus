@@ -184,6 +184,10 @@ class QdrantIndexer:
         texts = [s.get("content", "") for s in sections]
         vectors = await self._embed_batch(texts)
 
+        # Top-level citation and reference data (shared across all section points)
+        citations = result.get("citations", [])
+        references = result.get("references", [])
+
         points = [
             PointStruct(
                 id=section["theme_id"],
@@ -191,10 +195,14 @@ class QdrantIndexer:
                 payload={
                     "job_id": job_id,
                     "title": result.get("title", ""),
+                    "abstract": result.get("abstract", ""),
                     "theme_id": section["theme_id"],
                     "label": section.get("label", ""),
                     "content": section.get("content", ""),
                     "claim_ids": section.get("claim_ids", []),
+                    "citation_refs": section.get("citation_refs", []),
+                    "citations": citations,
+                    "references": references,
                 },
             )
             for section, vector in zip(sections, vectors)

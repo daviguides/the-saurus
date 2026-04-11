@@ -42,9 +42,29 @@ class ThemeReviewResult(BaseModel):
     key_claims: list[dict] = []
 
 
+class CitationRef(BaseModel):
+    ref_number: int
+    claim_id: str
+    paper_id: str
+    paper_title: str = ""
+    page: int = 0
+    paragraph: int = 0
+
+
+class PaperReference(BaseModel):
+    paper_id: str
+    paper_title: str = ""
+    authors: list[str] = []
+    cited_in: list[dict] = []
+
+
 class ReviewSection(BaseModel):
     title: str = ""
+    abstract: str = ""
     theme_id: str
     label: str = ""
     content: str = ""
     claim_ids: list[str] = []
+    citation_refs: list[int] = []
+    citations: list[CitationRef] = []
+    references: list[PaperReference] = []
