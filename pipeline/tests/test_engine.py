@@ -202,6 +202,14 @@ def _patch_claim_extractor():
     )
 
 
+def _patch_theme_dedup():
+    """Patch ThemeDedupAgent with StubThemeDedup in orchestrator."""
+    return patch(
+        "pipeline.engine.orchestrator.ThemeDedupAgent",
+        return_value=StubThemeDedup(),
+    )
+
+
 class TestPipelineExecution:
     async def test_full_pipeline_completes(self, jobs_dir: Path):
         """Pipeline runs all stages and sets status to COMPLETED."""
@@ -213,6 +221,7 @@ class TestPipelineExecution:
             patch("pipeline.engine.orchestrator.get_or_create_emitter", return_value=emitter),
             _patch_theme_extractor(),
             _patch_claim_extractor(),
+            _patch_theme_dedup(),
         ):
             await run_pipeline(job_id, jobs_dir)
 
@@ -237,6 +246,7 @@ class TestPipelineExecution:
             patch("pipeline.engine.orchestrator.get_or_create_emitter", return_value=emitter),
             _patch_theme_extractor(),
             _patch_claim_extractor(),
+            _patch_theme_dedup(),
         ):
             await run_pipeline(job_id, jobs_dir)
 
@@ -264,6 +274,7 @@ class TestPipelineExecution:
             patch("pipeline.engine.orchestrator.get_or_create_emitter", return_value=emitter),
             _patch_theme_extractor(),
             _patch_claim_extractor(),
+            _patch_theme_dedup(),
         ):
             await run_pipeline(job_id, jobs_dir)
 
@@ -298,6 +309,7 @@ class TestPipelineExecution:
             patch("pipeline.engine.orchestrator.get_or_create_emitter", return_value=emitter),
             _patch_theme_extractor(),
             _patch_claim_extractor(),
+            _patch_theme_dedup(),
         ):
             await run_pipeline(job_id, jobs_dir)
 
@@ -327,6 +339,7 @@ class TestPipelineExecution:
             patch("pipeline.engine.orchestrator.get_or_create_emitter", return_value=emitter),
             _patch_theme_extractor(),
             _patch_claim_extractor(),
+            _patch_theme_dedup(),
         ):
             await run_pipeline(job_id, jobs_dir)
 
@@ -351,6 +364,7 @@ class TestPipelineExecution:
             patch("pipeline.engine.orchestrator.get_or_create_emitter", return_value=emitter),
             _patch_theme_extractor(),
             _patch_claim_extractor(),
+            _patch_theme_dedup(),
         ):
             await run_pipeline(job_id, jobs_dir)
 
@@ -395,6 +409,7 @@ class TestPipelineExecution:
             patch("pipeline.engine.orchestrator.get_or_create_emitter", return_value=emitter),
             _patch_theme_extractor(),
             _patch_claim_extractor(),
+            _patch_theme_dedup(),
         ):
             await run_pipeline(job_id, jobs_dir)
 
@@ -468,7 +483,7 @@ class TestAPILaunchesPipeline:
 
         pdf_bytes = _make_pdf_bytes()
 
-        with patch.object(settings, "jobs_dir", str(jobs_dir)), _patch_theme_extractor(), _patch_claim_extractor():
+        with patch.object(settings, "jobs_dir", str(jobs_dir)), _patch_theme_extractor(), _patch_claim_extractor(), _patch_theme_dedup():
             transport = ASGITransport(app=app)
             async with AsyncClient(transport=transport, base_url="http://test") as client:
                 resp = await client.post(
