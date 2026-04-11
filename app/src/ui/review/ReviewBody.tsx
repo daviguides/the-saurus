@@ -3,6 +3,7 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { ReviewPaper } from "../../core/types/review";
 import CitationLink from "./CitationLink";
+import { slugify, extractText } from "./slugify";
 
 interface Props {
   markdown: string;
@@ -17,6 +18,14 @@ export default function ReviewBody({ markdown, papers }: Props) {
           {children}
         </CitationLink>
       ),
+      h2: ({ children }) => {
+        const id = slugify(extractText(children));
+        return (
+          <h2 id={id} className="scroll-mt-4 transition-colors duration-500">
+            {children}
+          </h2>
+        );
+      },
     }),
     [papers],
   );

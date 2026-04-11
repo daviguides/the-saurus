@@ -1,10 +1,38 @@
-import { useEffect, useRef } from "react";
-import { BookOpen, Loader2, AlertCircle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { BookOpen, Loader2, AlertCircle, Copy, Check } from "lucide-react";
 import { useReview } from "../../core/hooks/useReview";
 import { useJobId } from "../../core/hooks/useJobId";
 import StatsHeader from "../review/StatsHeader";
 import ReviewBody from "../review/ReviewBody";
 import ReferencesSection from "../review/ReferencesSection";
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setCopied(false), 2000);
+  };
+
+  useEffect(() => () => clearTimeout(timeoutRef.current), []);
+
+  const Icon = copied ? Check : Copy;
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      title={copied ? "Copied!" : "Copy review text"}
+      className="flex items-center gap-1.5 text-sm text-text-secondary hover:text-primary transition-colors"
+    >
+      <Icon size={14} />
+      <span>{copied ? "Copied" : "Copy"}</span>
+    </button>
+  );
+}
 
 function EmptyState() {
   return (
@@ -86,7 +114,12 @@ export default function ReviewView() {
 
   return (
     <div className="flex flex-col h-full">
-      <StatsHeader stats={review.stats} />
+      <div className="flex items-center border-b border-border bg-surface">
+        <StatsHeader stats={review.stats} />
+        <div className="ml-auto px-8">
+          <CopyButton text={review.markdown} />
+        </div>
+      </div>
       <div className="flex-1 overflow-y-auto scroll-smooth">
         <div className="px-8 py-6">
           <ReviewBody markdown={review.markdown} papers={review.papers} />
