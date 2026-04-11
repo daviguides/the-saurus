@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, Loader2, AlertCircle, Copy, Check } from "lucide-react";
+import { Loader2, AlertCircle, Copy, Check } from "lucide-react";
 import { useReview } from "../../core/hooks/useReview";
 import { useJobId } from "../../core/hooks/useJobId";
 import StatsHeader from "../review/StatsHeader";
 import ReviewBody from "../review/ReviewBody";
 import ReferencesSection from "../review/ReferencesSection";
+import TheSaurusMascot from "../shared/TheSaurusMascot";
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -37,7 +38,7 @@ function CopyButton({ text }: { text: string }) {
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center h-full gap-4 text-center px-4">
-      <BookOpen size={48} className="text-text-muted" />
+      <TheSaurusMascot size={120} className="animate-[breathe_3s_ease-in-out_infinite]" />
       <div>
         <h2 className="text-xl font-heading font-semibold text-text-primary mb-2">
           No review yet
