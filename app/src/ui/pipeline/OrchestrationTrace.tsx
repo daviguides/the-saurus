@@ -5,22 +5,32 @@ import {
   ChevronDown,
   ChevronRight,
   Cpu,
-  Eye,
-  EyeOff,
   FileSearch,
   FileText,
   GitMerge,
   Loader2,
   AlertCircle,
+  Play,
   Quote,
   Tags,
   Zap,
 } from "lucide-react";
-import type { AgentEvent } from "../../core/types/pipeline";
+import type { PipelineEvent } from "../../core/types/pipeline";
+import { isAgentEvent } from "../../core/types/pipeline";
 
 // --- Constants ---
 
-type ViewMode = "friendly" | "technical";
+const STAGE_ICON_MAP: Record<
+  string,
+  React.ComponentType<{ size?: number; className?: string }>
+> = {
+  paper_analysis: FileSearch,
+  theme_extraction: Tags,
+  claim_extraction: Quote,
+  theme_dedup: GitMerge,
+  theme_review: BookOpen,
+  aggregation: FileText,
+};
 
 const AGENT_ICON_MAP: Record<
   string,
@@ -34,10 +44,48 @@ const AGENT_ICON_MAP: Record<
   Aggregator: FileText,
 };
 
-function getAgentIcon(
-  agentName: string,
+function getEventIcon(
+  event: PipelineEvent,
 ): React.ComponentType<{ size?: number; className?: string }> {
-  return AGENT_ICON_MAP[agentName] ?? Cpu;
+  if (isAgentEvent(event)) {
+    return AGENT_ICON_MAP[event.agentName] ?? Cpu;
+  }
+  if (event.stage) {
+    return STAGE_ICON_MAP[event.stage] ?? Play;
+  }
+  return Zap;
+}
+
+function getEventColor(event: PipelineEvent): string {
+  const et = event.eventType;
+  if (et === "job_failed" || et === "agent_error") return "text-error";
+  if (et === "job_completed" || et === "agent_completed") return "text-success";
+  if (et === "stage_completed" || et === "paper_processed" || et === "paper_analyzed")
+    return "text-primary";
+  return "text-text-secondary";
+}
+
+function isTerminalEvent(event: PipelineEvent): boolean {
+  return (
+    event.eventType === "job_completed" ||
+    event.eventType === "job_failed" ||
+    event.eventType === "stage_completed" ||
+    event.eventType === "agent_completed" ||
+    event.eventType === "agent_error"
+  );
+}
+
+function isActiveEvent(event: PipelineEvent, allEvents: PipelineEvent[]): boolean {
+  const et = event.eventType;
+  if (et !== "stage_started" && et !== "agent_started" && et !== "job_started")
+    return false;
+  // Check if there's a completing event after this
+  const stage = event.stage;
+  for (let i = allEvents.indexOf(event) + 1; i < allEvents.length; i++) {
+    const e = allEvents[i];
+    if (e.stage === stage && isTerminalEvent(e)) return false;
+  }
+  return true;
 }
 
 function formatRelativeTime(timestamp: number, firstTimestamp: number): string {
@@ -50,57 +98,24 @@ function formatRelativeTime(timestamp: number, firstTimestamp: number): string {
   return `${min}m ${sec}s`;
 }
 
-function isEventActive(event: AgentEvent, allEvents: AgentEvent[]): boolean {
-  if (event.eventType !== "agent_started") return false;
-  const key = `${event.agentName}:${event.paperId ?? ""}`;
-  // Check if there's a completing event after this one
-  for (let i = allEvents.indexOf(event) + 1; i < allEvents.length; i++) {
-    const e = allEvents[i];
-    const eKey = `${e.agentName}:${e.paperId ?? ""}`;
-    if (eKey === key && (e.eventType === "agent_completed" || e.eventType === "agent_error")) {
-      return false;
-    }
-  }
-  return true;
-}
-
-// --- OrchestrationStepItem ---
+// --- TraceStepItem ---
 
 interface StepItemProps {
-  event: AgentEvent;
+  event: PipelineEvent;
   isLast: boolean;
-  mode: ViewMode;
   firstTimestamp: number;
-  allEvents: AgentEvent[];
+  allEvents: PipelineEvent[];
 }
 
-function OrchestrationStepItem({
-  event,
-  isLast,
-  mode,
-  firstTimestamp,
-  allEvents,
-}: StepItemProps) {
-  const [detailOpen, setDetailOpen] = useState(false);
-  const active = isEventActive(event, allEvents);
-  const isError = event.eventType === "agent_error";
-  const isCompleted =
-    event.eventType === "agent_completed" ||
-    event.eventType === "agent_tool_result";
-
-  const Icon = getAgentIcon(event.agentName);
-  const displayMessage =
-    mode === "technical" ? event.technicalMessage : event.humanMessage;
-
-  // Determine if this event has expandable detail
-  const hasDetail =
-    (event.eventType === "agent_tool_call" && event.toolArgsPreview) ||
-    (event.eventType === "agent_tool_result" && event.resultLen > 0) ||
-    (event.eventType === "agent_error") ||
-    (event.eventType === "agent_started" && mode === "technical" && event.model);
+function TraceStepItem({ event, isLast, firstTimestamp, allEvents }: StepItemProps) {
+  const active = isActiveEvent(event, allEvents);
+  const isError = event.eventType === "job_failed" || event.eventType === "agent_error";
+  const isCompleted = isTerminalEvent(event) && !isError;
+  const Icon = getEventIcon(event);
+  const color = getEventColor(event);
 
   return (
-    <div className="relative pl-6 pb-4 last:pb-0">
+    <div className="relative pl-6 pb-3 last:pb-0">
       {/* Connecting line */}
       {!isLast && (
         <div className="absolute left-[11px] top-6 bottom-0 w-px bg-border" />
@@ -120,79 +135,15 @@ function OrchestrationStepItem({
       </div>
 
       {/* Content */}
-      <div className="flex flex-col gap-1">
-        {/* Header row */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs font-mono text-primary bg-primary-bg px-1.5 py-0.5 rounded border border-border">
-            {formatRelativeTime(event.timestamp, firstTimestamp)}
-          </span>
-          <span className="inline-flex items-center gap-1 text-xs text-text-secondary">
-            <Icon size={12} className="text-primary" />
-            {event.agentName}
-          </span>
-          {event.eventType === "agent_tool_call" && (
-            <span className="text-xs font-mono text-accent">
-              {event.toolName}
-            </span>
-          )}
-          {event.eventType === "agent_tool_result" && event.elapsedMs != null && (
-            <span className="text-xs font-mono text-text-muted">
-              {event.elapsedMs}ms
-            </span>
-          )}
-          {event.eventType === "agent_completed" && event.elapsedMs != null && (
-            <span className="text-xs font-mono text-text-muted">
-              {event.elapsedMs}ms
-            </span>
-          )}
-        </div>
-
-        {/* Message */}
-        <p
-          className={`text-sm leading-relaxed ${
-            isError ? "text-error" : "text-text-primary"
-          }`}
-        >
-          {displayMessage}
-        </p>
-
-        {/* Expandable detail */}
-        {hasDetail && (
-          <button
-            type="button"
-            onClick={() => setDetailOpen(!detailOpen)}
-            className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-text-secondary transition-colors mt-0.5 w-fit"
-          >
-            {detailOpen ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
-            details
-          </button>
-        )}
-        {hasDetail && detailOpen && (
-          <div className="mt-1 bg-bg rounded-md p-2 border border-border text-xs font-mono text-text-secondary overflow-x-auto">
-            {event.eventType === "agent_tool_call" && event.toolArgsPreview && (
-              <pre className="whitespace-pre-wrap break-all">
-                {event.toolArgsPreview}
-              </pre>
-            )}
-            {event.eventType === "agent_tool_result" && (
-              <span>
-                Result: {event.resultLen} chars
-                {event.elapsedMs != null && ` · ${event.elapsedMs}ms`}
-              </span>
-            )}
-            {event.eventType === "agent_error" && (
-              <div className="space-y-1">
-                <div className="text-error">{event.error}</div>
-                {event.errorType && (
-                  <div className="text-text-muted">Type: {event.errorType}</div>
-                )}
-              </div>
-            )}
-            {event.eventType === "agent_started" && mode === "technical" && event.model && (
-              <span>Model: {event.model}</span>
-            )}
-          </div>
-        )}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-xs font-mono text-primary bg-primary-bg px-1.5 py-0.5 rounded border border-border">
+          {formatRelativeTime(event.timestamp, firstTimestamp)}
+        </span>
+        <span className="inline-flex items-center gap-1 text-xs text-text-secondary">
+          <Icon size={12} className="text-primary" />
+          {event.eventType}
+        </span>
+        <span className={`text-sm ${color}`}>{event.message}</span>
       </div>
     </div>
   );
@@ -201,33 +152,17 @@ function OrchestrationStepItem({
 // --- OrchestrationTrace ---
 
 interface OrchestrationTraceProps {
-  events: AgentEvent[];
+  events: PipelineEvent[];
   isActive: boolean;
-  mode?: ViewMode;
-  onModeChange?: (mode: ViewMode) => void;
 }
 
 export default function OrchestrationTrace({
   events,
   isActive,
-  mode: controlledMode,
-  onModeChange,
 }: OrchestrationTraceProps) {
   const [expanded, setExpanded] = useState(false);
-  const [internalMode, setInternalMode] = useState<ViewMode>("friendly");
   const scrollRef = useRef<HTMLDivElement>(null);
   const isAtBottomRef = useRef(true);
-
-  const mode = controlledMode ?? internalMode;
-
-  function toggleMode() {
-    const next = mode === "friendly" ? "technical" : "friendly";
-    if (onModeChange) {
-      onModeChange(next);
-    } else {
-      setInternalMode(next);
-    }
-  }
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
@@ -250,7 +185,7 @@ export default function OrchestrationTrace({
 
   return (
     <div className="border border-border rounded-lg overflow-hidden bg-surface mt-4">
-      {/* Header — always visible */}
+      {/* Header */}
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
@@ -263,13 +198,11 @@ export default function OrchestrationTrace({
           )}
         </div>
         <span className="text-sm font-medium text-text-primary flex-1">
-          Orchestration Trace
+          Event Trace
         </span>
         {!expanded && (
           <span className="text-xs text-text-muted truncate max-w-48">
-            {isActive
-              ? lastEvent.humanMessage
-              : `Completed · ${events.length} steps`}
+            {lastEvent.message}
           </span>
         )}
         <span className="text-xs font-mono text-text-muted bg-bg px-1.5 py-0.5 rounded">
@@ -282,39 +215,22 @@ export default function OrchestrationTrace({
         )}
       </button>
 
-      {/* Expand/collapse via CSS grid */}
+      {/* Expandable timeline */}
       <div
         className="grid transition-[grid-template-rows] duration-200 ease"
         style={{ gridTemplateRows: expanded ? "1fr" : "0fr" }}
       >
         <div className="overflow-hidden min-h-0">
-          {/* Mode toggle */}
-          <div className="flex items-center justify-end px-4 py-1.5 border-t border-border bg-bg/30">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleMode();
-              }}
-              className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-text-secondary transition-colors"
-            >
-              {mode === "friendly" ? <Eye size={12} /> : <EyeOff size={12} />}
-              {mode === "friendly" ? "Technical" : "Friendly"}
-            </button>
-          </div>
-
-          {/* Timeline */}
           <div
             ref={scrollRef}
             onScroll={handleScroll}
-            className="max-h-64 overflow-y-auto px-4 pb-3"
+            className="max-h-64 overflow-y-auto border-t border-border px-4 py-3"
           >
             {events.map((event, index) => (
-              <OrchestrationStepItem
+              <TraceStepItem
                 key={event.id}
                 event={event}
                 isLast={index === events.length - 1}
-                mode={mode}
                 firstTimestamp={firstTimestamp}
                 allEvents={events}
               />

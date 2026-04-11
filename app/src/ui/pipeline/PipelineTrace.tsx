@@ -3,7 +3,7 @@ import { Loader2, WifiOff } from "lucide-react";
 import type { PipelineState } from "../../core/types/pipeline";
 import ProgressBar from "./ProgressBar";
 import StageItem from "./StageItem";
-import EventStream from "./EventStream";
+import OrchestrationTrace from "./OrchestrationTrace";
 
 interface Props {
   state: PipelineState;
@@ -77,7 +77,10 @@ export default function PipelineTrace({ state, connectionLost }: Props) {
           ))}
         </div>
 
-        <EventStream events={state.events} />
+        <OrchestrationTrace
+          events={state.events}
+          isActive={state.status === "running"}
+        />
       </div>
     </div>
   );
