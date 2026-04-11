@@ -23,3 +23,15 @@ body {
   0% { background-color: color-mix(in srgb, var(--color-accent) 30%, transparent); }
   100% { background-color: transparent; }
 }
+
+/* Pipeline — counter tick on number change */
+@keyframes tick {
+  0% { opacity: 0.5; transform: scale(1.15); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Pipeline — fade in for loading crossfade */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
