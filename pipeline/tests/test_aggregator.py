@@ -249,8 +249,8 @@ class TestResolveCitations:
         ]
         claim_lookup = _build_claim_lookup(_make_claims())
         resolved = _resolve_citations(sections, citations, claim_lookup)
-        assert "[1](p.2,§3)" in resolved[0].content
-        assert "[2](p.4,§1)" in resolved[0].content
+        assert '[1](cite:1 "p.2,§3")' in resolved[0].content
+        assert '[2](cite:2 "p.4,§1")' in resolved[0].content
 
     def test_missing_claim_shows_fallback(self) -> None:
         sections = [
@@ -266,7 +266,7 @@ class TestResolveCitations:
         ]
         claim_lookup = _build_claim_lookup(_make_claims())
         resolved = _resolve_citations(sections, citations, claim_lookup)
-        assert "[99](?)" in resolved[0].content
+        assert '[99](cite:99 "?")' in resolved[0].content
 
     def test_orphan_ref_left_intact(self) -> None:
         sections = [
@@ -408,10 +408,10 @@ class TestAggregatorAgentRun:
 
         sections = result["sections"]
         assert len(sections) == 2
-        # Check [1] was resolved to [1](p.2,§3)
-        assert "[1](p.2,§3)" in sections[0]["content"]
-        assert "[2](p.4,§1)" in sections[0]["content"]
-        assert "[3](p.5,§2)" in sections[1]["content"]
+        # Check [1] was resolved to [1](cite:1 "p.2,§3")
+        assert '[1](cite:1 "p.2,§3")' in sections[0]["content"]
+        assert '[2](cite:2 "p.4,§1")' in sections[0]["content"]
+        assert '[3](cite:3 "p.5,§2")' in sections[1]["content"]
 
     async def test_run_returns_claim_ids_backward_compat(
         self, input_data: dict[str, Any], mock_result: AggregatorResult

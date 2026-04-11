@@ -25,10 +25,36 @@ export interface EnrichedPaperResponse {
   claims: Record<string, unknown>[];
 }
 
+export interface RawCitation {
+  ref_number: number;
+  claim_id: string;
+  paper_id: string;
+  paper_title?: string;
+  page?: number;
+  paragraph?: number;
+}
+
+export interface RawReviewSection {
+  theme_id: string;
+  label: string;
+  content: string;
+  claim_ids: string[];
+  citation_refs?: number[];
+}
+
+export interface RawReference {
+  paper_id: string;
+  paper_title?: string;
+  authors?: string[];
+  cited_in?: { ref_number: number; page: number; paragraph: number }[];
+}
+
 export interface RawReview {
   title: string;
-  sections: { theme_id: string; label: string; content: string; claim_ids: string[] }[];
-  references: unknown[];
+  abstract?: string;
+  sections: RawReviewSection[];
+  citations?: RawCitation[];
+  references?: RawReference[];
 }
 
 export interface JobStatusResponse {

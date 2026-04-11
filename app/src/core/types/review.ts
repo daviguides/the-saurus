@@ -26,6 +26,8 @@ export interface ReviewStats {
 export interface ReviewData {
   markdown: string;
   papers: ReviewPaper[];
+  /** Maps citation ref_number → paper index (1-based) */
+  refToPaperIndex: Record<number, number>;
   stats: ReviewStats;
   generatedAt: number;
 }

@@ -123,7 +123,7 @@ export default function ReviewView() {
       </div>
       <div className="flex-1 overflow-y-auto scroll-smooth">
         <div className="px-8 py-6">
-          <ReviewBody markdown={review.markdown} papers={review.papers} />
+          <ReviewBody markdown={review.markdown} papers={review.papers} refToPaperIndex={review.refToPaperIndex} />
           <ReferencesSection papers={review.papers} />
         </div>
       </div>

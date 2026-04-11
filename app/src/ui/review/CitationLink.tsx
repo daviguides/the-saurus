@@ -7,9 +7,10 @@ interface Props {
   title?: string;
   children?: ReactNode;
   papers: ReviewPaper[];
+  refToPaperIndex?: Record<number, number>;
 }
 
-export default function CitationLink({ href, title, children, papers }: Props) {
+export default function CitationLink({ href, title, children, papers, refToPaperIndex }: Props) {
   if (!href?.startsWith("cite:")) {
     return (
       <a href={href} title={title} target="_blank" rel="noopener noreferrer" className="text-primary underline">
@@ -18,13 +19,15 @@ export default function CitationLink({ href, title, children, papers }: Props) {
     );
   }
 
-  const refIndex = parseInt(href.slice(5), 10);
-  const paper = papers.find((p) => p.index === refIndex);
+  const refNumber = parseInt(href.slice(5), 10);
+  // Map ref_number → paper index via citation mapping, fallback to direct match
+  const paperIndex = refToPaperIndex?.[refNumber] ?? refNumber;
+  const paper = papers.find((p) => p.index === paperIndex);
   const position = title || "";
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    const el = document.getElementById(`ref-${refIndex}`);
+    const el = document.getElementById(`ref-${paperIndex}`);
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "start" });
       el.classList.add("ref-highlight");
@@ -43,7 +46,7 @@ export default function CitationLink({ href, title, children, papers }: Props) {
 
   const link = (
     <a
-      href={`#ref-${refIndex}`}
+      href={`#ref-${paperIndex}`}
       onClick={handleClick}
       className="text-primary font-medium no-underline hover:underline cursor-pointer"
     >

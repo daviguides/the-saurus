@@ -265,7 +265,7 @@ def _resolve_citations(
             ref_num = int(match.group(1))
             pos = ref_to_pos.get(ref_num)
             if pos is not None:
-                return f"[{ref_num}]({pos})"
+                return f"[{ref_num}](cite:{ref_num} \"{pos}\")"
             logger.warning("Orphan reference [%d] in section %s", ref_num, section.theme_id)
             return match.group(0)  # leave as-is
 

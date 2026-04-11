@@ -8,13 +8,14 @@ import { slugify, extractText } from "./slugify";
 interface Props {
   markdown: string;
   papers: ReviewPaper[];
+  refToPaperIndex?: Record<number, number>;
 }
 
-export default function ReviewBody({ markdown, papers }: Props) {
+export default function ReviewBody({ markdown, papers, refToPaperIndex }: Props) {
   const components = useMemo(
     (): ComponentProps<typeof Markdown>["components"] => ({
       a: ({ href, title, children }) => (
-        <CitationLink href={href} title={title} papers={papers}>
+        <CitationLink href={href} title={title} papers={papers} refToPaperIndex={refToPaperIndex}>
           {children}
         </CitationLink>
       ),
@@ -27,7 +28,7 @@ export default function ReviewBody({ markdown, papers }: Props) {
         );
       },
     }),
-    [papers],
+    [papers, refToPaperIndex],
   );
 
   return (
