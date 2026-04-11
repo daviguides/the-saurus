@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from typing import Any
+from uuid import uuid4
 
 import google.genai as genai
 from qdrant_client import QdrantClient
@@ -204,7 +205,7 @@ class QdrantIndexer:
 
         points = [
             PointStruct(
-                id=section["theme_id"],
+                id=_safe_point_id(section.get("theme_id", "")),
                 vector=vector,
                 payload={
                     "job_id": job_id,
@@ -222,6 +223,16 @@ class QdrantIndexer:
             for section, vector in zip(sections, vectors)
         ]
         await self._upsert(LITERATURE_REVIEW, points)
+
+
+def _safe_point_id(value: str) -> str:
+    """Ensure value is a valid Qdrant point ID (UUID). Generate one if not."""
+    try:
+        from uuid import UUID
+        UUID(value)
+        return value
+    except (ValueError, AttributeError):
+        return str(uuid4())
 
 
 _indexer: QdrantIndexer | None = None
