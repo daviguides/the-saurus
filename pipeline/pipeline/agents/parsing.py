@@ -25,10 +25,62 @@ T = TypeVar("T", bound=BaseModel)
 logger = logging.getLogger(__name__)
 
 LLM_TIMEOUT = 180.0  # seconds
+DIRECT_FALLBACK_ENABLED = True  # Bypass Agno on empty response and call Gemini directly
 
 
 class AgentResponseError(Exception):
     """Raised when the agent response cannot be parsed after retries."""
+
+
+async def _direct_gemini_call(message: str, instructions: str, agent_name: str, ctx: dict) -> str | None:
+    """Fallback: call Gemini API directly, bypassing Agno.
+
+    Used when Agno returns empty content (silently swallowed error).
+    Returns the raw text response or None on failure.
+    """
+    try:
+        import google.genai as genai
+        from pipeline.config import settings
+
+        client = genai.Client(api_key=settings.llm_api_key)
+        full_prompt = f"{instructions}\n\n{message}"
+
+        logger.info(
+            "[%s] DIRECT FALLBACK — calling Gemini API directly (bypassing Agno) %s",
+            agent_name,
+            " ".join(f"{k}={v}" for k, v in ctx.items() if k not in ("_emitter", "job_dir")) if ctx else "",
+        )
+
+        result = await asyncio.to_thread(
+            client.models.generate_content,
+            model=settings.llm_model_id,
+            contents=full_prompt,
+        )
+
+        if result.candidates:
+            candidate = result.candidates[0]
+            if candidate.content and candidate.content.parts:
+                text = candidate.content.parts[0].text
+                logger.info(
+                    "[%s] DIRECT FALLBACK succeeded | len=%d finish=%s %s",
+                    agent_name, len(text), candidate.finish_reason,
+                    " ".join(f"{k}={v}" for k, v in ctx.items() if k not in ("_emitter", "job_dir")) if ctx else "",
+                )
+                return text
+            else:
+                logger.error(
+                    "[%s] DIRECT FALLBACK — no content | finish=%s safety=%s",
+                    agent_name, candidate.finish_reason, candidate.safety_ratings,
+                )
+        else:
+            logger.error(
+                "[%s] DIRECT FALLBACK — no candidates | feedback=%s",
+                agent_name, getattr(result, "prompt_feedback", None),
+            )
+    except Exception as exc:
+        logger.error("[%s] DIRECT FALLBACK failed: %s", agent_name, str(exc)[:300])
+
+    return None
 
 
 def estimate_tokens(text: str) -> int:
@@ -191,6 +243,15 @@ async def run_agent_with_retry(
                     agent_name, attempt, max_retries, elapsed,
                     " ".join(f"{k}={v}" for k, v in ctx.items() if k != "_emitter") if ctx else "",
                 )
+
+                # Fallback: call Gemini directly when Agno silently fails
+                if DIRECT_FALLBACK_ENABLED:
+                    instructions = getattr(agent, "instructions", "") or ""
+                    if not instructions:
+                        instructions = getattr(getattr(agent, "_agent", agent), "instructions", "") or ""
+                    direct_raw = await _direct_gemini_call(message, instructions, agent_name, ctx)
+                    if direct_raw:
+                        raw = direct_raw
 
             # Save raw response for debugging
             if job_dir and raw is not None:

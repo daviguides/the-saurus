@@ -11,8 +11,8 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
 )
 
-# Silence noisy Agno/Gemini generic error logs — our parsing.py handles these
-logging.getLogger("agno").setLevel(logging.CRITICAL)
+# Show Agno errors (ERROR level) to debug Gemini failures, but hide INFO/DEBUG noise
+logging.getLogger("agno").setLevel(logging.ERROR)
 logging.getLogger("google_genai").setLevel(logging.WARNING)
 # Reduce httpx noise (every HuggingFace/Gemini/Qdrant request logged at INFO)
 logging.getLogger("httpx").setLevel(logging.WARNING)
