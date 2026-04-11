@@ -68,6 +68,7 @@ class ThemeReviewerAgent:
 
         review = await run_agent_with_retry(
             self._agent, message, ThemeReviewResult,
+            context={"stage": "theme_review", "theme": theme.get("name", "?"), "claim_count": len(relevant_claims)},
         )
 
         # Validate claim IDs — only keep those present in input

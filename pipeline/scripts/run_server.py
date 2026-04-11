@@ -1,6 +1,15 @@
+import logging
+
 import uvicorn
 
 from pipeline.config import settings
+
+# Configure logging so agent debug info is visible
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)-7s [%(name)s] %(message)s",
+    datefmt="%H:%M:%S",
+)
 
 
 def main():

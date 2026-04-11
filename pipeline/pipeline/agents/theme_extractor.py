@@ -59,6 +59,7 @@ class ThemeExtractorAgent:
 
         extraction = await run_agent_with_retry(
             self._agent, content, ThemeExtractionResult,
+            context={"paper_id": paper_id, "stage": "theme_extraction"},
         )
         return {
             "themes": [

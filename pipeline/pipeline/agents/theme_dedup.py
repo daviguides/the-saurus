@@ -63,6 +63,7 @@ class ThemeDedupAgent:
 
         dedup = await run_agent_with_retry(
             self._agent, message, ThemeDedupResult,
+            context={"stage": "theme_dedup", "raw_theme_count": len(all_themes)},
         )
 
         # Map LLM groups back to concrete theme data

@@ -72,6 +72,7 @@ class ClaimExtractorAgent:
 
         extraction = await run_agent_with_retry(
             self._agent, message, ClaimExtractionResult,
+            context={"paper_id": paper_id, "stage": "claim_extraction", "theme_count": len(themes)},
         )
         return {
             "claims": [
