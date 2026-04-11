@@ -275,7 +275,7 @@ export function usePipelineTrace(jobId: string | null) {
         const events = await fetchEvents(jobId!);
         if (cancelled) return;
         for (const event of events) {
-          dispatchEvent(event as unknown as RawPipelineEvent);
+          dispatchEvent(event);
         }
       } catch {
         // If events fetch fails, still connect WS to get live events

@@ -76,18 +76,6 @@ export type PipelineAction =
   | { type: "PIPELINE_FAILED"; payload: { message: string } }
   | { type: "RECOVERY_START" };
 
-/** Response from GET /jobs/{id}/status. */
-export interface JobStatusResponse {
-  job_id: string;
-  status: "pending" | "running" | "completed" | "failed";
-  stage: string;
-  progress: number;
-  paper_count: number;
-  created_at: string;
-  updated_at: string;
-  error: string | null;
-}
-
 /** Raw event JSON from the backend WebSocket. */
 export interface RawPipelineEvent {
   event_id: string;

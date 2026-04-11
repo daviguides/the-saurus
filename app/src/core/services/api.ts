@@ -1,3 +1,5 @@
+import type { RawPipelineEvent } from "../types/pipeline";
+
 export const PIPELINE_API_URL =
   import.meta.env.VITE_PIPELINE_URL || "http://localhost:8002";
 
@@ -40,21 +42,13 @@ export interface JobStatusResponse {
   error: string | null;
 }
 
-export interface RawEvent {
-  event_id: string;
-  event_type: string;
-  timestamp: string;
-  job_id: string;
-  payload: Record<string, unknown>;
-}
-
 export async function fetchJobStatus(jobId: string): Promise<JobStatusResponse> {
   const res = await fetch(`${PIPELINE_API_URL}/jobs/${jobId}/status`);
   if (!res.ok) throw new Error(`Job not found (${res.status})`);
   return res.json();
 }
 
-export async function fetchEvents(jobId: string): Promise<RawEvent[]> {
+export async function fetchEvents(jobId: string): Promise<RawPipelineEvent[]> {
   const res = await fetch(`${PIPELINE_API_URL}/jobs/${jobId}/events`);
   if (!res.ok) throw new Error(`Failed to fetch events (${res.status})`);
   const data = await res.json();
