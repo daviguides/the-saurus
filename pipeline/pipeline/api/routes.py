@@ -108,7 +108,7 @@ async def create_job(files: list[UploadFile]) -> CreateJobResponse:
 
         # Save markdown
         md_path = job_path / f"{paper_id}.md"
-        md_path.write_text(result.to_markdown())
+        md_path.write_text(result.to_annotated_markdown())
 
     if not papers:
         raise HTTPException(status_code=400, detail="No papers could be ingested")
