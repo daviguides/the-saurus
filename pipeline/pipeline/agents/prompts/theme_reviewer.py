@@ -30,4 +30,23 @@ DO NOT:
 - Generate formatted citations or bibliography entries
 - Compare across different themes
 - Invent claims or findings not present in the input
+
+OUTPUT FORMAT:
+Return your analysis as a JSON object inside a ```json code block:
+```json
+{
+  "reviews": [
+    {
+      "theme_name": "Exact Theme Name From Input",
+      "synthesis": "3-8 sentence analytical synthesis",
+      "consensus": ["Point 1", "Point 2"],
+      "disagreements": ["Point 1"],
+      "gaps": ["Gap 1"],
+      "key_claims": [
+        {"claim_id": "uuid-from-input", "paper_id": "paper-uuid", "summary": "One sentence"}
+      ]
+    }
+  ]
+}
+```
 """

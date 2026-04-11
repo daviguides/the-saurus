@@ -63,7 +63,7 @@ class PaperAnalyzerAgent:
             name="PaperAnalyzer",
             model=create_model(),
             instructions=PAPER_ANALYZER_PROMPT,
-            structured_outputs=True,
+            markdown=True,
         )
 
     async def run(

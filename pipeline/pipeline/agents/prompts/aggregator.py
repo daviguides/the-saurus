@@ -41,4 +41,24 @@ DO NOT:
 - Produce bibliography entries or formatted references — just map [N] to \
 claim_id and paper_id.
 - Omit any theme from the input — every theme must have a section.
+
+OUTPUT FORMAT:
+Return your analysis as a JSON object inside a ```json code block:
+```json
+{
+  "title": "Literature Review Title",
+  "abstract": "3-5 sentence abstract",
+  "sections": [
+    {
+      "theme_id": "theme-uuid-or-name",
+      "label": "Section Heading",
+      "content": "Section body with [N] citations...",
+      "citation_refs": [1, 2, 5]
+    }
+  ],
+  "citations": [
+    {"ref_number": 1, "claim_id": "claim-uuid", "paper_id": "paper-uuid"}
+  ]
+}
+```
 """
