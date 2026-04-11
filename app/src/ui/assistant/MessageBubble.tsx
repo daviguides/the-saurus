@@ -15,13 +15,13 @@ export default function MessageBubble({ message }: Props) {
         className={`max-w-[85%] rounded-2xl px-4 py-3 ${
           isUser
             ? "bg-primary text-white"
-            : "bg-surface border border-border border-l-2 border-l-primary text-text-primary"
+            : "bg-bg border border-border border-l-2 border-l-primary text-text-primary"
         }`}
       >
         {isUser ? (
           <p className="whitespace-pre-wrap text-sm">{message.content}</p>
         ) : (
-          <div className="prose prose-sm max-w-none text-text-primary [&_a]:text-primary [&_code]:bg-bg [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:font-mono">
+          <div className="prose-content">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {message.content}
             </ReactMarkdown>
