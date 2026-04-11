@@ -1,12 +1,29 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { usePapers } from "../../core/hooks/usePapers";
+import { useUpload } from "../../core/hooks/useUpload";
 import { usePipelineTrace } from "../../core/hooks/usePipelineTrace";
+import { PIPELINE_STAGES } from "../../core/types/pipeline";
+import type { PipelineState } from "../../core/types/pipeline";
 import UploadModal from "../papers/UploadModal";
 import EmptyState from "../papers/EmptyState";
 import PaperList from "../papers/PaperList";
 import PaperCards from "../papers/PaperCards";
 import PipelineTrace from "../pipeline/PipelineTrace";
+import Toast from "../shared/Toast";
 import { MOCK_COMPLETE_PAPERS } from "../../mocks/papers";
+
+const INITIAL_PIPELINE_STATE: PipelineState = {
+  status: "running",
+  stages: PIPELINE_STAGES.map((s) => ({
+    id: s.id,
+    status: "pending",
+    processedPapers: [],
+    totalPapers: 0,
+  })),
+  events: [],
+  progress: { completed: 0, total: 0 },
+  startedAt: Date.now(),
+};
 
 export default function PapersView() {
   const {
@@ -21,6 +38,14 @@ export default function PapersView() {
 
   const { state: pipelineState, isRunning, isCompleted, startPipeline } =
     usePipelineTrace();
+
+  const {
+    status: uploadStatus,
+    progress: uploadProgress,
+    error: uploadError,
+    upload,
+    reset: resetUpload,
+  } = useUpload();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -42,6 +67,13 @@ export default function PapersView() {
     }
   }, [isCompleted, isProcessing, loadMockComplete]);
 
+  const handleFilesAdded = useCallback(
+    (files: File[]) => {
+      upload(files);
+    },
+    [upload],
+  );
+
   const handleGenerate = () => {
     const selectedPapers = papers
       .filter((p) => selectedIds.has(p.id))
@@ -51,7 +83,14 @@ export default function PapersView() {
     startPipeline(selectedPapers);
   };
 
-  // Processing state — show pipeline trace
+  const isUploading = uploadStatus === "uploading";
+
+  // Upload succeeded — show pipeline trace with initial pending state
+  if (uploadStatus === "processing") {
+    return <PipelineTrace state={INITIAL_PIPELINE_STATE} />;
+  }
+
+  // Pipeline running via mock (existing flow) — show pipeline trace
   if (isProcessing || isRunning) {
     return <PipelineTrace state={pipelineState} />;
   }
@@ -61,13 +100,17 @@ export default function PapersView() {
       <>
         <EmptyState
           onUpload={() => setModalOpen(true)}
-          onFilesAdded={addPapers}
+          onFilesAdded={handleFilesAdded}
+          disabled={isUploading}
+          progress={uploadProgress}
         />
         <UploadModal
           open={modalOpen}
           onClose={() => setModalOpen(false)}
-          onFilesAdded={addPapers}
+          onFilesAdded={handleFilesAdded}
+          disabled={isUploading}
         />
+        <Toast message={uploadError} onDismiss={resetUpload} />
       </>
     );
   }
@@ -89,8 +132,10 @@ export default function PapersView() {
       <UploadModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        onFilesAdded={addPapers}
+        onFilesAdded={handleFilesAdded}
+        disabled={isUploading}
       />
+      <Toast message={uploadError} onDismiss={resetUpload} />
     </>
   );
 }
