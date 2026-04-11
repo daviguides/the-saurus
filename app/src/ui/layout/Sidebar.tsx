@@ -1,6 +1,7 @@
 import { NavLink } from "react-router";
 import { Upload, FileText, BookOpen } from "lucide-react";
 import clsx from "clsx";
+import { useReview } from "../../core/hooks/useReview";
 
 const navItems = [
   { to: "/papers", label: "Papers", icon: FileText },
@@ -8,6 +9,8 @@ const navItems = [
 ];
 
 export default function Sidebar() {
+  const { hasReview } = useReview();
+
   const handleUploadClick = () => {
     window.dispatchEvent(new CustomEvent("open-upload-modal"));
   };
@@ -36,7 +39,7 @@ export default function Sidebar() {
             title={label}
             className={({ isActive }) =>
               clsx(
-                "flex items-center justify-center w-10 h-10 rounded-lg transition-colors duration-200",
+                "relative flex items-center justify-center w-10 h-10 rounded-lg transition-colors duration-200",
                 isActive
                   ? "bg-primary text-white"
                   : "text-text-secondary hover:text-primary hover:bg-primary/10",
@@ -44,6 +47,9 @@ export default function Sidebar() {
             }
           >
             <Icon size={20} />
+            {to === "/review" && hasReview && (
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-accent" />
+            )}
           </NavLink>
         ))}
       </nav>

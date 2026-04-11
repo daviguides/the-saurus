@@ -29,3 +29,13 @@
 body {
   font-family: var(--font-body);
 }
+
+/* Review — reference highlight on scroll-to */
+.ref-highlight {
+  animation: highlight-fade 2s ease-out;
+}
+
+@keyframes highlight-fade {
+  0% { background-color: color-mix(in srgb, var(--color-accent) 30%, transparent); }
+  100% { background-color: transparent; }
+}
