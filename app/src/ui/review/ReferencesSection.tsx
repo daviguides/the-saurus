@@ -1,7 +1,17 @@
 import type { ReviewPaper } from "../../core/types/review";
+import { slugify } from "./slugify";
 
 interface Props {
   papers: ReviewPaper[];
+}
+
+function scrollToSection(sectionLabel: string) {
+  const el = document.getElementById(slugify(sectionLabel));
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    el.classList.add("ref-highlight");
+    setTimeout(() => el.classList.remove("ref-highlight"), 2000);
+  }
 }
 
 function ReferenceEntry({ paper }: { paper: ReviewPaper }) {
@@ -19,7 +29,16 @@ function ReferenceEntry({ paper }: { paper: ReviewPaper }) {
           {paper.citedIn.map((section, i) => (
             <span key={section}>
               {i > 0 && ", "}
-              <span className="text-text-secondary">{section}</span>
+              <a
+                href={`#${slugify(section)}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  scrollToSection(section);
+                }}
+                className="text-primary hover:underline cursor-pointer"
+              >
+                {section}
+              </a>
             </span>
           ))}
         </p>
