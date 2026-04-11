@@ -252,7 +252,7 @@ async def _run_parallel_per_paper(
             input["themes"] per paper.
     """
 
-    async def process_one(paper: PaperEntry) -> dict[str, Any]:
+    async def process_one(paper: PaperEntry) -> dict[str, Any] | Exception:
         content = paper_contents.get(paper.paper_id, "")
         input_dict: dict[str, Any] = {
             "paper_id": paper.paper_id,
@@ -262,11 +262,37 @@ async def _run_parallel_per_paper(
         if extra_inputs:
             for key, mapping in extra_inputs.items():
                 input_dict[key] = mapping.get(paper.paper_id, [])
-        result = await agent.run(input_dict)
-        await tracker.stage_item_done(stage, paper.paper_id)
-        return result
+        try:
+            result = await agent.run(input_dict)
+            await tracker.stage_item_done(stage, paper.paper_id)
+            return result
+        except Exception as exc:
+            logger.error("Paper %s failed in %s: %s", paper.paper_id, stage, exc)
+            await tracker.stage_item_done(stage, paper.paper_id)
+            return exc
 
-    return list(await asyncio.gather(*[process_one(p) for p in papers]))
+    raw_results = await asyncio.gather(*[process_one(p) for p in papers])
+
+    # Collect results, re-raising if ALL papers failed
+    results: list[dict[str, Any]] = []
+    errors: list[Exception] = []
+    for r in raw_results:
+        if isinstance(r, Exception):
+            errors.append(r)
+        else:
+            results.append(r)
+
+    if not results:
+        raise RuntimeError(
+            f"All {len(papers)} papers failed in {stage}: {errors[0]}"
+        )
+    if errors:
+        logger.warning(
+            "%d/%d papers failed in %s — continuing with %d successful",
+            len(errors), len(papers), stage, len(results),
+        )
+
+    return results
 
 
 async def _run_parallel_per_theme(
@@ -288,23 +314,46 @@ async def _run_parallel_per_theme(
         pid = claim.get("source", {}).get("paper_id", "")
         claims_by_paper.setdefault(pid, []).append(claim)
 
-    async def process_one(theme: dict[str, Any]) -> dict[str, Any]:
-        # Associate claims from all papers that contributed to this theme
+    async def process_one(theme: dict[str, Any]) -> dict[str, Any] | Exception:
         paper_ids = theme.get("paper_ids", [theme.get("paper_id", "")])
         related_claims: list[dict[str, Any]] = []
         for pid in paper_ids:
             related_claims.extend(claims_by_paper.get(pid, []))
-        result = await agent.run({"theme": theme, "claims": related_claims})
-        # Persist per-theme review
-        theme_id = theme["id"]
-        await write_yaml(
-            job_path / "theme_reviews" / f"{theme_id}.yaml",
-            result,
-            job_id=job_id,
-        )
-        if indexer and fire_qdrant:
-            fire_qdrant(indexer.index_theme_review(job_id, result))
-        await tracker.stage_item_done(stage, theme_id)
-        return result
+        try:
+            result = await agent.run({"theme": theme, "claims": related_claims})
+            theme_id = theme["id"]
+            await write_yaml(
+                job_path / "theme_reviews" / f"{theme_id}.yaml",
+                result,
+                job_id=job_id,
+            )
+            if indexer and fire_qdrant:
+                fire_qdrant(indexer.index_theme_review(job_id, result))
+            await tracker.stage_item_done(stage, theme_id)
+            return result
+        except Exception as exc:
+            logger.error("Theme %s failed: %s", theme.get("id", "?"), exc)
+            await tracker.stage_item_done(stage, theme.get("id", ""))
+            return exc
 
-    return list(await asyncio.gather(*[process_one(t) for t in themes]))
+    raw_results = await asyncio.gather(*[process_one(t) for t in themes])
+
+    results: list[dict[str, Any]] = []
+    errors: list[Exception] = []
+    for r in raw_results:
+        if isinstance(r, Exception):
+            errors.append(r)
+        else:
+            results.append(r)
+
+    if not results:
+        raise RuntimeError(
+            f"All {len(themes)} themes failed in {stage}: {errors[0]}"
+        )
+    if errors:
+        logger.warning(
+            "%d/%d themes failed in %s — continuing with %d successful",
+            len(errors), len(themes), stage, len(results),
+        )
+
+    return results
