@@ -1,11 +1,12 @@
-import { BookOpen } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { BookOpen, Loader2, AlertCircle } from "lucide-react";
 import { useReview } from "../../core/hooks/useReview";
-import { MOCK_REVIEW } from "../../mocks/review";
+import { useJobId } from "../../core/hooks/useJobId";
 import StatsHeader from "../review/StatsHeader";
 import ReviewBody from "../review/ReviewBody";
 import ReferencesSection from "../review/ReferencesSection";
 
-function EmptyState({ onLoadMock }: { onLoadMock: () => void }) {
+function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center h-full gap-4 text-center px-4">
       <BookOpen size={48} className="text-text-muted" />
@@ -17,22 +18,70 @@ function EmptyState({ onLoadMock }: { onLoadMock: () => void }) {
           Upload papers and run the pipeline to generate a literature review.
         </p>
       </div>
+    </div>
+  );
+}
+
+function LoadingState() {
+  return (
+    <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-4">
+      <Loader2 size={32} className="text-primary animate-spin" />
+      <p className="text-text-secondary text-sm">Loading review...</p>
+    </div>
+  );
+}
+
+function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center h-full gap-4 text-center px-4">
+      <AlertCircle size={48} className="text-red-500" />
+      <div>
+        <h2 className="text-xl font-heading font-semibold text-text-primary mb-2">
+          Failed to load review
+        </h2>
+        <p className="text-text-secondary max-w-md text-sm">{message}</p>
+      </div>
       <button
         type="button"
-        onClick={onLoadMock}
+        onClick={onRetry}
         className="mt-2 px-4 py-2 text-sm rounded-lg border border-border text-text-secondary hover:text-primary hover:border-primary transition-colors"
       >
-        Load mock review
+        Retry
       </button>
     </div>
   );
 }
 
 export default function ReviewView() {
-  const { review, hasReview, loadReview } = useReview();
+  const { review, hasReview, loading, error, fetchAndLoad } = useReview();
+  const jobId = useJobId();
+  const attemptedRef = useRef(false);
+
+  // Auto-fetch review on mount if not already loaded
+  useEffect(() => {
+    if (!hasReview && !loading && jobId && !attemptedRef.current) {
+      attemptedRef.current = true;
+      fetchAndLoad(jobId);
+    }
+  }, [hasReview, loading, jobId, fetchAndLoad]);
+
+  if (loading) {
+    return <LoadingState />;
+  }
+
+  if (error) {
+    return (
+      <ErrorState
+        message={error}
+        onRetry={() => {
+          if (jobId) fetchAndLoad(jobId);
+        }}
+      />
+    );
+  }
 
   if (!hasReview || !review) {
-    return <EmptyState onLoadMock={() => loadReview(MOCK_REVIEW)} />;
+    return <EmptyState />;
   }
 
   return (
