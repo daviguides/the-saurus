@@ -10,8 +10,8 @@ from typing import Any
 from pipeline.agents import (
     ClaimExtractorAgent,
     StubAggregator,
-    StubThemeDedup,
     StubThemeReviewer,
+    ThemeDedupAgent,
     ThemeExtractorAgent,
 )
 from pipeline.core import (
@@ -115,7 +115,7 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         for result in theme_results:
             all_themes.extend(result.get("themes", []))
 
-        theme_dedup = StubThemeDedup()
+        theme_dedup = ThemeDedupAgent()
         await tracker.stage_start(Stage.THEME_DEDUP, 1)
         dedup_result = await theme_dedup.run({"themes": all_themes})
         await write_yaml(job_path / "theme_map.yaml", dedup_result, job_id=job_id)
@@ -232,9 +232,11 @@ async def _run_parallel_per_theme(
         claims_by_paper.setdefault(pid, []).append(claim)
 
     async def process_one(theme: dict[str, Any]) -> dict[str, Any]:
-        # Associate claims from the same paper as the theme
-        paper_id = theme.get("paper_id", "")
-        related_claims = claims_by_paper.get(paper_id, [])
+        # Associate claims from all papers that contributed to this theme
+        paper_ids = theme.get("paper_ids", [theme.get("paper_id", "")])
+        related_claims: list[dict[str, Any]] = []
+        for pid in paper_ids:
+            related_claims.extend(claims_by_paper.get(pid, []))
         result = await agent.run({"theme": theme, "claims": related_claims})
         # Persist per-theme review
         theme_id = theme["id"]

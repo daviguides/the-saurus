@@ -9,6 +9,7 @@ from .stubs import (
     StubThemeReviewer,
 )
 from .claim_extractor import ClaimExtractorAgent
+from .theme_dedup import ThemeDedupAgent
 from .theme_extractor import ThemeExtractorAgent
 
 __all__ = [
@@ -19,5 +20,6 @@ __all__ = [
     "StubThemeDedup",
     "StubThemeExtractor",
     "StubThemeReviewer",
+    "ThemeDedupAgent",
     "ThemeExtractorAgent",
 ]
