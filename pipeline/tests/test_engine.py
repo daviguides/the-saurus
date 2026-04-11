@@ -210,6 +210,14 @@ def _patch_theme_dedup():
     )
 
 
+def _patch_theme_reviewer():
+    """Patch ThemeReviewerAgent with StubThemeReviewer in orchestrator."""
+    return patch(
+        "pipeline.engine.orchestrator.ThemeReviewerAgent",
+        return_value=StubThemeReviewer(),
+    )
+
+
 class TestPipelineExecution:
     async def test_full_pipeline_completes(self, jobs_dir: Path):
         """Pipeline runs all stages and sets status to COMPLETED."""
@@ -222,6 +230,7 @@ class TestPipelineExecution:
             _patch_theme_extractor(),
             _patch_claim_extractor(),
             _patch_theme_dedup(),
+            _patch_theme_reviewer(),
         ):
             await run_pipeline(job_id, jobs_dir)
 
@@ -247,6 +256,7 @@ class TestPipelineExecution:
             _patch_theme_extractor(),
             _patch_claim_extractor(),
             _patch_theme_dedup(),
+            _patch_theme_reviewer(),
         ):
             await run_pipeline(job_id, jobs_dir)
 
@@ -275,6 +285,7 @@ class TestPipelineExecution:
             _patch_theme_extractor(),
             _patch_claim_extractor(),
             _patch_theme_dedup(),
+            _patch_theme_reviewer(),
         ):
             await run_pipeline(job_id, jobs_dir)
 
@@ -310,6 +321,7 @@ class TestPipelineExecution:
             _patch_theme_extractor(),
             _patch_claim_extractor(),
             _patch_theme_dedup(),
+            _patch_theme_reviewer(),
         ):
             await run_pipeline(job_id, jobs_dir)
 
@@ -340,6 +352,7 @@ class TestPipelineExecution:
             _patch_theme_extractor(),
             _patch_claim_extractor(),
             _patch_theme_dedup(),
+            _patch_theme_reviewer(),
         ):
             await run_pipeline(job_id, jobs_dir)
 
@@ -365,6 +378,7 @@ class TestPipelineExecution:
             _patch_theme_extractor(),
             _patch_claim_extractor(),
             _patch_theme_dedup(),
+            _patch_theme_reviewer(),
         ):
             await run_pipeline(job_id, jobs_dir)
 
@@ -410,6 +424,7 @@ class TestPipelineExecution:
             _patch_theme_extractor(),
             _patch_claim_extractor(),
             _patch_theme_dedup(),
+            _patch_theme_reviewer(),
         ):
             await run_pipeline(job_id, jobs_dir)
 
@@ -483,7 +498,7 @@ class TestAPILaunchesPipeline:
 
         pdf_bytes = _make_pdf_bytes()
 
-        with patch.object(settings, "jobs_dir", str(jobs_dir)), _patch_theme_extractor(), _patch_claim_extractor(), _patch_theme_dedup():
+        with patch.object(settings, "jobs_dir", str(jobs_dir)), _patch_theme_extractor(), _patch_claim_extractor(), _patch_theme_dedup(), _patch_theme_reviewer():
             transport = ASGITransport(app=app)
             async with AsyncClient(transport=transport, base_url="http://test") as client:
                 resp = await client.post(
