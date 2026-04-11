@@ -1,8 +1,8 @@
 import socketio
 
 from assistant_ws.ws.chat_service import ChatService, evict_team
-from assistant_ws.ws.session import SessionManager
 from assistant_ws.ws.connection import ConnectionManager
+from assistant_ws.ws.session import SessionManager
 
 session_mgr = SessionManager()
 conn_mgr = ConnectionManager()
