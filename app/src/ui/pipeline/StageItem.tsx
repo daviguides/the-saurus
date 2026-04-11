@@ -32,43 +32,62 @@ export default function StageItem({ stage, lastProcessedTitle }: Props) {
   const isRunning = stage.status === "running";
   const isCompleted = stage.status === "completed";
   const isPending = stage.status === "pending";
+  const isFailed = stage.status === "failed";
 
   return (
     <div
-      className={`flex items-center gap-3 px-4 py-3 rounded-lg mb-1.5 transition-colors ${
-        isRunning ? "bg-surface border border-border" : "bg-transparent"
+      className={`flex items-center gap-3 px-4 py-3 rounded-lg mb-1.5 transition-all duration-200 ease ${
+        isRunning
+          ? "bg-surface border border-border shadow-sm"
+          : "bg-transparent border border-transparent shadow-none"
       }`}
     >
-      {/* Status icon */}
-      <div className="flex-shrink-0 w-6 flex justify-center">
-        {isCompleted && (
+      {/* Status icon — all variants always rendered, toggled via opacity/scale */}
+      <div className="relative flex-shrink-0 w-6 h-6 flex items-center justify-center">
+        <div
+          className={`absolute inset-0 flex items-center justify-center transition-all duration-200 ease ${
+            isCompleted ? "opacity-100 scale-100" : "opacity-0 scale-75"
+          }`}
+        >
           <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
             <Check size={14} className="text-primary" />
           </div>
-        )}
-        {isRunning && (
+        </div>
+        <div
+          className={`absolute inset-0 flex items-center justify-center transition-all duration-200 ease ${
+            isRunning ? "opacity-100 scale-100" : "opacity-0 scale-75"
+          }`}
+        >
           <Loader2 size={20} className="text-primary animate-spin" />
-        )}
-        {isPending && (
+        </div>
+        <div
+          className={`absolute inset-0 flex items-center justify-center transition-all duration-200 ease ${
+            isPending ? "opacity-100 scale-100" : "opacity-0 scale-75"
+          }`}
+        >
           <Circle size={18} className="text-text-muted/40" />
-        )}
-        {stage.status === "failed" && (
+        </div>
+        <div
+          className={`absolute inset-0 flex items-center justify-center transition-all duration-200 ease ${
+            isFailed ? "opacity-100 scale-100" : "opacity-0 scale-75"
+          }`}
+        >
           <div className="w-6 h-6 rounded-full bg-error/10 flex items-center justify-center">
             <Circle size={14} className="text-error" />
           </div>
-        )}
+        </div>
       </div>
 
       {/* Stage icon */}
       <Icon
         size={16}
-        className={isPending ? "text-text-muted/40" : "text-primary"}
+        className={`transition-colors duration-200 ${isPending ? "text-text-muted/40" : "text-primary"}`}
       />
 
       {/* Label + activity */}
       <div className="flex-1 min-w-0">
         <span
-          className={`text-sm font-medium ${
+          className={`text-sm font-medium transition-colors duration-200 ${
             isPending ? "text-text-muted" : "text-text-primary"
           }`}
         >
@@ -81,10 +100,11 @@ export default function StageItem({ stage, lastProcessedTitle }: Props) {
         )}
       </div>
 
-      {/* Counter */}
+      {/* Counter with tick animation on change */}
       {stage.totalPapers > 0 && (
         <span
-          className={`text-xs font-mono flex-shrink-0 ${
+          key={stage.processedPapers.length}
+          className={`text-xs font-mono flex-shrink-0 animate-[tick_200ms_ease] ${
             isPending ? "text-text-muted/40" : "text-text-secondary"
           }`}
         >
