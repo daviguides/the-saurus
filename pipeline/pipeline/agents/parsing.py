@@ -91,17 +91,17 @@ async def run_agent_with_retry(
     from pipeline.agents.models import llm_semaphore
     from pipeline.config import settings
 
-    # Resolve raw response dump directory from context
-    job_dir: Path | None = None
-    if ctx.get("job_dir"):
-        job_dir = Path(ctx["job_dir"]) / "raw"
-
     if max_retries is None:
         max_retries = settings.llm_max_retries
     if retry_delay is None:
         retry_delay = settings.llm_retry_delay
 
     ctx = context or {}
+
+    # Resolve raw response dump directory from context
+    job_dir: Path | None = None
+    if ctx.get("job_dir"):
+        job_dir = Path(ctx["job_dir"]) / "raw"
     agent_name = getattr(agent, "name", agent.__class__.__name__)
     msg_chars = len(message)
     msg_tokens = estimate_tokens(message)
