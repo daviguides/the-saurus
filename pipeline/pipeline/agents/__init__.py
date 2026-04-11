@@ -11,6 +11,7 @@ from .stubs import (
 from .claim_extractor import ClaimExtractorAgent
 from .theme_dedup import ThemeDedupAgent
 from .theme_extractor import ThemeExtractorAgent
+from .theme_reviewer import ThemeReviewerAgent
 
 __all__ = [
     "Agent",
@@ -22,4 +23,5 @@ __all__ = [
     "StubThemeReviewer",
     "ThemeDedupAgent",
     "ThemeExtractorAgent",
+    "ThemeReviewerAgent",
 ]
