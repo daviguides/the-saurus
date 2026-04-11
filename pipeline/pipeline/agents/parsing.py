@@ -19,7 +19,6 @@ from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import Any, TypeVar
 
-from agno.agent import RunCompletedEvent, RunErrorEvent
 from pydantic import BaseModel
 
 T = TypeVar("T", bound=BaseModel)
@@ -76,7 +75,8 @@ async def run_agent_with_retry(
 ) -> T:
     """Run an Agno agent with retry logic, timeout, and response parsing.
 
-    Uses streaming mode to capture granular Agno events during execution.
+    Uses non-streaming mode to avoid Agno's per-chunk JSON parsing bug
+    that silently fails on large responses (>100K chars).
 
     Args:
         agent: Agno Agent instance.
@@ -86,7 +86,7 @@ async def run_agent_with_retry(
         retry_delay: Base delay between retries (multiplied by attempt number).
         timeout: Max seconds to wait for a single LLM call.
         context: Optional dict with debug info (paper_id, stage, etc.) for logging.
-        on_event: Optional async callback invoked for each Agno stream event.
+        on_event: Unused (kept for API compat). Streaming disabled.
     """
     from pipeline.agents.models import llm_semaphore
     from pipeline.config import settings
@@ -126,53 +126,13 @@ async def run_agent_with_retry(
                     agent_name, attempt, max_retries,
                     " ".join(f"{k}={v}" for k, v in ctx.items()) if ctx else "",
                 )
-                raw = None
-                event_count = 0
-                last_event_type = ""
                 async with asyncio.timeout(timeout):
-                    async for event in agent.arun(
+                    result = await agent.arun(
                         message,
-                        stream=True,
-                        stream_events=True,
+                        stream=False,
                         output_schema=output_schema,
-                    ):
-                        event_count += 1
-                        last_event_type = type(event).__name__
-                        if on_event is not None:
-                            try:
-                                await on_event(event)
-                            except Exception:
-                                logger.warning(
-                                    "[%s] on_event callback error for %s",
-                                    agent_name,
-                                    type(event).__name__,
-                                    exc_info=True,
-                                )
-                        if isinstance(event, RunErrorEvent):
-                            error_msg = getattr(event, "error", None) or getattr(event, "message", None) or str(event)
-                            logger.error(
-                                "[%s] RunErrorEvent | error=%s event_attrs=%r %s",
-                                agent_name,
-                                str(error_msg)[:500],
-                                {k: str(v)[:200] for k, v in vars(event).items() if v is not None},
-                                " ".join(f"{k}={v}" for k, v in ctx.items()) if ctx else "",
-                            )
-                        if isinstance(event, RunCompletedEvent):
-                            raw = event.content
-                            if raw is None:
-                                logger.warning(
-                                    "[%s] RunCompletedEvent.content is None | event=%r %s",
-                                    agent_name,
-                                    {k: str(v)[:200] for k, v in vars(event).items() if v is not None},
-                                    " ".join(f"{k}={v}" for k, v in ctx.items()) if ctx else "",
-                                )
-
-                if raw is None:
-                    logger.warning(
-                        "[%s] Stream ended without parsed content | events=%d last_event=%s %s",
-                        agent_name, event_count, last_event_type,
-                        " ".join(f"{k}={v}" for k, v in ctx.items()) if ctx else "",
                     )
+                raw = result.content
 
             elapsed = time.monotonic() - t0
 
