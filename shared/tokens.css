@@ -357,3 +357,51 @@
   background-color: #fff;
   accent-color: var(--saurus-primary);
 }
+
+/* ============================================================
+ * .prose-content — Dark Mode Overrides
+ * Only properties that don't auto-adapt via var(--saurus-*) tokens.
+ * ============================================================ */
+
+/* --- INLINE CODE --- */
+.dark .prose-content code {
+  background-color: #1E2122;
+  color: var(--saurus-ink);
+}
+
+/* --- CODE BLOCKS --- */
+.dark .prose-content pre {
+  background-color: #1E2122;
+}
+
+/* --- BLOCKQUOTES --- */
+.dark .prose-content blockquote {
+  background: linear-gradient(to right, rgba(91, 171, 138, 0.06), transparent);
+}
+
+/* --- TABLES --- */
+.dark .prose-content table {
+  background-color: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark .prose-content thead {
+  background-color: transparent;
+}
+
+.dark .prose-content th {
+  border-bottom-color: rgba(255, 255, 255, 0.10);
+}
+
+.dark .prose-content tbody tr {
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark .prose-content tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* --- CHECKBOX --- */
+.dark .prose-content input[type="checkbox"] {
+  background-color: var(--saurus-surface);
+}
