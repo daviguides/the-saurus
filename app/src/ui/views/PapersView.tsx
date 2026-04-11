@@ -1,11 +1,51 @@
-import { usePapers } from "../../core/hooks/usePapers";
+import { useCallback, useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
+import { useJobId } from "../../core/hooks/useJobId";
+import { fetchEnrichedPapers, fetchJobStatus } from "../../core/services/api";
+import { transformPapers } from "../../core/transforms/papers";
+import type { Paper } from "../../core/types/paper";
 import PaperCards from "../papers/PaperCards";
 import TheSaurusMascot from "../shared/TheSaurusMascot";
 
 export default function PapersView() {
-  const { papers, viewState } = usePapers();
+  const jobId = useJobId();
+  const [papers, setPapers] = useState<Paper[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  if (viewState !== "complete" || papers.length === 0) {
+  const fetchPapers = useCallback(async (id: string) => {
+    setLoading(true);
+    try {
+      const status = await fetchJobStatus(id);
+      if (status.status !== "completed") {
+        setPapers([]);
+        return;
+      }
+      const enriched = await fetchEnrichedPapers(id);
+      setPapers(transformPapers(enriched));
+    } catch {
+      setPapers([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (jobId) {
+      fetchPapers(jobId);
+    } else {
+      setPapers([]);
+    }
+  }, [jobId, fetchPapers]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 size={32} className="text-primary animate-spin" />
+      </div>
+    );
+  }
+
+  if (papers.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center px-4 gap-4">
         <TheSaurusMascot size={120} className="animate-[breathe_3s_ease-in-out_infinite]" />
