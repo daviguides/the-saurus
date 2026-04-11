@@ -25,7 +25,7 @@ T = TypeVar("T", bound=BaseModel)
 
 logger = logging.getLogger(__name__)
 
-LLM_TIMEOUT = 120.0  # seconds
+LLM_TIMEOUT = 180.0  # seconds — structured output for large papers needs more time
 
 
 class AgentResponseError(Exception):
@@ -121,6 +121,8 @@ async def run_agent_with_retry(
                     " ".join(f"{k}={v}" for k, v in ctx.items()) if ctx else "",
                 )
                 raw = None
+                event_count = 0
+                last_event_type = ""
                 async with asyncio.timeout(timeout):
                     async for event in agent.arun(
                         message,
@@ -128,6 +130,8 @@ async def run_agent_with_retry(
                         stream_events=True,
                         output_schema=output_schema,
                     ):
+                        event_count += 1
+                        last_event_type = type(event).__name__
                         if on_event is not None:
                             try:
                                 await on_event(event)
@@ -140,6 +144,21 @@ async def run_agent_with_retry(
                                 )
                         if isinstance(event, RunCompletedEvent):
                             raw = event.content
+                            if raw is None:
+                                # Log the full event for debugging
+                                logger.warning(
+                                    "[%s] RunCompletedEvent.content is None | event=%r %s",
+                                    agent_name,
+                                    {k: str(v)[:200] for k, v in vars(event).items() if v is not None},
+                                    " ".join(f"{k}={v}" for k, v in ctx.items()) if ctx else "",
+                                )
+
+                if raw is None:
+                    logger.warning(
+                        "[%s] Stream ended without parsed content | events=%d last_event=%s %s",
+                        agent_name, event_count, last_event_type,
+                        " ".join(f"{k}={v}" for k, v in ctx.items()) if ctx else "",
+                    )
 
             elapsed = time.monotonic() - t0
 
