@@ -24,7 +24,9 @@ class Settings(BaseSettings):
 
     # Qdrant
     qdrant_url: str = "http://localhost:6333"
-    qdrant_collection: str = "papers"
+    qdrant_api_key: str | None = None
+    qdrant_embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+    qdrant_embedding_dimension: int = 384
 
     # WebSocket
     ws_path: str = "/ws"
