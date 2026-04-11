@@ -59,7 +59,7 @@ export interface PipelineEvent {
 }
 
 export interface PipelineState {
-  status: "idle" | "running" | "completed" | "failed";
+  status: "idle" | "recovering" | "running" | "completed" | "failed";
   stages: PipelineStageState[];
   events: PipelineEvent[];
   progress: { completed: number; total: number };
@@ -73,7 +73,20 @@ export type PipelineAction =
   | { type: "PAPER_PROCESSED"; payload: { stage: string; paperId: string; paperTitle: string } }
   | { type: "EVENT_RECEIVED"; payload: PipelineEvent }
   | { type: "PIPELINE_COMPLETED" }
-  | { type: "PIPELINE_FAILED"; payload: { message: string } };
+  | { type: "PIPELINE_FAILED"; payload: { message: string } }
+  | { type: "RECOVERY_START" };
+
+/** Response from GET /jobs/{id}/status. */
+export interface JobStatusResponse {
+  job_id: string;
+  status: "pending" | "running" | "completed" | "failed";
+  stage: string;
+  progress: number;
+  paper_count: number;
+  created_at: string;
+  updated_at: string;
+  error: string | null;
+}
 
 /** Raw event JSON from the backend WebSocket. */
 export interface RawPipelineEvent {

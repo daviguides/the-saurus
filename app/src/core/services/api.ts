@@ -29,6 +29,38 @@ export interface RawReview {
   references: unknown[];
 }
 
+export interface JobStatusResponse {
+  job_id: string;
+  status: "pending" | "running" | "completed" | "failed";
+  stage: string;
+  progress: number;
+  paper_count: number;
+  created_at: string;
+  updated_at: string;
+  error: string | null;
+}
+
+export interface RawEvent {
+  event_id: string;
+  event_type: string;
+  timestamp: string;
+  job_id: string;
+  payload: Record<string, unknown>;
+}
+
+export async function fetchJobStatus(jobId: string): Promise<JobStatusResponse> {
+  const res = await fetch(`${PIPELINE_API_URL}/jobs/${jobId}/status`);
+  if (!res.ok) throw new Error(`Job not found (${res.status})`);
+  return res.json();
+}
+
+export async function fetchEvents(jobId: string): Promise<RawEvent[]> {
+  const res = await fetch(`${PIPELINE_API_URL}/jobs/${jobId}/events`);
+  if (!res.ok) throw new Error(`Failed to fetch events (${res.status})`);
+  const data = await res.json();
+  return data.events;
+}
+
 export async function fetchPapers(jobId: string): Promise<PaperInfo[]> {
   const res = await fetch(`${PIPELINE_API_URL}/jobs/${jobId}/papers`);
   if (!res.ok) return [];
