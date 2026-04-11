@@ -34,5 +34,6 @@ class PaperEntry(BaseModel):
     paper_id: str
     filename: str
     title: str = ""
+    authors: list[str] = Field(default_factory=list)
     page_count: int = 0
     ingested_at: datetime | None = Field(default=None)
