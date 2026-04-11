@@ -2,11 +2,17 @@
 
 from __future__ import annotations
 
-from agno.models.anthropic import Claude
+import asyncio
+
+from agno.models.google import Gemini
 
 from pipeline.config import settings
 
+# Semaphore to control concurrent LLM calls across all agents.
+# Protects against rate limits and allows provider swap later.
+llm_semaphore = asyncio.Semaphore(settings.llm_max_concurrent)
 
-def create_model() -> Claude:
-    """Create an Agno model instance from pipeline settings."""
-    return Claude(id=settings.llm_model_id, api_key=settings.llm_api_key)
+
+def create_model() -> Gemini:
+    """Create an Agno Gemini model instance from pipeline settings."""
+    return Gemini(id=settings.llm_model_id, api_key=settings.llm_api_key or None)

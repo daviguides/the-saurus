@@ -12,9 +12,12 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000"
 
     # LLM
-    llm_provider: str = "anthropic"
-    llm_model_id: str = "claude-sonnet-4-20250514"
-    llm_api_key: str = ""
+    llm_provider: str = "google"
+    llm_model_id: str = "gemini-2.5-flash"
+    llm_api_key: str = ""  # PIPELINE_LLM_API_KEY or GOOGLE_API_KEY
+
+    # Concurrency
+    llm_max_concurrent: int = 20
 
     # Persistence
     jobs_dir: str = "./jobs"
