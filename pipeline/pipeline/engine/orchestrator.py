@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import logging
+from collections.abc import Coroutine
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -15,7 +17,6 @@ from pipeline.agents import (
     ThemeReviewerAgent,
 )
 from pipeline.core import (
-    EventEmitter,
     EventType,
     JobState,
     JobStatus,
@@ -24,16 +25,34 @@ from pipeline.core import (
     write_status,
     write_yaml,
 )
+from pipeline.core.qdrant import get_indexer
 from pipeline.ws.stream import get_or_create_emitter
 
 from .progress import ProgressTracker
 from .stages import Stage
+
+logger = logging.getLogger(__name__)
+
+
+async def _safe_qdrant(coro: Coroutine) -> None:
+    """Run a Qdrant write coroutine, swallowing any errors."""
+    try:
+        await coro
+    except Exception:
+        logger.warning("Qdrant write failed (non-blocking)", exc_info=True)
 
 
 async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
     """Run the full pipeline for a job. Intended to be launched via asyncio.create_task."""
     emitter = get_or_create_emitter(job_id, jobs_dir)
     job_path = jobs_dir / job_id
+    qdrant_tasks: set[asyncio.Task] = set()
+
+    def _fire_qdrant(coro: Coroutine) -> None:
+        """Schedule a Qdrant write as fire-and-forget background task."""
+        task = asyncio.create_task(_safe_qdrant(coro))
+        qdrant_tasks.add(task)
+        task.add_done_callback(qdrant_tasks.discard)
 
     try:
         # Load papers
@@ -50,6 +69,14 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
                 paper_contents[paper.paper_id] = md_path.read_text()
 
         tracker = ProgressTracker(job_id, jobs_dir, emitter, len(papers))
+
+        # Initialize Qdrant collections (fire-and-forget)
+        try:
+            indexer = get_indexer()
+            await indexer.ensure_collections()
+        except Exception:
+            logger.warning("Qdrant init failed — writes will be skipped", exc_info=True)
+            indexer = None
 
         # Mark job as running
         now = datetime.now(UTC)
@@ -78,6 +105,8 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
                 result,
                 job_id=job_id,
             )
+            if indexer:
+                _fire_qdrant(indexer.index_themes(job_id, paper.paper_id, result))
             await emitter.emit(
                 EventType.THEME_EXTRACTED,
                 {"paper_id": paper.paper_id, "theme_count": len(result.get("themes", []))},
@@ -87,12 +116,16 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         # --- Stage 2: Claim Extraction (per-paper, parallel) ---
         claim_extractor = ClaimExtractorAgent()
         themes_by_paper = {
-            paper.paper_id: result.get("themes", [])
-            for paper, result in zip(papers, theme_results)
+            paper.paper_id: result.get("themes", []) for paper, result in zip(papers, theme_results)
         }
         await tracker.stage_start(Stage.CLAIM_EXTRACTION, len(papers))
         claim_results = await _run_parallel_per_paper(
-            papers, paper_contents, claim_extractor, tracker, Stage.CLAIM_EXTRACTION, job_path,
+            papers,
+            paper_contents,
+            claim_extractor,
+            tracker,
+            Stage.CLAIM_EXTRACTION,
+            job_path,
             extra_inputs={"themes": themes_by_paper},
         )
         # Persist per-paper claims
@@ -102,6 +135,8 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
                 result,
                 job_id=job_id,
             )
+            if indexer:
+                _fire_qdrant(indexer.index_claims(job_id, paper.paper_id, result))
             await emitter.emit(
                 EventType.CLAIM_EXTRACTED,
                 {"paper_id": paper.paper_id, "claim_count": len(result.get("claims", []))},
@@ -119,6 +154,8 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         await tracker.stage_start(Stage.THEME_DEDUP, 1)
         dedup_result = await theme_dedup.run({"themes": all_themes})
         await write_yaml(job_path / "theme_map.yaml", dedup_result, job_id=job_id)
+        if indexer:
+            _fire_qdrant(indexer.index_theme_map(job_id, dedup_result))
         await emitter.emit(
             EventType.THEME_DEDUPLICATED,
             {"theme_count": len(dedup_result.get("themes", []))},
@@ -136,7 +173,15 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         theme_reviewer = ThemeReviewerAgent()
         await tracker.stage_start(Stage.THEME_REVIEW, len(canonical_themes))
         review_results = await _run_parallel_per_theme(
-            canonical_themes, all_claims, theme_reviewer, tracker, Stage.THEME_REVIEW, job_path, job_id
+            canonical_themes,
+            all_claims,
+            theme_reviewer,
+            tracker,
+            Stage.THEME_REVIEW,
+            job_path,
+            job_id,
+            indexer,
+            _fire_qdrant,
         )
         await tracker.stage_complete(Stage.THEME_REVIEW)
 
@@ -147,8 +192,14 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         await tracker.stage_start(Stage.AGGREGATION, 1)
         review = await aggregator.run({"theme_reviews": review_results})
         await write_yaml(job_path / "review.yaml", review, job_id=job_id)
+        if indexer:
+            _fire_qdrant(indexer.index_review(job_id, review))
         await emitter.emit(EventType.REVIEW_GENERATED, {"title": review.get("title", "")})
         await tracker.stage_complete(Stage.AGGREGATION)
+
+        # Wait for all pending Qdrant writes before marking complete
+        if qdrant_tasks:
+            await asyncio.gather(*qdrant_tasks, return_exceptions=True)
 
         # Mark job as completed
         now = datetime.now(UTC)
@@ -165,6 +216,10 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         await emitter.emit(EventType.JOB_COMPLETED, {"progress": 1.0})
 
     except Exception as exc:
+        # Drain any pending Qdrant writes on failure too
+        if qdrant_tasks:
+            await asyncio.gather(*qdrant_tasks, return_exceptions=True)
+
         now = datetime.now(UTC)
         error_status = JobStatus(
             job_id=job_id,
@@ -222,6 +277,8 @@ async def _run_parallel_per_theme(
     stage: str,
     job_path: Path,
     job_id: str,
+    indexer: Any | None = None,
+    fire_qdrant: Any | None = None,
 ) -> list[dict[str, Any]]:
     """Run theme reviewer in parallel across all themes."""
 
@@ -245,6 +302,8 @@ async def _run_parallel_per_theme(
             result,
             job_id=job_id,
         )
+        if indexer and fire_qdrant:
+            fire_qdrant(indexer.index_theme_review(job_id, result))
         await tracker.stage_item_done(stage, theme_id)
         return result
 
