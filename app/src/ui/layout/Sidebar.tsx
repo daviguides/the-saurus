@@ -4,6 +4,7 @@ import clsx from "clsx";
 import { useReview } from "../../core/hooks/useReview";
 
 const navItems = [
+  { to: "/upload", label: "Upload", icon: Upload },
   { to: "/papers", label: "Papers", icon: FileText },
   { to: "/review", label: "Review", icon: BookOpen },
 ];
@@ -11,26 +12,11 @@ const navItems = [
 export default function Sidebar() {
   const { hasReview } = useReview();
 
-  const handleUploadClick = () => {
-    window.dispatchEvent(new CustomEvent("open-upload-modal"));
-  };
-
   return (
     <aside
       className="flex flex-col items-center border-r border-border bg-surface shrink-0 py-3 gap-1"
       style={{ width: "var(--sidebar-width)" }}
     >
-      <button
-        type="button"
-        onClick={handleUploadClick}
-        className="flex items-center justify-center w-10 h-10 rounded-lg text-text-secondary hover:text-primary hover:bg-primary/10 transition-colors duration-200 mb-2"
-        title="Upload Papers"
-      >
-        <Upload size={20} />
-      </button>
-
-      <div className="w-8 border-t border-border mb-2" />
-
       <nav className="flex flex-col items-center gap-1">
         {navItems.map(({ to, label, icon: Icon }) => (
           <NavLink
