@@ -16,8 +16,11 @@ class Settings(BaseSettings):
     llm_model_id: str = "gemini-2.5-flash"
     llm_api_key: str = ""  # PIPELINE_LLM_API_KEY or GOOGLE_API_KEY
 
-    # Concurrency
-    llm_max_concurrent: int = 20
+    # Concurrency — free tier: 5 req/min, 20 req/day
+    # Paid tier: much higher. Adjust via PIPELINE_LLM_MAX_CONCURRENT
+    llm_max_concurrent: int = 2
+    llm_retry_delay: float = 15.0  # base retry delay (matches Gemini 429 retryDelay)
+    llm_max_retries: int = 5  # more retries for rate-limited APIs
 
     # Persistence
     jobs_dir: str = "./jobs"

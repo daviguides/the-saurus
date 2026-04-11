@@ -19,8 +19,6 @@ T = TypeVar("T", bound=BaseModel)
 
 logger = logging.getLogger(__name__)
 
-MAX_RETRIES = 3
-RETRY_DELAY = 2.0
 LLM_TIMEOUT = 120.0  # seconds
 
 
@@ -63,8 +61,8 @@ async def run_agent_with_retry(
     message: str,
     output_schema: type[T],
     *,
-    max_retries: int = MAX_RETRIES,
-    retry_delay: float = RETRY_DELAY,
+    max_retries: int | None = None,
+    retry_delay: float | None = None,
     timeout: float = LLM_TIMEOUT,
     context: dict[str, Any] | None = None,
 ) -> T:
@@ -79,6 +77,14 @@ async def run_agent_with_retry(
         timeout: Max seconds to wait for a single LLM call.
         context: Optional dict with debug info (paper_id, stage, etc.) for logging.
     """
+    from pipeline.agents.models import llm_semaphore
+    from pipeline.config import settings
+
+    if max_retries is None:
+        max_retries = settings.llm_max_retries
+    if retry_delay is None:
+        retry_delay = settings.llm_retry_delay
+
     ctx = context or {}
     agent_name = getattr(agent, "name", agent.__class__.__name__)
     msg_chars = len(message)
@@ -98,10 +104,16 @@ async def run_agent_with_retry(
     for attempt in range(1, max_retries + 1):
         t0 = time.monotonic()
         try:
-            result = await asyncio.wait_for(
-                agent.arun(message, output_schema=output_schema),
-                timeout=timeout,
-            )
+            async with llm_semaphore:
+                logger.info(
+                    "[%s] Acquired semaphore (attempt %d/%d) %s",
+                    agent_name, attempt, max_retries,
+                    " ".join(f"{k}={v}" for k, v in ctx.items()) if ctx else "",
+                )
+                result = await asyncio.wait_for(
+                    agent.arun(message, output_schema=output_schema),
+                    timeout=timeout,
+                )
             elapsed = time.monotonic() - t0
 
             # Log raw response type and size
