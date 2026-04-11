@@ -69,7 +69,7 @@ class ThemeDedupAgent:
 
         dedup = await run_agent_with_retry(
             self._agent, message, ThemeDedupResult,
-            context={"stage": "theme_dedup", "raw_theme_count": len(all_themes), "job_dir": input.get("job_dir", "")},
+            context={"stage": "theme_dedup", "theme_count": len(all_themes), "raw_theme_count": len(all_themes), "job_dir": input.get("job_dir", ""), "_emitter": input.get("_emitter")},
             on_event=on_event,
         )
 
