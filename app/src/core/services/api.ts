@@ -7,6 +7,19 @@ export interface CreateJobResponse {
   status: string;
 }
 
+export interface PaperInfo {
+  paper_id: string;
+  title: string;
+  filename: string;
+}
+
+export async function fetchPapers(jobId: string): Promise<PaperInfo[]> {
+  const res = await fetch(`${PIPELINE_API_URL}/jobs/${jobId}/papers`);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return (data.papers ?? []) as PaperInfo[];
+}
+
 export function createJob(
   files: File[],
   onProgress?: (percent: number) => void,
