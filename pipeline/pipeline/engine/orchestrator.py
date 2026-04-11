@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import Any
 
 from pipeline.agents import (
+    ClaimExtractorAgent,
     StubAggregator,
-    StubClaimExtractor,
     StubThemeDedup,
     StubThemeReviewer,
     ThemeExtractorAgent,
@@ -85,10 +85,15 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         await tracker.stage_complete(Stage.THEME_EXTRACTION)
 
         # --- Stage 2: Claim Extraction (per-paper, parallel) ---
-        claim_extractor = StubClaimExtractor()
+        claim_extractor = ClaimExtractorAgent()
+        themes_by_paper = {
+            paper.paper_id: result.get("themes", [])
+            for paper, result in zip(papers, theme_results)
+        }
         await tracker.stage_start(Stage.CLAIM_EXTRACTION, len(papers))
         claim_results = await _run_parallel_per_paper(
-            papers, paper_contents, claim_extractor, tracker, Stage.CLAIM_EXTRACTION, job_path
+            papers, paper_contents, claim_extractor, tracker, Stage.CLAIM_EXTRACTION, job_path,
+            extra_inputs={"themes": themes_by_paper},
         )
         # Persist per-paper claims
         for paper, result in zip(papers, claim_results):
@@ -182,16 +187,27 @@ async def _run_parallel_per_paper(
     tracker: ProgressTracker,
     stage: str,
     job_path: Path,
+    extra_inputs: dict[str, dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
-    """Run an agent in parallel across all papers."""
+    """Run an agent in parallel across all papers.
+
+    Args:
+        extra_inputs: Optional mapping of {key: {paper_id: value}} to merge
+            into each agent call. For example, {"themes": {pid: [...]}} adds
+            input["themes"] per paper.
+    """
 
     async def process_one(paper: PaperEntry) -> dict[str, Any]:
         content = paper_contents.get(paper.paper_id, "")
-        result = await agent.run({
+        input_dict: dict[str, Any] = {
             "paper_id": paper.paper_id,
             "title": paper.title,
             "content": content,
-        })
+        }
+        if extra_inputs:
+            for key, mapping in extra_inputs.items():
+                input_dict[key] = mapping.get(paper.paper_id, [])
+        result = await agent.run(input_dict)
         await tracker.stage_item_done(stage, paper.paper_id)
         return result
 
