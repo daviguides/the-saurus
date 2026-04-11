@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     # Qdrant
     qdrant_url: str = "http://localhost:6333"
     qdrant_api_key: str | None = None
-    qdrant_embedding_model: str = "models/text-embedding-004"
+    qdrant_embedding_model: str = "gemini-embedding-001"
 
     # WebSocket
     ws_path: str = "/ws"

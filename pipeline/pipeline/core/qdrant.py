@@ -7,7 +7,7 @@ import logging
 from typing import Any
 from uuid import uuid4
 
-import google.genai as genai
+from agno.knowledge.embedder.google import GeminiEmbedder
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, PointStruct, VectorParams
 
@@ -24,14 +24,14 @@ LITERATURE_REVIEW = "literature_review"
 
 ALL_COLLECTIONS = [PAPER_THEMES, PAPER_CLAIMS, THEME_MAP, THEME_REVIEWS, LITERATURE_REVIEW]
 
-# Gemini text-embedding-004 outputs 768 dimensions
-GEMINI_EMBEDDING_DIMENSION = 768
+# gemini-embedding-001 outputs 768 dimensions
+EMBEDDING_DIMENSION = 768
 
 
 class QdrantIndexer:
     """Embeds pipeline outputs and upserts to Qdrant collections.
 
-    Uses Gemini text-embedding-004 for embeddings via API (no local model).
+    Uses Agno GeminiEmbedder for embeddings via Gemini API.
     All methods are async and safe to call via asyncio.create_task().
     Failures are logged but never raised — Qdrant is a secondary index.
     """
@@ -41,9 +41,11 @@ class QdrantIndexer:
             url=settings.qdrant_url,
             api_key=settings.qdrant_api_key,
         )
-        self._genai_client = genai.Client(api_key=settings.llm_api_key)
-        self._embedding_model = settings.qdrant_embedding_model
-        self._dimension = GEMINI_EMBEDDING_DIMENSION
+        self._embedder = GeminiEmbedder(
+            model=settings.qdrant_embedding_model,
+            api_key=settings.llm_api_key,
+        )
+        self._dimension = EMBEDDING_DIMENSION
 
     async def ensure_collections(self) -> None:
         """Create all collections if they don't exist."""
@@ -63,22 +65,13 @@ class QdrantIndexer:
         await asyncio.to_thread(_sync)
 
     async def _embed(self, text: str) -> list[float]:
-        """Embed a single text via Gemini API."""
-        result = await asyncio.to_thread(
-            self._genai_client.models.embed_content,
-            model=self._embedding_model,
-            contents=text,
-        )
-        return result.embeddings[0].values
+        """Embed a single text via Agno GeminiEmbedder."""
+        return await self._embedder.async_get_embedding(text)
 
     async def _embed_batch(self, texts: list[str]) -> list[list[float]]:
-        """Embed multiple texts via Gemini API in a single batch call."""
-        result = await asyncio.to_thread(
-            self._genai_client.models.embed_content,
-            model=self._embedding_model,
-            contents=texts,
-        )
-        return [e.values for e in result.embeddings]
+        """Embed multiple texts via Agno GeminiEmbedder."""
+        vectors, _usage = await self._embedder.async_get_embeddings_batch_and_usage(texts)
+        return vectors
 
     async def _upsert(self, collection: str, points: list[PointStruct]) -> None:
         """Upsert points to a collection in a thread."""
@@ -175,7 +168,7 @@ class QdrantIndexer:
         vector = await self._embed(review_text)
 
         point = PointStruct(
-            id=theme_id,
+            id=_safe_point_id(theme_id),
             vector=vector,
             payload={
                 "job_id": job_id,
@@ -211,7 +204,7 @@ class QdrantIndexer:
                     "job_id": job_id,
                     "title": result.get("title", ""),
                     "abstract": result.get("abstract", ""),
-                    "theme_id": section["theme_id"],
+                    "theme_id": section.get("theme_id", ""),
                     "label": section.get("label", ""),
                     "content": section.get("content", ""),
                     "claim_ids": section.get("claim_ids", []),
