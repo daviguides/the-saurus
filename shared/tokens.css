@@ -140,3 +140,220 @@
   --shadow-sm: var(--saurus-shadow-sm);
   --shadow-md: var(--saurus-shadow-md);
 }
+
+/* ============================================================
+ * .prose-content — Markdown Prose Styling
+ * Light mode base. Dark mode overrides in prose-dark-mode task.
+ * Colors use var(--saurus-*) for automatic theme reactivity.
+ * ============================================================ */
+
+/* --- CONTAINER RESET --- */
+.prose-content {
+  @apply m-0 p-0;
+}
+
+.prose-content > *:first-child {
+  margin-top: 0 !important;
+}
+
+.prose-content > *:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* --- HEADINGS (H1-H6) --- */
+/* h1-h4: Literata serif for academic feel */
+/* h5-h6: Inter sans for uppercase label style */
+
+.prose-content h1 {
+  @apply text-2xl font-bold mb-6 mt-8 pb-3 tracking-tight;
+  font-family: var(--font-heading);
+  color: var(--saurus-primary);
+  border-bottom: 1px solid var(--saurus-border);
+}
+
+.prose-content h2 {
+  @apply text-xl font-semibold mb-4 mt-8;
+  font-family: var(--font-heading);
+  color: var(--saurus-primary);
+}
+
+.prose-content h3 {
+  @apply text-lg font-medium mb-3 mt-6;
+  font-family: var(--font-heading);
+  color: var(--saurus-primary-hover);
+}
+
+.prose-content h4 {
+  @apply text-base font-medium mb-2 mt-5;
+  font-family: var(--font-heading);
+  color: var(--saurus-ink-secondary);
+}
+
+.prose-content h4::before {
+  content: '#';
+  margin-right: 0.5rem;
+  color: var(--saurus-primary-hover);
+  opacity: 0.6;
+}
+
+.prose-content h5 {
+  @apply text-sm font-bold uppercase tracking-wider mb-2 mt-4;
+  color: var(--saurus-ink-muted);
+}
+
+.prose-content h6 {
+  @apply text-xs font-bold uppercase tracking-widest mb-2 mt-4 pl-2;
+  color: var(--saurus-ink-muted);
+  border-left: 2px solid var(--saurus-border);
+}
+
+/* --- PARAGRAPHS --- */
+.prose-content p {
+  @apply text-base leading-7 mb-4 font-light;
+  color: var(--saurus-ink);
+}
+
+.prose-content > p:last-child {
+  @apply mb-0;
+}
+
+/* --- INLINE CODE --- */
+.prose-content code {
+  @apply px-1.5 py-0.5 rounded text-[13px] font-mono align-middle break-words;
+  background-color: var(--saurus-primary-bg);
+  color: var(--saurus-primary);
+  border: 1px solid var(--saurus-border);
+}
+
+/* --- CODE BLOCKS --- */
+.prose-content pre {
+  @apply my-6 rounded-lg overflow-hidden;
+  border: 1px solid var(--saurus-border);
+  background-color: var(--saurus-surface);
+  box-shadow: var(--saurus-shadow-sm);
+}
+
+.prose-content pre code {
+  @apply block p-4 overflow-x-auto bg-transparent border-0;
+  @apply text-sm font-mono leading-relaxed;
+  color: var(--saurus-ink);
+  white-space: pre;
+  word-wrap: normal;
+}
+
+/* --- BLOCKQUOTES --- */
+.prose-content blockquote {
+  @apply relative my-6 pl-5 py-3 rounded-r-lg;
+  border-left: 4px solid var(--saurus-primary);
+  background: linear-gradient(to right, var(--saurus-primary-bg), transparent);
+}
+
+.prose-content blockquote p {
+  @apply italic leading-relaxed mb-0;
+  color: var(--saurus-ink-secondary);
+}
+
+/* --- HORIZONTAL RULE --- */
+.prose-content hr {
+  @apply my-8;
+  border-top: 1px solid var(--saurus-border);
+}
+
+/* --- LISTS --- */
+.prose-content ul {
+  @apply list-disc list-outside ml-5 space-y-2 mb-6;
+  color: var(--saurus-ink);
+}
+
+.prose-content ul li::marker {
+  color: var(--saurus-primary);
+}
+
+.prose-content ol {
+  @apply list-decimal list-outside ml-5 space-y-2 mb-6;
+  color: var(--saurus-ink);
+}
+
+.prose-content ol li::marker {
+  color: var(--saurus-primary-hover);
+  font-family: var(--font-mono);
+}
+
+.prose-content li {
+  @apply pl-1 leading-7;
+}
+
+/* Nested lists */
+.prose-content li ul,
+.prose-content li ol {
+  @apply mt-2 mb-0;
+}
+
+/* --- TABLES --- */
+.prose-content table {
+  @apply my-8 w-full text-left border-collapse overflow-hidden rounded-lg;
+  background-color: color-mix(in srgb, var(--saurus-surface) 50%, transparent);
+  border: 1px solid var(--saurus-border);
+}
+
+.prose-content thead {
+  background-color: var(--saurus-surface);
+}
+
+.prose-content th {
+  @apply py-3 px-4 text-xs font-bold uppercase tracking-wider;
+  color: var(--saurus-ink-secondary);
+  border-bottom: 1px solid var(--saurus-border);
+}
+
+.prose-content td {
+  @apply py-3 px-4 text-sm leading-snug;
+  color: var(--saurus-ink);
+}
+
+.prose-content tbody tr {
+  @apply last:border-0 transition-colors;
+  border-bottom: 1px solid var(--saurus-border);
+}
+
+.prose-content tbody tr:hover {
+  background-color: color-mix(in srgb, var(--saurus-surface) 30%, transparent);
+}
+
+/* --- LINKS --- */
+.prose-content a {
+  @apply transition-colors underline;
+  color: var(--saurus-primary);
+  text-decoration-color: color-mix(in srgb, var(--saurus-primary) 40%, transparent);
+}
+
+.prose-content a:hover {
+  color: var(--saurus-primary-hover);
+  text-decoration-color: var(--saurus-primary-hover);
+}
+
+/* --- IMAGES --- */
+.prose-content img {
+  @apply my-6 w-full h-auto rounded-lg overflow-hidden;
+  @apply opacity-90 hover:opacity-100 transition-opacity;
+  border: 1px solid var(--saurus-border);
+  background-color: var(--saurus-surface);
+}
+
+/* --- STRONG & EMPHASIS --- */
+.prose-content strong {
+  @apply font-semibold;
+  color: var(--saurus-primary);
+}
+
+.prose-content em {
+  @apply italic;
+}
+
+/* --- CHECKBOX LISTS (task lists) --- */
+.prose-content input[type="checkbox"] {
+  @apply w-4 h-4 rounded mr-2 align-middle;
+  border: 1px solid var(--saurus-border);
+  background-color: #fff;
+  accent-color: var(--saurus-primary);
+}
