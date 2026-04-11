@@ -24,6 +24,7 @@
 :root {
   --header-height: 48px;
   --sidebar-width: 64px;
+  --drawer-width: 400px;
 }
 
 body {
