@@ -3,24 +3,18 @@ from contextlib import asynccontextmanager
 
 from fastmcp import FastMCP
 
-from papers_mcp.config import settings
-from papers_mcp.retriever import get_retriever
-from papers_mcp.tools.search import (
-    find_similar_papers_impl,
-    search_by_topic_impl,
-    search_papers_impl,
-)
+from papers_mcp.store import get_store
 
 logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def app_lifespan(server):
-    logger.info("Papers MCP starting — collection: %s", settings.qdrant_collection)
+    logger.info("Papers MCP starting")
     try:
-        retriever = get_retriever()
-        stats = retriever.stats()
-        logger.info("Qdrant connected: %s", stats)
+        store = get_store()
+        health = store.health()
+        logger.info("Qdrant collections: %s", health)
     except Exception as e:
         logger.warning("Qdrant not available at startup: %s", e)
     yield
@@ -30,55 +24,70 @@ mcp = FastMCP("papers-mcp", lifespan=app_lifespan)
 
 
 @mcp.tool()
-def search_papers(
-    query: str,
-    top_k: int = 5,
-    year_from: int | None = None,
-    year_to: int | None = None,
-    journal: str | None = None,
-) -> dict:
-    """Search scientific papers by natural language query.
+def get_paper_themes(paper_id: str) -> list[dict]:
+    """Get themes extracted from a specific paper.
 
     Args:
-        query: Natural language search query (e.g. "transformer attention mechanisms")
-        top_k: Number of results to return (default 5)
-        year_from: Filter papers published after this year
-        year_to: Filter papers published before this year
-        journal: Filter by journal name
+        paper_id: The paper identifier to retrieve themes for.
     """
-    retriever = get_retriever()
-    return search_papers_impl(retriever, query, top_k, year_from, year_to, journal)
+    store = get_store()
+    return [t.model_dump() for t in store.get_paper_themes(paper_id)]
 
 
 @mcp.tool()
-def search_by_topic(
-    topic: str,
-    query: str = "",
-    top_k: int = 10,
-    year_from: int | None = None,
-) -> dict:
-    """Search papers within a specific research topic.
+def get_claims_by_theme(theme: str) -> list[dict]:
+    """Get all claims grouped under a specific theme across all papers.
 
     Args:
-        topic: Research topic/field (e.g. "machine learning", "genomics")
-        query: Optional additional query to narrow results
-        top_k: Number of results to return (default 10)
-        year_from: Filter papers published after this year
+        theme: The theme name to filter claims by.
     """
-    retriever = get_retriever()
-    return search_by_topic_impl(retriever, topic, query, top_k, year_from)
+    store = get_store()
+    return [c.model_dump() for c in store.get_claims_by_theme(theme)]
 
 
 @mcp.tool()
-def find_similar_papers(
-    abstract: str,
-    top_k: int = 5,
-) -> dict:
-    """Find papers similar to a given abstract or text passage.
+def get_theme_map() -> list[dict]:
+    """Get the full canonical theme map across all papers.
+
+    Returns the deduplicated themes with their paper associations,
+    aliases, and descriptions.
+    """
+    store = get_store()
+    return [t.model_dump() for t in store.get_theme_map()]
+
+
+@mcp.tool()
+def get_theme_review(theme: str) -> dict | None:
+    """Get the deep review for a specific theme.
 
     Args:
-        abstract: Abstract or text to find similar papers for
-        top_k: Number of results to return (default 5)
+        theme: The theme label to retrieve the review for.
     """
-    retriever = get_retriever()
-    return find_similar_papers_impl(retriever, abstract, top_k)
+    store = get_store()
+    result = store.get_theme_review(theme)
+    return result.model_dump() if result else None
+
+
+@mcp.tool()
+def get_literature_review() -> list[dict]:
+    """Get the complete literature review with all sections.
+
+    Returns all sections of the aggregated literature review,
+    each containing content, theme association, and citation references.
+    """
+    store = get_store()
+    return [s.model_dump() for s in store.get_literature_review()]
+
+
+@mcp.tool()
+def search_claims(query: str, limit: int = 10) -> list[dict]:
+    """Semantic search across all extracted claims.
+
+    Embeds the query and finds the most similar claims using vector search.
+
+    Args:
+        query: Natural language search query.
+        limit: Maximum number of results to return (default 10).
+    """
+    store = get_store()
+    return [r.model_dump() for r in store.search_claims(query, limit)]
