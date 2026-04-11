@@ -25,6 +25,9 @@ def main():
         port=settings.port,
         reload=settings.reload,
         workers=settings.workers,
+        # Only watch Python source files — exclude jobs/ data (YAML, NDJSON, PDFs, markdown)
+        reload_includes=["*.py"] if settings.reload else None,
+        reload_excludes=["jobs/*", "*.yaml", "*.ndjson", "*.md", "*.pdf"] if settings.reload else None,
     )
 
 
