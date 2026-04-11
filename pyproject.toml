@@ -3,6 +3,9 @@ name = "answerthis"
 version = "0.1.0"
 description = "AnswerThis - AI agents for scientific literature reviews"
 requires-python = ">=3.13"
+dependencies = [
+    "anthropic>=0.94.0",
+]
 
 [tool.uv.workspace]
 members = [
