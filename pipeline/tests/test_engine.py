@@ -6,7 +6,6 @@ import asyncio
 from datetime import UTC, datetime
 from io import BytesIO
 from pathlib import Path
-from typing import Any
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -23,7 +22,6 @@ from pipeline.agents import (
 from pipeline.core import Event, EventEmitter, EventType, JobState, read_status, read_yaml
 from pipeline.engine import Stage, run_pipeline
 from pipeline.engine.stages import STAGES
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -188,6 +186,14 @@ class TestStageDefinitions:
 # ---------------------------------------------------------------------------
 
 
+def _patch_theme_extractor():
+    """Patch ThemeExtractorAgent with StubThemeExtractor in orchestrator."""
+    return patch(
+        "pipeline.engine.orchestrator.ThemeExtractorAgent",
+        return_value=StubThemeExtractor(),
+    )
+
+
 class TestPipelineExecution:
     async def test_full_pipeline_completes(self, jobs_dir: Path):
         """Pipeline runs all stages and sets status to COMPLETED."""
@@ -195,7 +201,10 @@ class TestPipelineExecution:
         emitter = EventEmitter(job_id, jobs_dir)
         events = _collect_events(emitter)
 
-        with patch("pipeline.engine.orchestrator.get_or_create_emitter", return_value=emitter):
+        with (
+            patch("pipeline.engine.orchestrator.get_or_create_emitter", return_value=emitter),
+            _patch_theme_extractor(),
+        ):
             await run_pipeline(job_id, jobs_dir)
 
         # Check final status
@@ -215,7 +224,10 @@ class TestPipelineExecution:
         emitter = EventEmitter(job_id, jobs_dir)
         events = _collect_events(emitter)
 
-        with patch("pipeline.engine.orchestrator.get_or_create_emitter", return_value=emitter):
+        with (
+            patch("pipeline.engine.orchestrator.get_or_create_emitter", return_value=emitter),
+            _patch_theme_extractor(),
+        ):
             await run_pipeline(job_id, jobs_dir)
 
         # Extract stage_started events in order
@@ -238,7 +250,10 @@ class TestPipelineExecution:
         emitter = EventEmitter(job_id, jobs_dir)
         events = _collect_events(emitter)
 
-        with patch("pipeline.engine.orchestrator.get_or_create_emitter", return_value=emitter):
+        with (
+            patch("pipeline.engine.orchestrator.get_or_create_emitter", return_value=emitter),
+            _patch_theme_extractor(),
+        ):
             await run_pipeline(job_id, jobs_dir)
 
         event_types = [e.event_type for e in events]
@@ -268,7 +283,10 @@ class TestPipelineExecution:
         emitter = EventEmitter(job_id, jobs_dir)
         events = _collect_events(emitter)
 
-        with patch("pipeline.engine.orchestrator.get_or_create_emitter", return_value=emitter):
+        with (
+            patch("pipeline.engine.orchestrator.get_or_create_emitter", return_value=emitter),
+            _patch_theme_extractor(),
+        ):
             await run_pipeline(job_id, jobs_dir)
 
         # Check theme extraction processed all papers
@@ -293,7 +311,10 @@ class TestPipelineExecution:
         emitter = EventEmitter(job_id, jobs_dir)
         events = _collect_events(emitter)
 
-        with patch("pipeline.engine.orchestrator.get_or_create_emitter", return_value=emitter):
+        with (
+            patch("pipeline.engine.orchestrator.get_or_create_emitter", return_value=emitter),
+            _patch_theme_extractor(),
+        ):
             await run_pipeline(job_id, jobs_dir)
 
         # Find PAPER_PROCESSED events for theme_extraction stage
@@ -313,7 +334,10 @@ class TestPipelineExecution:
         job_id, paper_ids = _create_test_job(jobs_dir, paper_count=2)
         emitter = EventEmitter(job_id, jobs_dir)
 
-        with patch("pipeline.engine.orchestrator.get_or_create_emitter", return_value=emitter):
+        with (
+            patch("pipeline.engine.orchestrator.get_or_create_emitter", return_value=emitter),
+            _patch_theme_extractor(),
+        ):
             await run_pipeline(job_id, jobs_dir)
 
         job_path = jobs_dir / job_id
@@ -353,7 +377,10 @@ class TestPipelineExecution:
 
         emitter.emit = tracking_emit
 
-        with patch("pipeline.engine.orchestrator.get_or_create_emitter", return_value=emitter):
+        with (
+            patch("pipeline.engine.orchestrator.get_or_create_emitter", return_value=emitter),
+            _patch_theme_extractor(),
+        ):
             await run_pipeline(job_id, jobs_dir)
 
         assert JobState.RUNNING in statuses
@@ -371,7 +398,10 @@ class TestPipelineExecution:
 
         with (
             patch("pipeline.engine.orchestrator.get_or_create_emitter", return_value=emitter),
-            patch("pipeline.engine.orchestrator.StubThemeExtractor", return_value=FailingExtractor()),
+            patch(
+                "pipeline.engine.orchestrator.ThemeExtractorAgent",
+                return_value=FailingExtractor(),
+            ),
         ):
             await run_pipeline(job_id, jobs_dir)
 
@@ -423,7 +453,7 @@ class TestAPILaunchesPipeline:
 
         pdf_bytes = _make_pdf_bytes()
 
-        with patch.object(settings, "jobs_dir", str(jobs_dir)):
+        with patch.object(settings, "jobs_dir", str(jobs_dir)), _patch_theme_extractor():
             transport = ASGITransport(app=app)
             async with AsyncClient(transport=transport, base_url="http://test") as client:
                 resp = await client.post(

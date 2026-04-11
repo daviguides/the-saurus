@@ -11,7 +11,6 @@ from pydantic import BaseModel, Field
 from pipeline.agents.models import create_model
 from pipeline.agents.prompts.theme_extractor import THEME_EXTRACTOR_PROMPT
 
-
 # --- Pydantic output models ---
 
 
