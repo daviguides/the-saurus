@@ -1,11 +1,13 @@
-import { useReducer, useCallback, useRef } from "react";
+import { useReducer, useEffect, useRef } from "react";
 import type {
   PipelineState,
   PipelineAction,
   PipelineStageState,
+  PipelineEvent,
+  RawPipelineEvent,
 } from "../types/pipeline";
 import { PIPELINE_STAGES } from "../types/pipeline";
-import { startMockPipeline } from "../../mocks/pipeline-events";
+import { PIPELINE_API_URL, fetchPapers } from "../services/api";
 
 function createInitialStages(): PipelineStageState[] {
   return PIPELINE_STAGES.map((s) => ({
@@ -92,20 +94,191 @@ function pipelineReducer(state: PipelineState, action: PipelineAction): Pipeline
   }
 }
 
-export function usePipelineTrace() {
+// --- Event Mapping ---
+
+function humanMessage(raw: RawPipelineEvent): string {
+  const p = raw.payload;
+  switch (raw.event_type) {
+    case "job_started":
+      return `Pipeline started (${p.paper_count} papers)`;
+    case "stage_started":
+      return `${p.stage} started`;
+    case "paper_processed":
+      return `Paper processed in ${p.stage} (${p.completed}/${p.total})`;
+    case "stage_completed":
+      return `${p.stage} completed`;
+    case "job_completed":
+      return "Pipeline completed";
+    case "job_failed":
+      return `Pipeline failed: ${p.error}`;
+    case "theme_extracted":
+      return `${p.theme_count} themes extracted`;
+    case "claim_extracted":
+      return `${p.claim_count} claims extracted`;
+    case "theme_deduplicated":
+      return `Deduplicated to ${p.theme_count} themes`;
+    case "review_generated":
+      return `Review generated: ${p.title}`;
+    default:
+      return raw.event_type;
+  }
+}
+
+function mapEventToActions(
+  raw: RawPipelineEvent,
+  paperLookup: Map<string, string>,
+): PipelineAction[] {
+  const actions: PipelineAction[] = [];
+  const p = raw.payload;
+
+  const streamEvent: PipelineEvent = {
+    id: raw.event_id,
+    eventType: raw.event_type,
+    timestamp: new Date(raw.timestamp).getTime(),
+    stage: (p.stage as string) ?? undefined,
+    paperId: (p.item_id as string) ?? (p.paper_id as string) ?? undefined,
+    paperTitle: paperLookup.get((p.item_id as string) ?? (p.paper_id as string) ?? ""),
+    message: humanMessage(raw),
+  };
+  actions.push({ type: "EVENT_RECEIVED", payload: streamEvent });
+
+  switch (raw.event_type) {
+    case "job_started":
+      actions.push({
+        type: "START_PIPELINE",
+        payload: { totalPapers: (p.paper_count as number) ?? 0 },
+      });
+      break;
+    case "stage_started":
+      actions.push({ type: "STAGE_STARTED", payload: { stage: p.stage as string } });
+      break;
+    case "paper_processed":
+      actions.push({
+        type: "PAPER_PROCESSED",
+        payload: {
+          stage: p.stage as string,
+          paperId: p.item_id as string,
+          paperTitle: paperLookup.get(p.item_id as string) ?? (p.item_id as string),
+        },
+      });
+      break;
+    case "stage_completed":
+      actions.push({ type: "STAGE_COMPLETED", payload: { stage: p.stage as string } });
+      break;
+    case "job_completed":
+      actions.push({ type: "PIPELINE_COMPLETED" });
+      break;
+    case "job_failed":
+      actions.push({ type: "PIPELINE_FAILED", payload: { message: (p.error as string) ?? "Unknown error" } });
+      break;
+  }
+
+  return actions;
+}
+
+// --- WebSocket URL ---
+
+function getWsUrl(jobId: string): string {
+  const base = PIPELINE_API_URL.replace(/^http/, "ws");
+  return `${base}/jobs/${jobId}/stream`;
+}
+
+// --- Reconnection constants ---
+
+const MAX_RECONNECT_ATTEMPTS = 10;
+const BASE_DELAY = 1000;
+const MAX_DELAY = 30000;
+
+// --- Hook ---
+
+export function usePipelineTrace(jobId: string | null) {
   const [state, dispatch] = useReducer(pipelineReducer, INITIAL_STATE);
-  const cleanupRef = useRef<(() => void) | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+  const attemptRef = useRef(0);
+  const terminalRef = useRef(false);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const paperLookupRef = useRef<Map<string, string>>(new Map());
 
-  const startPipeline = useCallback(
-    (papers: { id: string; title: string }[]) => {
-      if (cleanupRef.current) cleanupRef.current();
-      cleanupRef.current = startMockPipeline(papers, dispatch);
-    },
-    [],
-  );
+  useEffect(() => {
+    if (!jobId) return;
 
-  const isRunning = state.status === "running";
-  const isCompleted = state.status === "completed";
+    terminalRef.current = false;
+    attemptRef.current = 0;
 
-  return { state, isRunning, isCompleted, startPipeline };
+    let cancelled = false;
+
+    async function init() {
+      // Fetch paper titles for lookup
+      const papers = await fetchPapers(jobId!);
+      if (cancelled) return;
+      const lookup = new Map<string, string>();
+      for (const p of papers) {
+        lookup.set(p.paper_id, p.title || p.filename);
+      }
+      paperLookupRef.current = lookup;
+
+      connect();
+    }
+
+    function connect() {
+      if (cancelled || terminalRef.current) return;
+
+      const ws = new WebSocket(getWsUrl(jobId!));
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        attemptRef.current = 0;
+      };
+
+      ws.onmessage = (e) => {
+        let raw: RawPipelineEvent;
+        try {
+          raw = JSON.parse(e.data);
+        } catch {
+          return;
+        }
+        const actions = mapEventToActions(raw, paperLookupRef.current);
+        for (const action of actions) {
+          dispatch(action);
+        }
+        if (raw.event_type === "job_completed" || raw.event_type === "job_failed") {
+          terminalRef.current = true;
+        }
+      };
+
+      ws.onclose = () => {
+        if (cancelled || terminalRef.current) return;
+        scheduleReconnect();
+      };
+
+      ws.onerror = () => {
+        ws.close();
+      };
+    }
+
+    function scheduleReconnect() {
+      if (attemptRef.current >= MAX_RECONNECT_ATTEMPTS) return;
+      const delay = Math.min(BASE_DELAY * 2 ** attemptRef.current, MAX_DELAY);
+      attemptRef.current += 1;
+      reconnectTimerRef.current = setTimeout(connect, delay);
+    }
+
+    init();
+
+    return () => {
+      cancelled = true;
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+      if (wsRef.current) {
+        wsRef.current.onclose = null;
+        wsRef.current.close();
+      }
+    };
+  }, [jobId]);
+
+  return {
+    state,
+    isRunning: state.status === "running",
+    isCompleted: state.status === "completed",
+    isFailed: state.status === "failed",
+  };
 }
