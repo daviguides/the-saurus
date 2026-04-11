@@ -50,7 +50,7 @@ export default function StatsHeader({ stats }: Props) {
   const genMs = useCountUp(stats.generationTimeMs);
 
   return (
-    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-8 py-3 border-b border-border bg-surface">
+    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-8 py-3">
       <StatChip icon={FileText} label="papers" value={String(papers)} />
       <StatChip icon={Tags} label="themes" value={String(themes)} />
       <StatChip icon={Quote} label="claims" value={String(claims)} />
