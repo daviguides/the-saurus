@@ -6,6 +6,18 @@
     <title>The Saurus</title>
   </head>
   <body class="bg-bg text-text-primary">
+    <script>
+      // FOUC prevention: set dark class before first paint
+      (function() {
+        var t = localStorage.getItem('thesaurus:theme');
+        if (t === 'light') return;
+        if (t === 'dark'
+          || window.matchMedia('(prefers-color-scheme: dark)').matches
+          || !window.matchMedia('(prefers-color-scheme: light)').matches) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
     <div id="root"></div>
   </body>
 </html>
