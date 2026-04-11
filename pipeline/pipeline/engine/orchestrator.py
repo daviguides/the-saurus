@@ -11,8 +11,8 @@ from pipeline.agents import (
     StubAggregator,
     StubClaimExtractor,
     StubThemeDedup,
-    StubThemeExtractor,
     StubThemeReviewer,
+    ThemeExtractorAgent,
 )
 from pipeline.core import (
     EventEmitter,
@@ -66,7 +66,7 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         await emitter.emit(EventType.JOB_STARTED, {"paper_count": len(papers)})
 
         # --- Stage 1: Theme Extraction (per-paper, parallel) ---
-        theme_extractor = StubThemeExtractor()
+        theme_extractor = ThemeExtractorAgent()
         await tracker.stage_start(Stage.THEME_EXTRACTION, len(papers))
         theme_results = await _run_parallel_per_paper(
             papers, paper_contents, theme_extractor, tracker, Stage.THEME_EXTRACTION, job_path
