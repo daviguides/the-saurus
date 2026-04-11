@@ -24,6 +24,7 @@ class EventType(StrEnum):
     STAGE_FAILED = "stage_failed"
     PAPER_INGESTED = "paper_ingested"
     PAPER_PROCESSED = "paper_processed"
+    PAPER_ANALYZED = "paper_analyzed"
     THEME_EXTRACTED = "theme_extracted"
     THEME_DEDUPLICATED = "theme_deduplicated"
     CLAIM_EXTRACTED = "claim_extracted"

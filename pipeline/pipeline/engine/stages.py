@@ -6,8 +6,7 @@ from enum import StrEnum
 
 
 class Stage(StrEnum):
-    THEME_EXTRACTION = "theme_extraction"
-    CLAIM_EXTRACTION = "claim_extraction"
+    PAPER_ANALYSIS = "paper_analysis"
     THEME_DEDUP = "theme_dedup"
     THEME_REVIEW = "theme_review"
     AGGREGATION = "aggregation"

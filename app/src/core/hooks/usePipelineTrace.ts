@@ -121,6 +121,8 @@ function humanMessage(raw: RawPipelineEvent): string {
       return "Pipeline completed";
     case "job_failed":
       return `Pipeline failed: ${p.error}`;
+    case "paper_analyzed":
+      return `${p.theme_count} themes, ${p.claim_count} claims extracted`;
     case "theme_extracted":
       return `${p.theme_count} themes extracted`;
     case "claim_extracted":

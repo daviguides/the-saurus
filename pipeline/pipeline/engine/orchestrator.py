@@ -11,9 +11,8 @@ from typing import Any
 
 from pipeline.agents import (
     AggregatorAgent,
-    ClaimExtractorAgent,
+    PaperAnalyzerAgent,
     ThemeDedupAgent,
-    ThemeExtractorAgent,
     ThemeReviewerAgent,
 )
 from pipeline.core import (
@@ -87,7 +86,7 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         status = JobStatus(
             job_id=job_id,
             status=JobState.RUNNING,
-            stage=Stage.THEME_EXTRACTION,
+            stage=Stage.PAPER_ANALYSIS,
             progress=0.0,
             paper_count=len(papers),
             created_at=now,
@@ -96,62 +95,44 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         await write_status(job_id, status, jobs_dir)
         await emitter.emit(EventType.JOB_STARTED, {"paper_count": len(papers)})
 
-        # --- Stage 1: Theme Extraction (per-paper, parallel) ---
-        theme_extractor = ThemeExtractorAgent()
-        await tracker.stage_start(Stage.THEME_EXTRACTION, len(papers))
-        theme_results = await _run_parallel_per_paper(
-            papers, paper_contents, theme_extractor, tracker, Stage.THEME_EXTRACTION, job_path
+        # --- Stage 1: Paper Analysis (themes + claims in one pass, per-paper, parallel) ---
+        analyzer = PaperAnalyzerAgent()
+        await tracker.stage_start(Stage.PAPER_ANALYSIS, len(papers))
+        analysis_results = await _run_parallel_per_paper(
+            papers, paper_contents, analyzer, tracker, Stage.PAPER_ANALYSIS, job_path
         )
-        # Persist per-paper themes
-        for paper, result in zip(papers, theme_results):
+        # Persist per-paper themes and claims (split from unified result)
+        for paper, result in zip(papers, analysis_results):
+            themes_data = {"themes": result.get("themes", [])}
+            claims_data = {"claims": result.get("claims", [])}
             await write_yaml(
                 job_path / "themes" / f"{paper.paper_id}.yaml",
-                result,
+                themes_data,
                 job_id=job_id,
             )
-            if indexer:
-                _fire_qdrant(indexer.index_themes(job_id, paper.paper_id, result))
-            await emitter.emit(
-                EventType.THEME_EXTRACTED,
-                {"paper_id": paper.paper_id, "theme_count": len(result.get("themes", []))},
-            )
-        await tracker.stage_complete(Stage.THEME_EXTRACTION)
-
-        # --- Stage 2: Claim Extraction (per-paper, parallel) ---
-        claim_extractor = ClaimExtractorAgent()
-        themes_by_paper = {
-            paper.paper_id: result.get("themes", []) for paper, result in zip(papers, theme_results)
-        }
-        await tracker.stage_start(Stage.CLAIM_EXTRACTION, len(papers))
-        claim_results = await _run_parallel_per_paper(
-            papers,
-            paper_contents,
-            claim_extractor,
-            tracker,
-            Stage.CLAIM_EXTRACTION,
-            job_path,
-            extra_inputs={"themes": themes_by_paper},
-        )
-        # Persist per-paper claims
-        for paper, result in zip(papers, claim_results):
             await write_yaml(
                 job_path / "claims" / f"{paper.paper_id}.yaml",
-                result,
+                claims_data,
                 job_id=job_id,
             )
             if indexer:
-                _fire_qdrant(indexer.index_claims(job_id, paper.paper_id, result))
+                _fire_qdrant(indexer.index_themes(job_id, paper.paper_id, themes_data))
+                _fire_qdrant(indexer.index_claims(job_id, paper.paper_id, claims_data))
             await emitter.emit(
-                EventType.CLAIM_EXTRACTED,
-                {"paper_id": paper.paper_id, "claim_count": len(result.get("claims", []))},
+                EventType.PAPER_ANALYZED,
+                {
+                    "paper_id": paper.paper_id,
+                    "theme_count": len(result.get("themes", [])),
+                    "claim_count": len(result.get("claims", [])),
+                },
             )
-        await tracker.stage_complete(Stage.CLAIM_EXTRACTION)
+        await tracker.stage_complete(Stage.PAPER_ANALYSIS)
 
-        # === SYNC BARRIER: all per-paper stages complete ===
+        # === SYNC BARRIER: all per-paper analysis complete ===
 
-        # --- Stage 3: Theme Dedup (single pass) ---
+        # --- Stage 2: Theme Dedup (single pass) ---
         all_themes = []
-        for result in theme_results:
+        for result in analysis_results:
             all_themes.extend(result.get("themes", []))
 
         theme_dedup = ThemeDedupAgent()
@@ -168,10 +149,10 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
 
         # === SYNC BARRIER: dedup complete ===
 
-        # --- Stage 4: Theme Review (per-theme, parallel) ---
+        # --- Stage 3: Theme Review (per-theme, parallel) ---
         canonical_themes = dedup_result.get("themes", [])
         all_claims = []
-        for result in claim_results:
+        for result in analysis_results:
             all_claims.extend(result.get("claims", []))
 
         theme_reviewer = ThemeReviewerAgent()
@@ -191,7 +172,7 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
 
         # === SYNC BARRIER: all theme reviews complete ===
 
-        # --- Stage 5: Aggregation (single pass) ---
+        # --- Stage 4: Aggregation (single pass) ---
         aggregator = AggregatorAgent()
         await tracker.stage_start(Stage.AGGREGATION, 1)
         review = await aggregator.run({

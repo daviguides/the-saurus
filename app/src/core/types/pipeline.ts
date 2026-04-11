@@ -34,8 +34,7 @@ export interface PipelineStageConfig {
 }
 
 export const PIPELINE_STAGES: PipelineStageConfig[] = [
-  { id: "theme_extraction", label: "Theme Extraction", icon: "Tags" },
-  { id: "claim_extraction", label: "Claim Extraction", icon: "Quote" },
+  { id: "paper_analysis", label: "Paper Analysis", icon: "Tags" },
   { id: "theme_dedup", label: "Theme Deduplication", icon: "GitMerge" },
   { id: "theme_review", label: "Theme Review", icon: "BookOpen" },
   { id: "aggregation", label: "Review Generation", icon: "FileText" },
