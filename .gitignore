@@ -15,6 +15,7 @@ assistant-ui/dist/
 *.db
 *.sqlite3
 data/
+jobs/
 
 docs/
 
