@@ -122,7 +122,7 @@ export default function FederatedAssistant() {
           style={{ height: "var(--header-height)" }}
         >
           <h2 className="text-sm font-semibold text-text-primary">
-            Assistant
+            Dino Assistant
           </h2>
           <button
             type="button"
