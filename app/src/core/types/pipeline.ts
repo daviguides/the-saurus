@@ -24,3 +24,53 @@ export type ConnectionStatus =
   | "connected"
   | "disconnected"
   | "error";
+
+// --- Pipeline Trace Types ---
+
+export interface PipelineStageConfig {
+  id: string;
+  label: string;
+  icon: string;
+}
+
+export const PIPELINE_STAGES: PipelineStageConfig[] = [
+  { id: "ingestion", label: "PDF Ingestion", icon: "FileText" },
+  { id: "theme_extraction", label: "Theme Extraction", icon: "Tags" },
+  { id: "claim_extraction", label: "Claim Extraction", icon: "Quote" },
+  { id: "theme_dedup", label: "Theme Deduplication", icon: "GitMerge" },
+  { id: "review_generation", label: "Review Generation", icon: "BookOpen" },
+];
+
+export interface PipelineStageState {
+  id: string;
+  status: StageStatus;
+  processedPapers: string[];
+  totalPapers: number;
+}
+
+export interface PipelineEvent {
+  id: string;
+  eventType: string;
+  timestamp: number;
+  stage?: string;
+  paperId?: string;
+  paperTitle?: string;
+  message: string;
+}
+
+export interface PipelineState {
+  status: "idle" | "running" | "completed" | "failed";
+  stages: PipelineStageState[];
+  events: PipelineEvent[];
+  progress: { completed: number; total: number };
+  startedAt: number | null;
+}
+
+export type PipelineAction =
+  | { type: "START_PIPELINE"; payload: { totalPapers: number } }
+  | { type: "STAGE_STARTED"; payload: { stage: string } }
+  | { type: "STAGE_COMPLETED"; payload: { stage: string } }
+  | { type: "PAPER_PROCESSED"; payload: { stage: string; paperId: string; paperTitle: string } }
+  | { type: "EVENT_RECEIVED"; payload: PipelineEvent }
+  | { type: "PIPELINE_COMPLETED" }
+  | { type: "PIPELINE_FAILED"; payload: { message: string } };
