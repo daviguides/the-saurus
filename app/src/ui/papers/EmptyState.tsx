@@ -33,7 +33,7 @@ export default function EmptyState({ onUpload, onFilesAdded, disabled, progress 
       onDragLeave={() => setDragOver(false)}
       onDrop={handleDrop}
     >
-      <TheSaurusMascot size={140} className="text-primary/40" />
+      <TheSaurusMascot size={140} className="animate-[breathe_3s_ease-in-out_infinite]" />
       <div>
         <h2 className="text-xl font-heading font-semibold text-text-primary mb-2">
           {disabled ? "Uploading papers..." : "Feed The Saurus your papers"}
@@ -57,9 +57,9 @@ export default function EmptyState({ onUpload, onFilesAdded, disabled, progress 
         </div>
       ) : (
         <div
-          className={`w-full max-w-sm rounded-lg border-2 border-dashed p-6 transition-colors cursor-pointer ${
+          className={`w-full max-w-sm rounded-lg border-2 border-dashed p-6 transition-all duration-200 cursor-pointer ${
             dragOver
-              ? "border-primary bg-primary/5"
+              ? "border-primary bg-primary/5 scale-[1.02]"
               : "border-border hover:border-primary/50"
           }`}
           onClick={onUpload}

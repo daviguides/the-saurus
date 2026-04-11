@@ -1,4 +1,4 @@
-import { useReducer, useEffect, useRef } from "react";
+import { useReducer, useEffect, useRef, useState } from "react";
 import type {
   PipelineState,
   PipelineAction,
@@ -203,9 +203,11 @@ const MAX_DELAY = 30000;
 
 export function usePipelineTrace(jobId: string | null) {
   const [state, dispatch] = useReducer(pipelineReducer, INITIAL_STATE);
+  const [connectionLost, setConnectionLost] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const attemptRef = useRef(0);
   const terminalRef = useRef(false);
+  const hasConnectedRef = useRef(false);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const paperLookupRef = useRef<Map<string, string>>(new Map());
   const seenEventsRef = useRef(new Set<string>());
@@ -215,7 +217,9 @@ export function usePipelineTrace(jobId: string | null) {
 
     terminalRef.current = false;
     attemptRef.current = 0;
+    hasConnectedRef.current = false;
     seenEventsRef.current.clear();
+    setConnectionLost(false);
 
     let cancelled = false;
 
@@ -293,6 +297,8 @@ export function usePipelineTrace(jobId: string | null) {
 
       ws.onopen = () => {
         attemptRef.current = 0;
+        hasConnectedRef.current = true;
+        setConnectionLost(false);
       };
 
       ws.onmessage = (e) => {
@@ -307,6 +313,7 @@ export function usePipelineTrace(jobId: string | null) {
 
       ws.onclose = () => {
         if (cancelled || terminalRef.current) return;
+        if (hasConnectedRef.current) setConnectionLost(true);
         scheduleReconnect();
       };
 
@@ -336,6 +343,7 @@ export function usePipelineTrace(jobId: string | null) {
 
   return {
     state,
+    connectionLost,
     isRecovering: state.status === "recovering",
     isRunning: state.status === "running",
     isCompleted: state.status === "completed",

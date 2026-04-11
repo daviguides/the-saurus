@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle } from "lucide-react";
 import { usePapers } from "../../core/hooks/usePapers";
 import { useUpload } from "../../core/hooks/useUpload";
@@ -13,6 +13,20 @@ import PaperList from "../papers/PaperList";
 import PaperCards from "../papers/PaperCards";
 import PipelineTrace from "../pipeline/PipelineTrace";
 import Toast from "../shared/Toast";
+
+type StateKey = "pipeline" | "error" | "complete" | "empty" | "uploaded";
+
+function CrossfadeSlot({ active, children }: { active: boolean; children: React.ReactNode }) {
+  return (
+    <div
+      className={`absolute inset-0 transition-opacity duration-300 ease ${
+        active ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
+      }`}
+    >
+      {children}
+    </div>
+  );
+}
 
 export default function PapersView() {
   const {
@@ -37,7 +51,7 @@ export default function PapersView() {
   const storedJobId = useJobId();
   const effectiveJobId = uploadJobId ?? storedJobId;
 
-  const { state: pipelineState, isRecovering, isRunning, isCompleted, isFailed } =
+  const { state: pipelineState, connectionLost, isRecovering, isRunning, isCompleted, isFailed } =
     usePipelineTrace(effectiveJobId);
 
   const { fetchAndLoad: fetchAndLoadReview } = useReview();
@@ -77,69 +91,69 @@ export default function PapersView() {
 
   const isUploading = uploadStatus === "uploading";
 
-  // Show pipeline trace during recovery or active processing
-  if (isRecovering || uploadStatus === "processing" || isRunning) {
-    return <PipelineTrace state={pipelineState} />;
-  }
-
-  // Show error state for failed pipelines
-  if (isFailed && effectiveJobId) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full gap-4 text-center px-4">
-        <AlertCircle size={48} className="text-red-500" />
-        <div>
-          <h2 className="text-xl font-heading font-semibold text-text-primary mb-2">
-            Pipeline failed
-          </h2>
-          <p className="text-text-secondary max-w-md text-sm">
-            Something went wrong during processing. Please try uploading your papers again.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => clearJobId()}
-          className="mt-2 px-4 py-2 text-sm rounded-lg border border-border text-text-secondary hover:text-primary hover:border-primary transition-colors"
-        >
-          Start New Review
-        </button>
-      </div>
-    );
-  }
-
-  if (viewState === "complete") {
-    return <PaperCards papers={papers} />;
-  }
-
-  if (viewState === "empty") {
-    return (
-      <>
-        <EmptyState
-          onUpload={() => setModalOpen(true)}
-          onFilesAdded={handleFilesAdded}
-          disabled={isUploading}
-          progress={uploadProgress}
-        />
-        <UploadModal
-          open={modalOpen}
-          onClose={() => setModalOpen(false)}
-          onFilesAdded={handleFilesAdded}
-          disabled={isUploading}
-        />
-        <Toast message={uploadError} onDismiss={resetUpload} />
-      </>
-    );
-  }
+  const stateKey: StateKey = useMemo(() => {
+    if (isRecovering || uploadStatus === "processing" || isRunning) return "pipeline";
+    if (isFailed && effectiveJobId) return "error";
+    if (viewState === "complete") return "complete";
+    if (viewState === "empty") return "empty";
+    return "uploaded";
+  }, [isRecovering, uploadStatus, isRunning, isFailed, effectiveJobId, viewState]);
 
   return (
     <>
-      <PaperList
-        papers={papers}
-        selectedIds={selectedIds}
-        onToggle={toggleSelect}
-        onRemove={removePaper}
-        onAddMore={() => setModalOpen(true)}
-        onGenerate={() => {}}
-      />
+      <div className="relative h-full">
+        <CrossfadeSlot active={stateKey === "pipeline"}>
+          <PipelineTrace state={pipelineState} connectionLost={connectionLost} />
+        </CrossfadeSlot>
+
+        <CrossfadeSlot active={stateKey === "error"}>
+          <div className="flex flex-col items-center justify-center h-full gap-4 text-center px-4">
+            <div className="rounded-xl border border-error/30 p-8 flex flex-col items-center gap-4">
+              <AlertCircle size={48} className="text-error" />
+              <div>
+                <h2 className="text-xl font-heading font-semibold text-text-primary mb-2">
+                  Pipeline failed
+                </h2>
+                <p className="text-text-secondary max-w-md text-sm">
+                  Something went wrong during processing. Please try uploading your papers again.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => clearJobId()}
+                className="mt-2 px-4 py-2 text-sm rounded-lg border border-border text-text-secondary hover:text-primary hover:border-primary transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </CrossfadeSlot>
+
+        <CrossfadeSlot active={stateKey === "complete"}>
+          <PaperCards papers={papers} />
+        </CrossfadeSlot>
+
+        <CrossfadeSlot active={stateKey === "empty"}>
+          <EmptyState
+            onUpload={() => setModalOpen(true)}
+            onFilesAdded={handleFilesAdded}
+            disabled={isUploading}
+            progress={uploadProgress}
+          />
+        </CrossfadeSlot>
+
+        <CrossfadeSlot active={stateKey === "uploaded"}>
+          <PaperList
+            papers={papers}
+            selectedIds={selectedIds}
+            onToggle={toggleSelect}
+            onRemove={removePaper}
+            onAddMore={() => setModalOpen(true)}
+            onGenerate={() => {}}
+          />
+        </CrossfadeSlot>
+      </div>
+
       <UploadModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, WifiOff } from "lucide-react";
 import type { PipelineState } from "../../core/types/pipeline";
 import ProgressBar from "./ProgressBar";
 import StageItem from "./StageItem";
@@ -7,9 +7,10 @@ import EventStream from "./EventStream";
 
 interface Props {
   state: PipelineState;
+  connectionLost?: boolean;
 }
 
-export default function PipelineTrace({ state }: Props) {
+export default function PipelineTrace({ state, connectionLost }: Props) {
   const hasEvents = state.events.length > 0;
   const isLoading = !hasEvents && state.status !== "completed";
 
@@ -26,6 +27,20 @@ export default function PipelineTrace({ state }: Props) {
 
   return (
     <div className="relative flex flex-col h-full p-6">
+      {/* Connection lost banner */}
+      <div
+        className={`overflow-hidden transition-all duration-300 ease ${
+          connectionLost
+            ? "max-h-12 opacity-100 mb-3"
+            : "max-h-0 opacity-0 mb-0"
+        }`}
+      >
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent-bg border border-accent/30 text-sm text-text-secondary">
+          <WifiOff size={14} className="text-accent shrink-0" />
+          Connection lost — Reconnecting...
+        </div>
+      </div>
+
       {/* Loading state — crossfades out when first event arrives */}
       <div
         className={`absolute inset-0 flex flex-col items-center justify-center gap-3 transition-opacity duration-300 ease ${
