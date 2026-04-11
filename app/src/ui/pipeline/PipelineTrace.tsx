@@ -9,12 +9,12 @@ interface Props {
 }
 
 export default function PipelineTrace({ state }: Props) {
-  // Build paper ID → title map from events
-  const paperTitles = useMemo(() => {
+  // Track last processed paper title per stage
+  const lastProcessedPerStage = useMemo(() => {
     const map = new Map<string, string>();
     for (const event of state.events) {
-      if (event.paperId && event.paperTitle) {
-        map.set(event.paperId, event.paperTitle);
+      if (event.eventType === "paper_processed" && event.stage && event.paperTitle) {
+        map.set(event.stage, event.paperTitle);
       }
     }
     return map;
@@ -27,14 +27,18 @@ export default function PipelineTrace({ state }: Props) {
       </h2>
 
       <ProgressBar
-        completed={state.progress.completed}
-        total={state.progress.total}
+        stages={state.stages}
         startedAt={state.startedAt}
+        totalPapers={state.progress.total}
       />
 
       <div className="flex-1 overflow-y-auto -mx-2 px-2">
         {state.stages.map((stage) => (
-          <StageItem key={stage.id} stage={stage} paperTitles={paperTitles} />
+          <StageItem
+            key={stage.id}
+            stage={stage}
+            lastProcessedTitle={lastProcessedPerStage.get(stage.id)}
+          />
         ))}
       </div>
 
