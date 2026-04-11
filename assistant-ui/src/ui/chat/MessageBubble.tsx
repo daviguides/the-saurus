@@ -15,8 +15,8 @@ export default function MessageBubble({ message }: Props) {
       <div
         className={`max-w-[80%] rounded-2xl px-4 py-3 ${
           isUser
-            ? "bg-blue-600 text-white"
-            : "bg-gray-800 text-gray-100"
+            ? "bg-primary text-white"
+            : "bg-surface text-text-primary"
         }`}
       >
         {isUser ? (
@@ -29,7 +29,7 @@ export default function MessageBubble({ message }: Props) {
                 const inline = !match;
                 return inline ? (
                   <code
-                    className="bg-gray-700 px-1.5 py-0.5 rounded text-sm"
+                    className="bg-bg px-1.5 py-0.5 rounded text-sm"
                     {...props}
                   >
                     {children}
@@ -51,14 +51,14 @@ export default function MessageBubble({ message }: Props) {
         )}
 
         {message.references && message.references.length > 0 && (
-          <div className="mt-3 pt-3 border-t border-gray-700">
-            <p className="text-xs text-gray-400 mb-1">Sources:</p>
+          <div className="mt-3 pt-3 border-t border-border">
+            <p className="text-xs text-text-muted mb-1">Sources:</p>
             {message.references.map((ref, i) => (
-              <div key={i} className="text-xs text-gray-300 mb-1">
+              <div key={i} className="text-xs text-text-secondary mb-1">
                 <span className="font-medium">{ref.title}</span>
                 {ref.year && <span> ({ref.year})</span>}
                 {ref.doi && (
-                  <span className="text-blue-400 ml-1">{ref.doi}</span>
+                  <span className="text-primary ml-1">{ref.doi}</span>
                 )}
               </div>
             ))}
@@ -66,7 +66,7 @@ export default function MessageBubble({ message }: Props) {
         )}
 
         {message.isStreaming && (
-          <span className="inline-block w-2 h-4 bg-blue-400 animate-pulse ml-1" />
+          <span className="inline-block w-2 h-4 bg-primary animate-pulse ml-1" />
         )}
       </div>
     </div>

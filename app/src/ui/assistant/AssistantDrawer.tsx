@@ -11,9 +11,9 @@ import EmptyChat from "./EmptyChat";
 
 const STATUS_COLOR: Record<ConnectionStatus, string> = {
   connecting: "bg-accent",
-  connected: "bg-green-500",
+  connected: "bg-success",
   disconnected: "bg-text-muted",
-  error: "bg-red-500",
+  error: "bg-error",
 };
 
 export default function AssistantDrawer() {
