@@ -4,8 +4,8 @@ import socketio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from assistant_ws.config import settings
 from assistant_ws.api.routes import router as api_router
+from assistant_ws.config import settings
 from assistant_ws.ws import sio
 
 
