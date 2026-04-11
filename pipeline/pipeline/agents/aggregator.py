@@ -11,6 +11,7 @@ from agno.agent import Agent as AgnoAgent
 from pydantic import BaseModel, Field
 
 from pipeline.agents.models import create_model
+from pipeline.agents.parsing import run_agent_with_retry
 from pipeline.agents.prompts.aggregator import AGGREGATOR_PROMPT
 
 logger = logging.getLogger(__name__)
@@ -73,12 +74,10 @@ class AggregatorAgent:
         # Build numbered claim registry and LLM message
         claim_registry, message = _build_message(theme_reviews, claim_lookup)
 
-        result = await self._agent.arun(
-            message,
-            output_schema=AggregatorResult,
+        llm_result = await run_agent_with_retry(
+            self._agent, message, AggregatorResult,
+            context={"stage": "aggregation", "themes": len(theme_reviews)},
         )
-
-        llm_result: AggregatorResult = result.content
 
         # Post-process: resolve [N] → [N](p.X,§Y) in section content
         resolved_sections = _resolve_citations(
