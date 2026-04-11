@@ -8,8 +8,8 @@ import {
   Lightbulb,
   ChevronDown,
   ChevronUp,
-  MessageCircle,
 } from "lucide-react";
+import DinoFace from "../shared/DinoFace";
 
 export type Suggestion = {
   id: string;
@@ -89,11 +89,9 @@ export default function WelcomeContent({
 
   return (
     <div className="flex flex-col items-center px-4 py-8">
-      {/* Welcome header */}
-      <div className="flex items-center gap-3 mb-4">
-        <div className="p-3 rounded-full bg-primary/10">
-          <MessageCircle className="w-7 h-7 text-primary" />
-        </div>
+      {/* Welcome header — dino face */}
+      <div className="mb-4">
+        <DinoFace size={56} className="text-primary" />
       </div>
 
       <h2 className="text-xl font-heading font-semibold text-text-primary mb-2">
