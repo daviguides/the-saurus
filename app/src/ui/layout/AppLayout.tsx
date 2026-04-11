@@ -1,4 +1,4 @@
-import { Outlet } from "react-router";
+import { Outlet, useLocation } from "react-router";
 import clsx from "clsx";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
@@ -7,6 +7,7 @@ import FederatedAssistant from "../assistant/FederatedAssistant";
 
 function LayoutInner() {
   const { isOpen } = useAssistant();
+  const location = useLocation();
 
   return (
     <div className="flex h-dvh bg-bg text-text-primary font-body">
@@ -19,7 +20,9 @@ function LayoutInner() {
       >
         <Header />
         <main className="flex-1 overflow-y-auto">
-          <Outlet />
+          <div key={location.pathname} className="h-full animate-[viewFadeIn_150ms_ease]">
+            <Outlet />
+          </div>
         </main>
       </div>
       <FederatedAssistant />

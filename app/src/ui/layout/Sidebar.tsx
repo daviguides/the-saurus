@@ -48,7 +48,7 @@ export default function Sidebar() {
           >
             <Icon size={20} />
             {to === "/review" && hasReview && (
-              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-accent" />
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-accent animate-[scaleIn_300ms_ease-out]" />
             )}
           </NavLink>
         ))}
