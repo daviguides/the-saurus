@@ -35,7 +35,7 @@ class PapersStore:
             api_key=settings.qdrant_api_key,
         )
         self._embedder = GeminiEmbedder(
-            model=settings.embedding_model,
+            id=settings.embedding_model,
             api_key=settings.embedding_api_key or None,
         )
 
