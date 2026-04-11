@@ -3,7 +3,7 @@ import { createJob } from "../services/api";
 
 export type UploadStatus = "idle" | "uploading" | "processing" | "error";
 
-const STORAGE_KEY = "answerthis:job_id";
+const STORAGE_KEY = "thesaurus:job_id";
 
 export function useUpload() {
   const [status, setStatus] = useState<UploadStatus>("idle");

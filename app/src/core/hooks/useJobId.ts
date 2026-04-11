@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-const STORAGE_KEY = "answerthis:job_id";
+const STORAGE_KEY = "thesaurus:job_id";
 
 const listeners = new Set<() => void>();
 
