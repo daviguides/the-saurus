@@ -51,7 +51,7 @@ export default function PapersView() {
   const storedJobId = useJobId();
   const effectiveJobId = uploadJobId ?? storedJobId;
 
-  const { state: pipelineState, isRecovering, isRunning, isCompleted, isFailed } =
+  const { state: pipelineState, connectionLost, isRecovering, isRunning, isCompleted, isFailed } =
     usePipelineTrace(effectiveJobId);
 
   const { fetchAndLoad: fetchAndLoadReview } = useReview();
@@ -103,7 +103,7 @@ export default function PapersView() {
     <>
       <div className="relative h-full">
         <CrossfadeSlot active={stateKey === "pipeline"}>
-          <PipelineTrace state={pipelineState} />
+          <PipelineTrace state={pipelineState} connectionLost={connectionLost} />
         </CrossfadeSlot>
 
         <CrossfadeSlot active={stateKey === "error"}>
