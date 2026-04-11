@@ -38,7 +38,7 @@ export default function PaperListItem({
       <button
         type="button"
         onClick={onRemove}
-        className="opacity-0 group-hover:opacity-100 p-1 rounded text-text-muted hover:text-red-600 hover:bg-red-50 transition-all"
+        className="opacity-0 group-hover:opacity-100 p-1 rounded text-text-muted hover:text-error hover:bg-error/10 transition-all"
         aria-label={`Remove ${paper.title}`}
       >
         <Trash2 size={15} />
