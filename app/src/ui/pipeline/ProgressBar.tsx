@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { PipelineStageState } from "../../core/types/pipeline";
 
 interface Props {
@@ -6,15 +7,26 @@ interface Props {
   totalPapers: number;
 }
 
-function formatElapsed(startedAt: number | null): string {
-  if (!startedAt) return "";
+function formatElapsed(startedAt: number): string {
   const elapsed = Math.floor((Date.now() - startedAt) / 1000);
   const min = Math.floor(elapsed / 60);
   const sec = elapsed % 60;
   return min > 0 ? `${min}m ${sec}s` : `${sec}s`;
 }
 
+function useElapsed(startedAt: number | null): string {
+  const [, tick] = useState(0);
+  useEffect(() => {
+    if (!startedAt) return;
+    const id = setInterval(() => tick((t) => t + 1), 1000);
+    return () => clearInterval(id);
+  }, [startedAt]);
+  if (!startedAt) return "";
+  return formatElapsed(startedAt);
+}
+
 export default function ProgressBar({ stages, startedAt, totalPapers }: Props) {
+  const elapsed = useElapsed(startedAt);
   const completedStages = stages.filter((s) => s.status === "completed").length;
   const activeStage = stages.find((s) => s.status === "running");
 
@@ -37,7 +49,7 @@ export default function ProgressBar({ stages, startedAt, totalPapers }: Props) {
           {activeLabel} · {totalPapers} papers
         </span>
         <span className="text-sm text-text-secondary font-mono">
-          {pct}% {startedAt && `· ${formatElapsed(startedAt)}`}
+          {pct}% {elapsed && `· ${elapsed}`}
         </span>
       </div>
       <div className="h-2.5 rounded-full bg-border overflow-hidden">

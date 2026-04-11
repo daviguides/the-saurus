@@ -23,7 +23,10 @@ export default function EventStream({ events }: Props) {
 
   useEffect(() => {
     if (expanded && isAtBottomRef.current && scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth",
+      });
     }
   }, [events, expanded]);
 
@@ -48,32 +51,38 @@ export default function EventStream({ events }: Props) {
         )}
       </button>
 
-      {expanded && (
-        <div
-          ref={scrollRef}
-          onScroll={handleScroll}
-          className="max-h-48 overflow-y-auto border-t border-border bg-bg/30 px-4 py-2 space-y-0.5"
-        >
-          {events.map((event) => (
-            <div key={event.id} className="flex gap-2 text-xs font-mono leading-5">
-              <span className="text-text-muted flex-shrink-0">
-                [{formatTime(event.timestamp)}]
-              </span>
-              <span className="text-primary/70 flex-shrink-0">
-                {event.eventType}
-              </span>
-              <span className="text-text-secondary truncate">
-                {event.message}
-              </span>
-            </div>
-          ))}
-          {events.length === 0 && (
-            <p className="text-xs text-text-muted italic">
-              Waiting for events...
-            </p>
-          )}
+      {/* Animated expand/collapse via CSS grid trick */}
+      <div
+        className="grid transition-[grid-template-rows] duration-200 ease"
+        style={{ gridTemplateRows: expanded ? "1fr" : "0fr" }}
+      >
+        <div className="overflow-hidden min-h-0">
+          <div
+            ref={scrollRef}
+            onScroll={handleScroll}
+            className="max-h-48 overflow-y-auto border-t border-border bg-bg/30 px-4 py-2 space-y-0.5"
+          >
+            {events.map((event) => (
+              <div key={event.id} className="flex gap-2 text-xs font-mono leading-5">
+                <span className="text-text-muted flex-shrink-0">
+                  [{formatTime(event.timestamp)}]
+                </span>
+                <span className="text-primary/70 flex-shrink-0">
+                  {event.eventType}
+                </span>
+                <span className="text-text-secondary truncate">
+                  {event.message}
+                </span>
+              </div>
+            ))}
+            {events.length === 0 && (
+              <p className="text-xs text-text-muted italic">
+                Waiting for events...
+              </p>
+            )}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
