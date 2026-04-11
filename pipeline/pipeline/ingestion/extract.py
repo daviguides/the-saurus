@@ -10,6 +10,36 @@ from .models import IngestedPaper, Paragraph
 
 QUALITY_THRESHOLD = 50  # minimum chars per page to consider extraction successful
 
+# PDF ligatures and common unicode artifacts → ASCII equivalents
+_LIGATURE_MAP = {
+    "\ufb00": "ff",
+    "\ufb01": "fi",
+    "\ufb02": "fl",
+    "\ufb03": "ffi",
+    "\ufb04": "ffl",
+    "\ufb05": "ft",
+    "\ufb06": "st",
+    "\u2018": "'",   # left single quote
+    "\u2019": "'",   # right single quote
+    "\u201c": '"',   # left double quote
+    "\u201d": '"',   # right double quote
+    "\u2013": "-",   # en dash
+    "\u2014": "--",  # em dash
+    "\u2026": "...", # ellipsis
+    "\u00a0": " ",   # non-breaking space
+    "\u200b": "",    # zero-width space
+    "\u200c": "",    # zero-width non-joiner
+    "\u200d": "",    # zero-width joiner
+    "\ufeff": "",    # BOM
+}
+
+_LIGATURE_PATTERN = re.compile("|".join(re.escape(k) for k in _LIGATURE_MAP))
+
+
+def _normalize_text(text: str) -> str:
+    """Clean PDF text artifacts: ligatures, smart quotes, invisible chars."""
+    return _LIGATURE_PATTERN.sub(lambda m: _LIGATURE_MAP[m.group()], text)
+
 
 class IngestionError(Exception):
     """Raised when both extractors fail to produce usable output."""
@@ -70,7 +100,7 @@ def extract_pymupdf(pdf_bytes: bytes) -> IngestedPaper:
             for line in block["lines"]:
                 line_text = ""
                 for span in line["spans"]:
-                    line_text += span["text"]
+                    line_text += _normalize_text(span["text"])
                     block_max_size = max(block_max_size, span["size"])
                     if "Bold" in span["font"]:
                         has_bold = True
@@ -174,7 +204,7 @@ def extract_pdfplumber(pdf_bytes: bytes) -> IngestedPaper:
             if not current_para_lines:
                 return
 
-            text = " ".join(current_para_lines).strip()
+            text = _normalize_text(" ".join(current_para_lines).strip())
             if not text:
                 return
 
