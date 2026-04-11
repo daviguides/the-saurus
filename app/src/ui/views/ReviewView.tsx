@@ -38,7 +38,7 @@ function CopyButton({ text }: { text: string }) {
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center h-full gap-4 text-center px-4">
-      <TheSaurusMascot size={120} className="animate-[breathe_3s_ease-in-out_infinite]" />
+      <TheSaurusMascot size={160} className="animate-[breathe_3s_ease-in-out_infinite]" />
       <div>
         <h2 className="text-xl font-heading font-semibold text-text-primary mb-2">
           No review yet

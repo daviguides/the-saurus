@@ -48,7 +48,7 @@ export default function PapersView() {
   if (papers.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center px-4 gap-4">
-        <TheSaurusMascot size={120} className="animate-[breathe_3s_ease-in-out_infinite]" />
+        <TheSaurusMascot size={160} className="animate-[breathe_3s_ease-in-out_infinite]" />
         <div>
           <h2 className="text-xl font-heading font-semibold text-text-primary mb-2">
             No papers analyzed yet

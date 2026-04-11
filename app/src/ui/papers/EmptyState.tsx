@@ -33,7 +33,7 @@ export default function EmptyState({ onUpload, onFilesAdded, disabled, progress 
       onDragLeave={() => setDragOver(false)}
       onDrop={handleDrop}
     >
-      <TheSaurusMascot size={140} className="animate-[breathe_3s_ease-in-out_infinite]" />
+      <TheSaurusMascot size={180} className="animate-[breathe_3s_ease-in-out_infinite]" />
       <div>
         <h2 className="text-xl font-heading font-semibold text-text-primary mb-2">
           {disabled ? "Uploading papers..." : "Feed The Saurus your papers"}
