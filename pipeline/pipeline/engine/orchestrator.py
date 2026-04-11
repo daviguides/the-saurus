@@ -17,7 +17,6 @@ from pipeline.agents import (
     ThemeReviewerAgent,
 )
 from pipeline.core import (
-    EventEmitter,
     EventType,
     JobState,
     JobStatus,
