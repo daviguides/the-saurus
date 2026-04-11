@@ -332,6 +332,15 @@
   text-decoration-color: var(--saurus-primary-hover);
 }
 
+/* Citation links — no underline by default, underline on hover */
+.prose-content a[href^="#ref-"] {
+  text-decoration: none;
+}
+
+.prose-content a[href^="#ref-"]:hover {
+  text-decoration: underline;
+}
+
 /* --- IMAGES --- */
 .prose-content img {
   @apply my-6 w-full h-auto rounded-lg overflow-hidden;
