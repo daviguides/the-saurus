@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { isValidElement, type ReactNode } from "react";
 
 export function slugify(text: string): string {
   return text
@@ -12,7 +12,7 @@ export function extractText(node: ReactNode): string {
   if (typeof node === "number") return String(node);
   if (!node) return "";
   if (Array.isArray(node)) return node.map(extractText).join("");
-  if (typeof node === "object" && "props" in node) {
+  if (isValidElement<{ children?: ReactNode }>(node)) {
     return extractText(node.props.children);
   }
   return "";
