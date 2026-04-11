@@ -1,8 +1,32 @@
 import { defineConfig } from "@rsbuild/core";
 import { pluginReact } from "@rsbuild/plugin-react";
+import { pluginModuleFederation } from "@module-federation/rsbuild-plugin";
 
 export default defineConfig({
-  plugins: [pluginReact()],
+  plugins: [
+    pluginReact(),
+    pluginModuleFederation({
+      name: "theSaurusApp",
+      dts: false,
+      remotes: {
+        theSaurusAssistant:
+          "theSaurusAssistant@http://localhost:5174/remoteEntry.js",
+      },
+      shared: {
+        react: { singleton: true, requiredVersion: "^19.0.0", eager: true },
+        "react-dom": {
+          singleton: true,
+          requiredVersion: "^19.0.0",
+          eager: true,
+        },
+        "socket.io-client": {
+          singleton: true,
+          requiredVersion: "^4.0.0",
+          eager: true,
+        },
+      },
+    }),
+  ],
   source: {
     entry: {
       index: "./src/main.tsx",
