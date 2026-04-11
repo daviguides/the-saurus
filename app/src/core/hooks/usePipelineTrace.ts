@@ -4,6 +4,7 @@ import type {
   PipelineAction,
   PipelineStageState,
   PipelineEvent,
+  StagePipelineEvent,
   RawPipelineEvent,
 } from "../types/pipeline";
 import { PIPELINE_STAGES } from "../types/pipeline";
@@ -143,9 +144,9 @@ function mapEventToActions(
   const actions: PipelineAction[] = [];
   const p = raw.payload;
 
-  const streamEvent: PipelineEvent = {
+  const streamEvent: StagePipelineEvent = {
     id: raw.event_id,
-    eventType: raw.event_type,
+    eventType: raw.event_type as StagePipelineEvent["eventType"],
     timestamp: new Date(raw.timestamp).getTime(),
     stage: (p.stage as string) ?? undefined,
     paperId: (p.item_id as string) ?? (p.paper_id as string) ?? undefined,

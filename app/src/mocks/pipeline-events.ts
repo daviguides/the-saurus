@@ -1,4 +1,4 @@
-import type { PipelineAction, PipelineEvent } from "../core/types/pipeline";
+import type { PipelineAction, StagePipelineEvent } from "../core/types/pipeline";
 import { PIPELINE_STAGES } from "../core/types/pipeline";
 
 interface MockPaper {
@@ -7,12 +7,12 @@ interface MockPaper {
 }
 
 function createEvent(
-  eventType: string,
+  eventType: StagePipelineEvent["eventType"],
   stage: string,
   message: string,
   paperId?: string,
   paperTitle?: string,
-): PipelineEvent {
+): StagePipelineEvent {
   return {
     id: crypto.randomUUID(),
     eventType,
