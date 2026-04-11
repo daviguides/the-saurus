@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from tests.conftest import mock_streaming_arun
+
 import pytest
 
 from pipeline.agents.protocol import Agent
@@ -153,7 +155,7 @@ class TestThemeDedupAgentRun:
             agent = ThemeDedupAgent()
 
         agent._agent = AsyncMock()
-        agent._agent.arun = AsyncMock(return_value=fake_output)
+        agent._agent.arun = mock_streaming_arun(fake_output)
 
         result = await agent.run({"themes": input_themes})
 
@@ -175,7 +177,7 @@ class TestThemeDedupAgentRun:
             agent = ThemeDedupAgent()
 
         agent._agent = AsyncMock()
-        agent._agent.arun = AsyncMock(return_value=fake_output)
+        agent._agent.arun = mock_streaming_arun(fake_output)
 
         result = await agent.run({"themes": input_themes})
 
@@ -194,7 +196,7 @@ class TestThemeDedupAgentRun:
             agent = ThemeDedupAgent()
 
         agent._agent = AsyncMock()
-        agent._agent.arun = AsyncMock(return_value=fake_output)
+        agent._agent.arun = mock_streaming_arun(fake_output)
 
         result = await agent.run({"themes": input_themes})
 
@@ -216,7 +218,7 @@ class TestThemeDedupAgentRun:
             agent = ThemeDedupAgent()
 
         agent._agent = AsyncMock()
-        agent._agent.arun = AsyncMock(return_value=fake_output)
+        agent._agent.arun = mock_streaming_arun(fake_output)
 
         result = await agent.run({"themes": input_themes})
 
@@ -232,7 +234,7 @@ class TestThemeDedupAgentRun:
             agent = ThemeDedupAgent()
 
         agent._agent = AsyncMock()
-        agent._agent.arun = AsyncMock(return_value=fake_output)
+        agent._agent.arun = mock_streaming_arun(fake_output)
 
         result = await agent.run({"themes": input_themes})
 
@@ -254,7 +256,7 @@ class TestThemeDedupAgentRun:
             agent = ThemeDedupAgent()
 
         agent._agent = AsyncMock()
-        agent._agent.arun = AsyncMock(return_value=fake_output)
+        agent._agent.arun = mock_streaming_arun(fake_output)
 
         await agent.run({"themes": input_themes})
 
@@ -277,7 +279,7 @@ class TestThemeDedupAgentRun:
             agent = ThemeDedupAgent()
 
         agent._agent = AsyncMock()
-        agent._agent.arun = AsyncMock(return_value=fake_output)
+        agent._agent.arun = mock_streaming_arun(fake_output)
 
         result = await agent.run({"themes": input_themes})
 

@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from tests.conftest import mock_streaming_arun
+
 import pytest
 
 from pipeline.agents.protocol import Agent
@@ -176,7 +178,7 @@ class TestThemeExtractorAgentRun:
             agent = ThemeExtractorAgent()
 
         agent._agent = AsyncMock()
-        agent._agent.arun = AsyncMock(return_value=fake_output)
+        agent._agent.arun = mock_streaming_arun(fake_output)
 
         result = await agent.run({
             "paper_id": "paper-123",
@@ -210,7 +212,7 @@ class TestThemeExtractorAgentRun:
             agent = ThemeExtractorAgent()
 
         agent._agent = AsyncMock()
-        agent._agent.arun = AsyncMock(return_value=fake_output)
+        agent._agent.arun = mock_streaming_arun(fake_output)
 
         result = await agent.run({
             "paper_id": "p1",
@@ -230,7 +232,7 @@ class TestThemeExtractorAgentRun:
             agent = ThemeExtractorAgent()
 
         agent._agent = AsyncMock()
-        agent._agent.arun = AsyncMock(return_value=fake_output)
+        agent._agent.arun = mock_streaming_arun(fake_output)
 
         await agent.run({
             "paper_id": "p1",
@@ -240,5 +242,7 @@ class TestThemeExtractorAgentRun:
 
         agent._agent.arun.assert_called_once_with(
             "the paper content",
+            stream=True,
+            stream_events=True,
             output_schema=ThemeExtractionResult,
         )
