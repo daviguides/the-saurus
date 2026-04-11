@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
@@ -9,6 +10,7 @@ from uuid import uuid4
 from fastapi import APIRouter, HTTPException, UploadFile
 
 from pipeline.config import settings
+from pipeline.engine import run_pipeline
 from pipeline.core import (
     EventEmitter,
     EventType,
@@ -35,6 +37,8 @@ from .schemas import (
 )
 
 router = APIRouter()
+
+_running_tasks: dict[str, asyncio.Task] = {}
 
 
 def _jobs_dir() -> Path:
@@ -131,6 +135,11 @@ async def create_job(files: list[UploadFile]) -> CreateJobResponse:
         EventType.JOB_CREATED,
         {"paper_count": len(papers), "filenames": [p.filename for p in papers]},
     )
+
+    # Launch pipeline as background task
+    task = asyncio.create_task(run_pipeline(job_id, jobs_dir))
+    _running_tasks[job_id] = task
+    task.add_done_callback(lambda t: _running_tasks.pop(job_id, None))
 
     return CreateJobResponse(
         job_id=job_id,
