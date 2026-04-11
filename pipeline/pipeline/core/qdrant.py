@@ -42,7 +42,7 @@ class QdrantIndexer:
             api_key=settings.qdrant_api_key,
         )
         self._embedder = GeminiEmbedder(
-            model=settings.qdrant_embedding_model,
+            id=settings.qdrant_embedding_model,
             api_key=settings.llm_api_key,
         )
         self._dimension = EMBEDDING_DIMENSION
