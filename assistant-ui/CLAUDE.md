@@ -52,4 +52,4 @@ pnpm lint
 
 ## Reference
 
-Pattern based on AccelVeo `avo-assistant-ui` (same Module Federation 2.0 architecture).
+Uses Module Federation 2.0 architecture for independent build and deployment.

@@ -2,8 +2,6 @@
 
 Maps agent names and event types to user-friendly progress messages
 with contextual interpolation, plus technical messages for developer view.
-Follows the same pattern as AVO's step_messages.py but simplified for
-pipeline agents (no MCP tools — pure structured-output agents).
 """
 
 from __future__ import annotations
