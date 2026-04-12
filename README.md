@@ -14,24 +14,72 @@ A literature review pipeline that devours scientific papers and produces compreh
 
 Every claim is traceable to its source: paper, page, and paragraph.
 
-## Quick Start
+## Prerequisites
+
+- Python 3.13+
+- Node.js 20+ with pnpm
+- [uv](https://docs.astral.sh/uv/) (Python package manager)
+- Docker (for Qdrant, optional)
+- Google AI Studio API key ([get one here](https://aistudio.google.com/apikey))
+
+## Setup
 
 ```bash
-# Install dependencies
+git clone https://github.com/daviguides/the-saurus.git
+cd the-saurus
 make setup
+```
 
-# Start pipeline + app (minimum for demo)
-make dev-pipeline   # Terminal 1 — port 8002
-make dev-app        # Terminal 2 — port 5173
+Copy environment files and set your API key:
 
-# Optional: assistant chat
-make dev-ws         # Terminal 3 — port 8001
-make dev-ui         # Terminal 4 — port 5174 (use: pnpm dev:federated)
-make dev-qdrant     # Terminal 5 — port 6333
-make dev-mcp        # Terminal 6 — port 8012
+```bash
+cp pipeline/.env.example pipeline/.env
+# Edit pipeline/.env and set PIPELINE_LLM_API_KEY
+
+cp assistant-ws/.env.example assistant-ws/.env
+# Edit assistant-ws/.env and set OPENAI_API_KEY (for the chat assistant)
+```
+
+## Running
+
+### Core (pipeline + app)
+
+The minimum to upload PDFs and generate a literature review:
+
+```bash
+# Terminal 1: Pipeline API (port 8002)
+make dev-pipeline
+
+# Terminal 2: React app (port 5173)
+make dev-app
 ```
 
 Open [http://localhost:5173](http://localhost:5173) and upload PDFs.
+
+### Conversational assistant (optional)
+
+Adds an embedded chat that can answer questions about your papers using MCP tools over Qdrant:
+
+```bash
+# Terminal 3: Qdrant vector database (port 6333)
+make dev-qdrant
+
+# Terminal 4: MCP server for RAG queries (port 8012)
+make dev-mcp
+
+# Terminal 5: Chat WebSocket backend (port 8001)
+make dev-ws
+
+# Terminal 6: Chat UI federated module (port 5174)
+make dev-ui
+```
+
+### All services at once (Docker Compose)
+
+```bash
+make up      # Start all services
+make down    # Stop all services
+```
 
 ## Architecture
 
@@ -48,6 +96,8 @@ Open [http://localhost:5173](http://localhost:5173) and upload PDFs.
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+See [`docs/architecture.md`](docs/architecture.md) for detailed diagrams covering the full pipeline flow, agent data model, event architecture, and service topology.
+
 ## Pipeline
 
 | Stage | Agent | Parallelism | Description |
@@ -57,13 +107,15 @@ Open [http://localhost:5173](http://localhost:5173) and upload PDFs.
 | Theme Review | ThemeReviewerAgent | Batched (5/call) | Synthesize claims per theme |
 | Aggregation | AggregatorAgent | Sequential | Cohesive review with citations |
 
+All agents use the Agno framework with Pydantic structured output and streaming events. LLM concurrency is controlled by a shared semaphore (configurable via `PIPELINE_LLM_MAX_CONCURRENT`).
+
 ## Tech Stack
 
 | Layer | Technology |
 |-------|------------|
-| Frontend | React 19, TypeScript, Rsbuild, Tailwind v4, Module Federation |
+| Frontend | React 19, TypeScript, Rsbuild, Tailwind v4, Module Federation 2.0 |
 | Pipeline | Python 3.13+, FastAPI, Agno, Gemini 2.5 Flash |
-| Assistant | Agno Team, Socket.IO, OpenAI/Anthropic |
+| Assistant | Agno Team, Socket.IO, GPT-4o-mini |
 | RAG | Qdrant, Gemini text-embedding-004, FastMCP |
 | Persistence | YAML (state), NDJSON (events), filesystem |
 | Design | Literata + Inter + Fira Code, light/dark themes |
@@ -72,31 +124,42 @@ Open [http://localhost:5173](http://localhost:5173) and upload PDFs.
 
 ```
 the-saurus/
-├── app/              # React desktop app
-├── assistant-ui/     # Federated chat UI
-├── assistant-ws/     # Chat WebSocket backend
-├── papers-mcp/       # MCP server (Qdrant RAG)
-├── pipeline/         # Core pipeline engine
-├── shared/           # Design tokens (CSS)
-├── docs/             # Design docs & explorations
+├── app/              # React desktop app (upload, trace, review)
+├── assistant-ui/     # Federated chat UI (Module Federation remote)
+├── assistant-ws/     # Chat WebSocket backend (Agno Team)
+├── papers-mcp/       # MCP server (6 tools over Qdrant)
+├── pipeline/         # Core pipeline engine (multi-agent orchestrator)
+├── shared/           # Design tokens (CSS variables, light + dark)
+├── docs/             # Architecture docs with diagrams
 ├── Makefile          # Dev commands
 └── docker-compose.yml
 ```
 
 ## Configuration
 
-Copy `pipeline/.env.example` to `pipeline/.env` and set:
+| Service | Env file | Key variables |
+|---------|----------|---------------|
+| Pipeline | `pipeline/.env` | `PIPELINE_LLM_API_KEY`, `PIPELINE_LLM_MAX_CONCURRENT` (default 2, set 10 for paid tier) |
+| Assistant | `assistant-ws/.env` | `OPENAI_API_KEY`, `AT_LLM_PROVIDER` (openai/anthropic) |
+| MCP | `papers-mcp/.env` | `MCP_QDRANT_URL` (default localhost:6333) |
 
+See each service's `.env.example` for all available settings.
+
+## Testing
+
+```bash
+make test    # Run all test suites
+make lint    # Lint all Python services
+
+# Individual services
+cd pipeline && uv run pytest tests/ -v
+cd assistant-ws && uv run pytest tests/ -v
+cd papers-mcp && uv run pytest tests/ -v
 ```
-PIPELINE_LLM_API_KEY=your-google-ai-studio-key
-PIPELINE_LLM_MAX_CONCURRENT=10  # paid tier
-```
 
-## Origin
+## The Name
 
-Built as a technical demonstration for [AnswerThis](https://answerthis.io/) (YC F25), addressing the gap between their Library (upload PDFs) and literature review engine (search-based). The Saurus bridges that gap: process uploaded papers into a comprehensive review.
-
-**The name**: Born from a comic moment in a technical interview. While discussing theme deduplication across scientific papers — how "chronobiology" and "chronos" refer to the same concept — the word "thesaurus" came up. A thesaurus connects words that mean the same thing. The pipeline does exactly that. **The Saurus**: part thesaurus, part dinosaur.
+A thesaurus connects words that mean the same thing. This pipeline does exactly that for scientific themes across papers: "chronobiology" in one paper and "circadian rhythms" in another become a single canonical theme. **The Saurus**: part thesaurus, part dinosaur.
 
 ## License
 
