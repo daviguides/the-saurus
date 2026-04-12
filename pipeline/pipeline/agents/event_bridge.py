@@ -5,8 +5,6 @@ Creates async callbacks that map Agno agent lifecycle events
 and emit them through the EventEmitter for NDJSON + WebSocket delivery.
 """
 
-from __future__ import annotations
-
 import logging
 import time
 from collections.abc import Awaitable, Callable

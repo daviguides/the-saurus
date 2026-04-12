@@ -4,8 +4,6 @@ Maps agent names and event types to user-friendly progress messages
 with contextual interpolation, plus technical messages for developer view.
 """
 
-from __future__ import annotations
-
 import re
 from typing import Any
 
@@ -27,7 +25,7 @@ AGENT_TEMPLATES: dict[tuple[str, str], str] = {
     ("ThemeDedup", "agent_completed"): "Deduplication complete",
     ("ThemeDedup", "agent_error"): "Deduplication failed",
     # ThemeReviewer
-    ("ThemeReviewer", "agent_started"): "Reviewing themes (batch {batch})...",
+    ("ThemeReviewer", "agent_started"): "Reviewing {theme_count} themes...",
     ("ThemeReviewer", "agent_completed"): "Theme review complete",
     ("ThemeReviewer", "agent_error"): "Theme review failed",
     # Aggregator
