@@ -2,7 +2,7 @@
 
 _Feed The Saurus your papers._
 
-A literature review pipeline that devours scientific papers and produces comprehensive, citation-backed reviews. Upload a corpus of PDFs, watch the pipeline process them in parallel, and get a structured literature review with thematic analysis and traceable citations.
+A literature review pipeline that devours scientific papers and produces comprehensive, citation-backed reviews. Upload a corpus of PDFs, watch the pipeline process them in parallel, get a structured literature review with thematic analysis and traceable citations, then chat with your papers through an embedded conversational assistant.
 
 ## What It Does
 
