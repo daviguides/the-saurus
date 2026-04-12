@@ -6,7 +6,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from pipeline.core import Event, JobStatus, PaperEntry
+from pipeline.core import Event, JobStatus
 
 
 class CreateJobResponse(BaseModel):

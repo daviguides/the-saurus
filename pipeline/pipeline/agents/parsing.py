@@ -43,7 +43,7 @@ def estimate_tokens(text: str) -> int:
     return len(text) // 4
 
 
-def parse_agent_response(raw: object, model_class: type[T]) -> T:
+def parse_agent_response[T: BaseModel](raw: object, model_class: type[T]) -> T:
     """Parse an LLM response into the expected Pydantic model."""
     if isinstance(raw, model_class):
         return raw
@@ -105,7 +105,7 @@ def _ctx_str(ctx: dict[str, Any]) -> str:
     return " ".join(f"{k}={v}" for k, v in ctx.items() if not k.startswith("_"))
 
 
-async def run_agent_with_retry(
+async def run_agent_with_retry[T: BaseModel](
     agent: Any,
     message: str,
     output_schema: type[T],

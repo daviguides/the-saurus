@@ -65,13 +65,13 @@ class AggregatorAgent:
 
     async def run(
         self,
-        input: dict[str, Any],
+        data: dict[str, Any],
         *,
         on_event: Callable[[Any], Awaitable[None]] | None = None,
     ) -> dict[str, Any]:
-        theme_reviews: list[dict[str, Any]] = input["theme_reviews"]
-        claims: list[dict[str, Any]] = input.get("claims", [])
-        papers: list[dict[str, Any]] = input.get("papers", [])
+        theme_reviews: list[dict[str, Any]] = data["theme_reviews"]
+        claims: list[dict[str, Any]] = data.get("claims", [])
+        papers: list[dict[str, Any]] = data.get("papers", [])
 
         # Build lookups for post-processing
         claim_lookup = _build_claim_lookup(claims)
@@ -82,7 +82,7 @@ class AggregatorAgent:
 
         llm_result = await run_agent_with_retry(
             self._agent, message, AggregatorResult,
-            context={"stage": "aggregation", "theme_count": len(theme_reviews), "job_dir": input.get("job_dir", ""), "_emitter": input.get("_emitter")},
+            context={"stage": "aggregation", "theme_count": len(theme_reviews), "job_dir": data.get("job_dir", ""), "_emitter": data.get("_emitter")},
             on_event=on_event,
         )
 

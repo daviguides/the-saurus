@@ -9,9 +9,9 @@ from uuid import uuid4
 class StubPaperAnalyzer:
     """Returns placeholder themes and claims for a single paper."""
 
-    async def run(self, input: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
-        paper_id = input["paper_id"]
-        title = input.get("title", "Untitled")
+    async def run(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+        paper_id = data["paper_id"]
+        title = data.get("title", "Untitled")
         theme_id = str(uuid4())
         claim_id = str(uuid4())
         return {
@@ -43,8 +43,8 @@ class StubPaperAnalyzer:
 class StubThemeDedup:
     """Passes all themes through as canonical (no actual dedup)."""
 
-    async def run(self, input: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
-        all_themes = input["themes"]
+    async def run(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+        all_themes = data["themes"]
         theme_map = {t["id"]: [t["id"]] for t in all_themes}
         return {
             "theme_map": theme_map,
@@ -55,9 +55,9 @@ class StubThemeDedup:
 class StubThemeReviewer:
     """Returns a placeholder review for a single theme."""
 
-    async def run(self, input: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
-        theme = input["theme"]
-        claims = input.get("claims", [])
+    async def run(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+        theme = data["theme"]
+        claims = data.get("claims", [])
         return {
             "theme_id": theme["id"],
             "label": theme.get("label", theme.get("name", "")),
@@ -81,8 +81,8 @@ class StubThemeReviewer:
 class StubAggregator:
     """Returns a placeholder literature review from theme reviews."""
 
-    async def run(self, input: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
-        theme_reviews = input["theme_reviews"]
+    async def run(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+        theme_reviews = data["theme_reviews"]
         sections = [
             {
                 "theme_id": tr["theme_id"],

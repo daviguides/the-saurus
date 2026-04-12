@@ -67,21 +67,21 @@ class PaperAnalyzerAgent:
 
     async def run(
         self,
-        input: dict[str, Any],
+        data: dict[str, Any],
         *,
         on_event: Callable[[Any], Awaitable[None]] | None = None,
     ) -> dict[str, Any]:
-        paper_id = input["paper_id"]
-        content = input["content"]
+        paper_id = data["paper_id"]
+        content = data["content"]
 
         analysis = await run_agent_with_retry(
             self._agent, content, PaperAnalysisResult,
             context={
                 "paper_id": paper_id,
-                "paper_title": input.get("title", ""),
+                "paper_title": data.get("title", ""),
                 "stage": "paper_analysis",
-                "job_dir": input.get("job_dir", ""),
-                "_emitter": input.get("_emitter"),
+                "job_dir": data.get("job_dir", ""),
+                "_emitter": data.get("_emitter"),
             },
             on_event=on_event,
         )

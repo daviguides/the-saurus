@@ -51,11 +51,11 @@ class ThemeDedupAgent:
 
     async def run(
         self,
-        input: dict[str, Any],
+        data: dict[str, Any],
         *,
         on_event: Callable[[Any], Awaitable[None]] | None = None,
     ) -> dict[str, Any]:
-        all_themes: list[dict[str, Any]] = input["themes"]
+        all_themes: list[dict[str, Any]] = data["themes"]
 
         # Build numbered list for LLM
         lines = []
@@ -69,7 +69,7 @@ class ThemeDedupAgent:
 
         dedup = await run_agent_with_retry(
             self._agent, message, ThemeDedupResult,
-            context={"stage": "theme_dedup", "theme_count": len(all_themes), "raw_theme_count": len(all_themes), "job_dir": input.get("job_dir", ""), "_emitter": input.get("_emitter")},
+            context={"stage": "theme_dedup", "theme_count": len(all_themes), "raw_theme_count": len(all_themes), "job_dir": data.get("job_dir", ""), "_emitter": data.get("_emitter")},
             on_event=on_event,
         )
 

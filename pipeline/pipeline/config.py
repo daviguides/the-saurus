@@ -1,7 +1,11 @@
+"""Pipeline configuration (pydantic-settings, PIPELINE_ prefix)."""
+
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    """Pipeline settings loaded from environment variables."""
+
     model_config = {"env_prefix": "PIPELINE_", "env_file": ".env", "env_file_encoding": "utf-8"}
 
     # Server
