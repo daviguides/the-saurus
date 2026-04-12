@@ -122,14 +122,16 @@ All agents use the Agno framework with Pydantic structured output and streaming 
 
 ```
 the-saurus/
-├── app/              # React desktop app (upload, trace, review)
-├── assistant-ui/     # Federated chat UI (Module Federation remote)
-├── assistant-ws/     # Chat WebSocket backend (Agno Team)
-├── papers-mcp/       # MCP server (6 tools over Qdrant)
-├── pipeline/         # Core pipeline engine (multi-agent orchestrator)
-├── shared/           # Design tokens (CSS variables, light + dark)
-├── docs/             # Architecture docs with diagrams
-├── Makefile          # Dev commands
+├── app/                    # React desktop app (upload, trace, review)
+├── assistant-ui/           # Federated chat UI (Module Federation remote)
+├── assistant-ws/           # Chat WebSocket backend (Agno Team)
+├── papers-mcp/             # MCP server (6 tools over Qdrant)
+├── pipeline/               # Core pipeline engine (multi-agent orchestrator)
+├── pipeline-test-client/   # CLI for end-to-end pipeline testing
+├── assistant-test-client/  # CLI for end-to-end assistant testing
+├── shared/                 # Design tokens (CSS variables, light + dark)
+├── docs/                   # Architecture docs with diagrams
+├── Makefile                # Dev commands
 └── docker-compose.yml
 ```
 
@@ -146,14 +148,61 @@ See each service's `.env.example` for all available settings.
 ## Testing
 
 ```bash
-make test    # Run all test suites
+make test    # Run all unit test suites
 make lint    # Lint all Python services
-
-# Individual services
-cd pipeline && uv run pytest tests/ -v
-cd assistant-ws && uv run pytest tests/ -v
-cd papers-mcp && uv run pytest tests/ -v
 ```
+
+### Test Clients
+
+Two standalone CLI tools for end-to-end testing against running services. They can be used interactively during development or autonomously by AI coding agents (like Claude Code) to validate changes, diagnose issues, and verify fixes against local or remote environments.
+
+**Pipeline Test Client** (`pipeline-test-client/`): Tests the full pipeline flow over HTTP + WebSocket.
+
+```bash
+cd pipeline-test-client
+
+# Upload a PDF and watch the pipeline process it end-to-end
+uv run pipeline-test run test-cases/papers/exercise_cognitive_function_brain.pdf
+
+# Run a YAML test case with assertions (paper count, theme count, citations)
+uv run pipeline-test test-flow test-cases/cases/basic_flow.yaml
+
+# Individual commands
+uv run pipeline-test upload <pdf>        # Upload PDFs, get job_id
+uv run pipeline-test stream <job_id>     # Watch live agent events
+uv run pipeline-test review <job_id>     # Show generated literature review
+uv run pipeline-test papers <job_id>     # Show extracted themes and claims
+```
+
+**Assistant Test Client** (`assistant-test-client/`): Tests the conversational assistant over Socket.IO.
+
+```bash
+cd assistant-test-client
+
+# Ask a question about the processed papers
+uv run assistant-test ask "What are the main themes found across all papers?"
+
+# Interactive chat mode
+uv run assistant-test chat
+
+# Run a YAML test case with assertions (content, tools called, step count)
+uv run assistant-test test-flow test-cases/cases/theme_query.yaml
+```
+
+### Logged Mode (for AI agents)
+
+Services can run in background with logs piped to files, allowing AI coding agents to start services, run test clients, and read logs to diagnose issues autonomously:
+
+```bash
+make log-pipeline    # Start pipeline, logs to logs/pipeline.log
+make log-ws          # Start assistant, logs to logs/assistant-ws.log
+make log-mcp         # Start MCP server, logs to logs/papers-mcp.log
+make log-core        # Pipeline + app
+make log-all         # All services
+make log-stop        # Stop all logged services
+```
+
+Agno `debug_mode` is enabled by default, so logs include full prompts sent to the LLM, structured output schemas, streaming events, and response content.
 
 ## The Name
 
