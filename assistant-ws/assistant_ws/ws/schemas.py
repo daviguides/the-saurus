@@ -1,9 +1,10 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from assistant_ws.config import settings
 
 
 class IncomingMessage(BaseModel):
-    text: str
-    session_id: str | None = None
+    text: str = Field(..., min_length=1, max_length=settings.max_message_length)
 
 
 class TokenEvent(BaseModel):

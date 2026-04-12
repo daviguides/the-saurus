@@ -15,7 +15,6 @@ from assistant_ws.ws.schemas import (
 # --------------- constants ---------------
 
 SAMPLE_TEXT = "What is photosynthesis?"
-SAMPLE_SESSION_ID = "sess-abc-123"
 SAMPLE_CONTENT = "Photosynthesis is"
 SAMPLE_STEP = "thinking"
 SAMPLE_AGENT = "coordinator"
@@ -34,26 +33,13 @@ SAMPLE_SCORE = 0.95
 class TestIncomingMessage:
     """Tests for IncomingMessage model."""
 
-    def test_with_text_only(self) -> None:
-        """text is required; session_id defaults to None."""
+    def test_with_text(self) -> None:
+        """text is required."""
         # Arrange / Act
         msg = IncomingMessage(text=SAMPLE_TEXT)
 
         # Assert
         assert msg.text == SAMPLE_TEXT
-        assert msg.session_id is None
-
-    def test_with_text_and_session_id(self) -> None:
-        """Both fields can be provided."""
-        # Arrange / Act
-        msg = IncomingMessage(
-            text=SAMPLE_TEXT,
-            session_id=SAMPLE_SESSION_ID,
-        )
-
-        # Assert
-        assert msg.text == SAMPLE_TEXT
-        assert msg.session_id == SAMPLE_SESSION_ID
 
     def test_missing_text_raises(self) -> None:
         """Omitting required text raises ValidationError."""
@@ -61,13 +47,15 @@ class TestIncomingMessage:
         with pytest.raises(ValidationError):
             IncomingMessage()  # type: ignore[call-arg]
 
+    def test_empty_text_raises(self) -> None:
+        """Empty text violates min_length constraint."""
+        with pytest.raises(ValidationError):
+            IncomingMessage(text="")
+
     def test_serialization_round_trip(self) -> None:
         """model_dump and model_validate are symmetric."""
         # Arrange
-        msg = IncomingMessage(
-            text=SAMPLE_TEXT,
-            session_id=SAMPLE_SESSION_ID,
-        )
+        msg = IncomingMessage(text=SAMPLE_TEXT)
 
         # Act
         data = msg.model_dump()
@@ -76,8 +64,8 @@ class TestIncomingMessage:
         # Assert
         assert restored == msg
 
-    def test_serialization_excludes_none(self) -> None:
-        """None session_id is included in dump by default."""
+    def test_serialization(self) -> None:
+        """model_dump produces expected dict."""
         # Arrange
         msg = IncomingMessage(text=SAMPLE_TEXT)
 
@@ -85,8 +73,7 @@ class TestIncomingMessage:
         data = msg.model_dump()
 
         # Assert
-        assert "session_id" in data
-        assert data["session_id"] is None
+        assert data == {"text": SAMPLE_TEXT}
 
 
 # --------------- TokenEvent ---------------

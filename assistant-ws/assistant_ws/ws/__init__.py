@@ -6,6 +6,9 @@ sio = socketio.AsyncServer(
     async_mode="asgi",
     cors_allowed_origins=settings.cors_origins_list,
     max_http_buffer_size=1_048_576,
+    ping_timeout=60,
+    ping_interval=25,
+    namespaces=["/chat"],
 )
 
 from assistant_ws.ws.events import register_events  # noqa: E402

@@ -1,46 +1,93 @@
+import logging
+import uuid
+
 import socketio
 
+from assistant_ws.config import settings
 from assistant_ws.ws.chat_service import ChatService, evict_team
 from assistant_ws.ws.connection import ConnectionManager
+from assistant_ws.ws.schemas import IncomingMessage
 from assistant_ws.ws.session import SessionManager
+
+logger = logging.getLogger(__name__)
 
 session_mgr = SessionManager()
 conn_mgr = ConnectionManager()
 chat_service = ChatService()
 
+_UUID4_LEN = 36
+
+
+def _is_valid_uuid4(val: str) -> bool:
+    try:
+        uuid.UUID(val, version=4)
+        return True
+    except (ValueError, AttributeError):
+        return False
+
 
 def register_events(sio: socketio.AsyncServer):
 
-    @sio.event
+    @sio.event(namespace="/chat")
     async def connect(sid, environ, auth=None):
-        session_id = None
-        if auth and isinstance(auth, dict):
-            session_id = auth.get("session_id")
+        # Auth: validate shared-secret token if configured
+        if settings.ws_auth_token:
+            token = None
+            if auth and isinstance(auth, dict):
+                token = auth.get("token")
+            if token != settings.ws_auth_token:
+                logger.warning("Rejected connection %s: invalid auth token", sid)
+                raise socketio.exceptions.ConnectionRefusedError("Authentication failed")
 
-        if not session_id:
-            session_id = session_mgr.create_session()
-        else:
-            session_mgr.ensure_session(session_id)
+        # Always generate server-side session ID (ignore client-supplied ones)
+        session_id = session_mgr.create_session()
 
         conn_mgr.register(sid, session_id)
-        await sio.emit("session_created", {"session_id": session_id}, to=sid)
+        await sio.emit("session_ready", {"session_id": session_id}, to=sid, namespace="/chat")
 
-    @sio.event
+    @sio.event(namespace="/chat")
     async def disconnect(sid):
         session_id = conn_mgr.get_session(sid)
         if session_id:
             evict_team(session_id)
         conn_mgr.unregister(sid)
 
-    @sio.event
+    @sio.event(namespace="/chat")
     async def message(sid, data):
         session_id = conn_mgr.get_session(sid)
         if not session_id:
-            await sio.emit("error", {"message": "No session found"}, to=sid)
+            await sio.emit("error", {"message": "No session found"}, to=sid, namespace="/chat")
             return
 
-        text = data.get("text", "") if isinstance(data, dict) else str(data)
-        if not text.strip():
+        # Validate incoming message using schema
+        try:
+            if isinstance(data, dict):
+                msg = IncomingMessage(**data)
+            else:
+                msg = IncomingMessage(text=str(data))
+        except Exception:
+            await sio.emit(
+                "error", {"message": "Invalid message format"}, to=sid, namespace="/chat"
+            )
+            return
+
+        text = msg.text.strip()
+        if not text:
+            await sio.emit(
+                "error",
+                {"message": "Message cannot be empty"},
+                to=sid,
+                namespace="/chat",
+            )
+            return
+
+        if len(text) > settings.max_message_length:
+            await sio.emit(
+                "error",
+                {"message": f"Message too long (max {settings.max_message_length} characters)"},
+                to=sid,
+                namespace="/chat",
+            )
             return
 
         await chat_service.process_message(sio, sid, session_id, text)
