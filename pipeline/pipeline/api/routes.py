@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import shutil
 from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
 from uuid import uuid4
@@ -43,8 +44,14 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 MAX_PDF_BYTES = 50 * 1024 * 1024  # 50 MB
+MAX_FILE_COUNT = 50  # S2: upper bound on number of uploaded files
 
 _running_tasks: dict[str, asyncio.Task] = {}
+
+
+def get_running_tasks() -> dict[str, asyncio.Task]:
+    """Expose running tasks for lifespan shutdown cleanup."""
+    return _running_tasks
 
 
 def _jobs_dir() -> Path:
@@ -70,6 +77,13 @@ async def create_job(files: list[UploadFile]) -> CreateJobResponse:
     if not files:
         raise HTTPException(status_code=422, detail="No files provided")
 
+    # S2: Limit number of uploaded files
+    if len(files) > MAX_FILE_COUNT:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Too many files: {len(files)} exceeds limit of {MAX_FILE_COUNT}",
+        )
+
     for f in files:
         if not f.filename or not f.filename.lower().endswith(".pdf"):
             raise HTTPException(
@@ -91,16 +105,32 @@ async def create_job(files: list[UploadFile]) -> CreateJobResponse:
     now = datetime.now(UTC)
 
     for f in files:
-        pdf_bytes = await f.read()
-        if len(pdf_bytes) > MAX_PDF_BYTES:
-            raise HTTPException(
-                status_code=413,
-                detail=f"File {f.filename} exceeds 50 MB limit",
-            )
+        # S1: Read in chunks with a size cap to avoid unbounded memory usage
+        chunks: list[bytes] = []
+        total_size = 0
+        while True:
+            chunk = await f.read(1024 * 1024)  # 1 MB chunks
+            if not chunk:
+                break
+            total_size += len(chunk)
+            if total_size > MAX_PDF_BYTES:
+                raise HTTPException(
+                    status_code=413,
+                    detail=f"File {f.filename} exceeds 50 MB limit",
+                )
+            chunks.append(chunk)
+        pdf_bytes = b"".join(chunks)
 
         # Save raw PDF — sanitize filename to prevent path traversal
         safe_name = PurePosixPath(f.filename).name
         pdf_path = job_path / safe_name
+        # S4: Handle duplicate filenames with counter suffix
+        counter = 1
+        while pdf_path.exists():
+            stem = PurePosixPath(safe_name).stem
+            suffix = PurePosixPath(safe_name).suffix
+            pdf_path = job_path / f"{stem}_{counter}{suffix}"
+            counter += 1
         await asyncio.to_thread(pdf_path.write_bytes, pdf_bytes)
 
         try:
@@ -126,6 +156,8 @@ async def create_job(files: list[UploadFile]) -> CreateJobResponse:
         await asyncio.to_thread(md_path.write_text, result.to_annotated_markdown())
 
     if not papers:
+        # E1: Clean up orphan PDF files when ingestion fails for all files
+        shutil.rmtree(job_path, ignore_errors=True)
         raise HTTPException(status_code=400, detail="No papers could be ingested")
 
     # Write papers.yaml
@@ -151,6 +183,10 @@ async def create_job(files: list[UploadFile]) -> CreateJobResponse:
         {"paper_count": len(papers), "filenames": [p.filename for p in papers]},
     )
 
+    # B1: Check if job_id already running before creating a new task
+    if job_id in _running_tasks and not _running_tasks[job_id].done():
+        raise HTTPException(status_code=409, detail="Job is already running")
+
     # Launch pipeline as background task
     task = asyncio.create_task(run_pipeline(job_id, jobs_dir))
     _running_tasks[job_id] = task
@@ -173,9 +209,13 @@ async def get_status(job_id: str) -> StatusResponse:
 
 
 @router.get("/jobs/{job_id}/events", response_model=EventsResponse)
-async def get_events(job_id: str, after_event_id: str | None = None) -> EventsResponse:
+async def get_events(
+    job_id: str, after_event_id: str | None = None, limit: int | None = None
+) -> EventsResponse:
     _get_job_dir(job_id)
     events = await read_events(job_id, _jobs_dir(), after_event_id=after_event_id)
+    if limit is not None and limit > 0:
+        events = events[:limit]
     return EventsResponse(events=events)
 
 

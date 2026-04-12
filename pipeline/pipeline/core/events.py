@@ -64,7 +64,10 @@ class EventEmitter:
         self._listeners.append(callback)
 
     def remove_listener(self, callback: Listener) -> None:
-        self._listeners.remove(callback)
+        try:
+            self._listeners.remove(callback)
+        except ValueError:
+            pass
 
     async def emit(
         self, event_type: EventType | str, payload: dict[str, Any] | None = None
@@ -93,5 +96,7 @@ class EventEmitter:
         return event
 
     def _append_line(self, line: str) -> None:
+        # R6: Intentionally open-per-write to guarantee flush/fsync on each event.
+        # Keeps NDJSON durable even if the process crashes mid-pipeline.
         with open(self._ndjson_path, "a") as f:
             f.write(line)

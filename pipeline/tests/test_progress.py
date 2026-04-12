@@ -171,8 +171,8 @@ class TestStageItemDone:
         assert call_args[0][0] == EventType.PAPER_PROCESSED
 
     @pytest.mark.asyncio
-    async def test_emits_stage_completed_on_last(self) -> None:
-        """Emits STAGE_COMPLETED when final item is processed."""
+    async def test_emits_paper_processed_on_last(self) -> None:
+        """Emits PAPER_PROCESSED even on the last item (stage_complete handles STAGE_COMPLETED)."""
         # Arrange
         tracker, emitter, _ = _make_tracker()
         total_items = 1
@@ -193,10 +193,10 @@ class TestStageItemDone:
                 "paper-0",
             )
 
-        # Assert
+        # Assert — stage_item_done always emits PAPER_PROCESSED, not STAGE_COMPLETED
         call_args = emitter.emit.call_args
         from pipeline.core.events import EventType
-        assert call_args[0][0] == EventType.STAGE_COMPLETED
+        assert call_args[0][0] == EventType.PAPER_PROCESSED
 
 
 class TestStageComplete:

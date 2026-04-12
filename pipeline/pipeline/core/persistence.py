@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from pathlib import Path
 
 import yaml
 
 from .events import Event
 from .models import JobStatus
+
+logger = logging.getLogger(__name__)
 
 _locks: dict[str, asyncio.Lock] = {}
 
@@ -34,7 +37,7 @@ def create_job_dir(job_id: str, jobs_dir: Path) -> Path:
     return job_path
 
 
-async def write_yaml(path: Path, data: dict, job_id: str | None = None) -> None:
+async def write_yaml(path: Path, data: dict | list, job_id: str | None = None) -> None:
     """Write data dict to a YAML file. Acquires per-job lock if job_id given."""
 
     def _sync() -> None:
@@ -55,8 +58,12 @@ async def read_yaml(path: Path) -> dict | None:
     def _sync() -> dict | None:
         if not path.exists():
             return None
-        with open(path) as f:
-            return yaml.safe_load(f)
+        try:
+            with open(path) as f:
+                return yaml.safe_load(f)
+        except yaml.YAMLError:
+            logger.warning("Failed to parse YAML file: %s", path, exc_info=True)
+            return None
 
     return await asyncio.to_thread(_sync)
 
@@ -93,7 +100,11 @@ async def read_events(
                 stripped = line.strip()
                 if not stripped:
                     continue
-                event = Event.model_validate_json(stripped)
+                try:
+                    event = Event.model_validate_json(stripped)
+                except Exception:
+                    logger.warning("Skipping corrupt NDJSON line in %s", path)
+                    continue
                 if not found_marker:
                     if event.event_id == after_event_id:
                         found_marker = True

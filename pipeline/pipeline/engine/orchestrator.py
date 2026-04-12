@@ -25,6 +25,7 @@ from pipeline.core import (
     write_status,
     write_yaml,
 )
+from pipeline.core.persistence import release_lock
 from pipeline.core.qdrant import get_indexer
 from pipeline.ws.stream import get_or_create_emitter, remove_emitter
 
@@ -104,7 +105,7 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
             emitter=emitter,
         )
         # Persist per-paper themes and claims (split from unified result)
-        for paper, result in zip(papers, analysis_results):
+        for paper, result in analysis_results:
             themes_data = {"themes": result.get("themes", [])}
             claims_data = {"claims": result.get("claims", [])}
             await write_yaml(
@@ -136,7 +137,7 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
 
         # --- Stage 2: Theme Dedup (single pass) ---
         all_themes = []
-        for result in analysis_results:
+        for _paper, result in analysis_results:
             all_themes.extend(result.get("themes", []))
 
         theme_dedup = ThemeDedupAgent()
@@ -160,7 +161,7 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         # --- Stage 3: Theme Review (batched — 5 themes per LLM call) ---
         canonical_themes = dedup_result.get("themes", [])
         all_claims = []
-        for result in analysis_results:
+        for _paper, result in analysis_results:
             all_claims.extend(result.get("claims", []))
 
         theme_reviewer = ThemeReviewerAgent()
@@ -214,7 +215,7 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         if qdrant_tasks:
             await asyncio.gather(*qdrant_tasks, return_exceptions=True)
 
-        # Mark job as completed
+        # Mark job as completed (preserve original created_at from tracker)
         now = datetime.now(UTC)
         final_status = JobStatus(
             job_id=job_id,
@@ -222,7 +223,7 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
             stage=Stage.AGGREGATION,
             progress=1.0,
             paper_count=len(papers),
-            created_at=now,
+            created_at=tracker._created_at,
             updated_at=now,
         )
         await write_status(job_id, final_status, jobs_dir)
@@ -235,13 +236,18 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
 
         logger.error("Pipeline failed for job %s: %s", job_id, exc, exc_info=True)
         now = datetime.now(UTC)
+        # Preserve original created_at from existing status
+        existing_status = await read_yaml(job_path / "status.yaml") if job_path.exists() else None
+        original_created = (
+            existing_status.get("created_at", now) if existing_status else now
+        )
         error_status = JobStatus(
             job_id=job_id,
             status=JobState.FAILED,
             stage="",
             progress=0.0,
             paper_count=0,
-            created_at=now,
+            created_at=original_created,
             updated_at=now,
             error="An internal error occurred. Check server logs for details.",
         )
@@ -251,6 +257,8 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
     finally:
         # Clean up per-job registries to prevent memory leaks
         remove_emitter(job_id)
+        # E8: Clean up per-job persistence lock
+        release_lock(job_id)
 
 
 async def _run_parallel_per_paper(
@@ -262,7 +270,7 @@ async def _run_parallel_per_paper(
     job_path: Path,
     extra_inputs: dict[str, dict[str, Any]] | None = None,
     emitter: Any | None = None,
-) -> list[dict[str, Any]]:
+) -> list[tuple[PaperEntry, dict[str, Any]]]:
     """Run an agent in parallel across all papers.
 
     Args:
@@ -301,23 +309,23 @@ async def _run_parallel_per_paper(
 
     raw_results = await asyncio.gather(*[process_one(p) for p in papers])
 
-    # Collect results, re-raising if ALL papers failed
-    results: list[dict[str, Any]] = []
+    # Collect results paired with their paper, re-raising if ALL papers failed
+    successful: list[tuple[PaperEntry, dict[str, Any]]] = []
     errors: list[Exception] = []
-    for r in raw_results:
+    for paper, r in zip(papers, raw_results):
         if isinstance(r, Exception):
             errors.append(r)
         else:
-            results.append(r)
+            successful.append((paper, r))
 
-    if not results:
+    if not successful:
         raise RuntimeError(
             f"All {len(papers)} papers failed in {stage}: {errors[0]}"
         )
     if errors:
         logger.warning(
             "%d/%d papers failed in %s — continuing with %d successful",
-            len(errors), len(papers), stage, len(results),
+            len(errors), len(papers), stage, len(successful),
         )
 
-    return results
+    return successful

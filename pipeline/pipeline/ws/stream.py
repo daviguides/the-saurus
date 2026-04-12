@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from pathlib import Path
 
@@ -10,6 +11,9 @@ logger = logging.getLogger(__name__)
 from fastapi import WebSocket, WebSocketDisconnect
 
 from pipeline.core import Event, EventEmitter
+
+# B3: Heartbeat interval for WebSocket receive loop (seconds)
+WS_HEARTBEAT_TIMEOUT = 60.0
 
 _emitters: dict[str, EventEmitter] = {}
 
@@ -21,6 +25,11 @@ def register_emitter(job_id: str, emitter: EventEmitter) -> None:
 def remove_emitter(job_id: str) -> None:
     """Remove emitter for a finished job to prevent memory leaks."""
     _emitters.pop(job_id, None)
+
+
+def clear_all_emitters() -> None:
+    """Remove all emitters (e.g., on shutdown). R5: Prevent memory leaks."""
+    _emitters.clear()
 
 
 def get_or_create_emitter(job_id: str, jobs_dir: Path) -> EventEmitter:
@@ -49,7 +58,16 @@ async def websocket_stream(websocket: WebSocket, job_id: str, jobs_dir: Path) ->
     emitter.add_listener(on_event)
     try:
         while True:
-            await websocket.receive_text()
+            try:
+                await asyncio.wait_for(
+                    websocket.receive_text(), timeout=WS_HEARTBEAT_TIMEOUT
+                )
+            except TimeoutError:
+                # B3: Send ping to detect dead connections
+                try:
+                    await websocket.send_json({"type": "ping"})
+                except Exception:
+                    break
     except WebSocketDisconnect:
         pass
     finally:

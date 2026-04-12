@@ -120,18 +120,34 @@ class ThemeReviewerAgent:
             )
 
             # Map results back to theme IDs
+            # B4: Normalize theme names more aggressively for matching
+            def _normalize_name(name: str) -> str:
+                """Normalize theme name: lowercase, strip, collapse whitespace and punctuation."""
+                import re as _re
+                return _re.sub(r"[\s_\-]+", " ", name.lower().strip())
+
             theme_name_to_id = {
-                t.get("name", "").lower().strip(): t["id"] for t in batch
+                _normalize_name(t.get("name", "")): t["id"] for t in batch
             }
             theme_name_to_meta = {
-                t.get("name", "").lower().strip(): t for t in batch
+                _normalize_name(t.get("name", "")): t for t in batch
             }
+
+            def _find_theme(review_name: str) -> tuple[str, dict[str, Any]]:
+                """Find matching theme by exact or substring match."""
+                key = _normalize_name(review_name)
+                # Exact match
+                if key in theme_name_to_id:
+                    return theme_name_to_id[key], theme_name_to_meta[key]
+                # Substring/contains match
+                for canon_name, tid in theme_name_to_id.items():
+                    if key in canon_name or canon_name in key:
+                        return tid, theme_name_to_meta[canon_name]
+                return "", {}
 
             batch_reviews: list[dict[str, Any]] = []
             for review in result.reviews:
-                name_key = review.theme_name.lower().strip()
-                theme_id = theme_name_to_id.get(name_key, "")
-                theme_meta = theme_name_to_meta.get(name_key, {})
+                theme_id, theme_meta = _find_theme(review.theme_name)
 
                 # Validate claim IDs
                 valid_ids = set()

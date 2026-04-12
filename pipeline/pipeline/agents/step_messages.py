@@ -22,14 +22,6 @@ AGENT_TEMPLATES: dict[tuple[str, str], str] = {
     ("PaperAnalyzer", "agent_started"): "Analyzing '{paper_title}'...",
     ("PaperAnalyzer", "agent_completed"): "Analysis complete",
     ("PaperAnalyzer", "agent_error"): "Analysis failed",
-    # ThemeExtractor
-    ("ThemeExtractor", "agent_started"): "Extracting themes from '{paper_title}'...",
-    ("ThemeExtractor", "agent_completed"): "Theme extraction complete",
-    ("ThemeExtractor", "agent_error"): "Theme extraction failed",
-    # ClaimExtractor
-    ("ClaimExtractor", "agent_started"): "Extracting claims...",
-    ("ClaimExtractor", "agent_completed"): "Claim extraction complete",
-    ("ClaimExtractor", "agent_error"): "Claim extraction failed",
     # ThemeDedup
     ("ThemeDedup", "agent_started"): "Deduplicating {theme_count} themes across papers...",
     ("ThemeDedup", "agent_completed"): "Deduplication complete",
@@ -133,7 +125,7 @@ class _SafeFormatDict(dict):
         return f"{{{key}}}"
 
 
-_PLACEHOLDER_RE = re.compile(r"\s*'?\{[^}]+\}'?\s*")
+_PLACEHOLDER_RE = re.compile(r"\s*'?\{[a-z_]+\}'?\s*")
 
 
 def _strip_placeholders(template: str) -> str:

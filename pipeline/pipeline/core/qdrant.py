@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from typing import Any
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from agno.knowledge.embedder.google import GeminiEmbedder
 from qdrant_client import QdrantClient
@@ -46,6 +46,13 @@ class QdrantIndexer:
             api_key=settings.llm_api_key,
         )
         self._dimension = EMBEDDING_DIMENSION
+
+    def close(self) -> None:
+        """Close the Qdrant client connection."""
+        try:
+            self._client.close()
+        except Exception:
+            logger.debug("Error closing Qdrant client", exc_info=True)
 
     async def ensure_collections(self) -> None:
         """Create all collections if they don't exist."""
@@ -221,7 +228,6 @@ class QdrantIndexer:
 def _safe_point_id(value: str) -> str:
     """Ensure value is a valid Qdrant point ID (UUID). Generate one if not."""
     try:
-        from uuid import UUID
         UUID(value)
         return value
     except (ValueError, AttributeError):
@@ -245,3 +251,11 @@ def get_indexer() -> QdrantIndexer | None:
             logger.warning("Qdrant indexer init failed — indexing disabled for this session")
             return None
     return _indexer
+
+
+def close_indexer() -> None:
+    """Close and discard the singleton QdrantIndexer."""
+    global _indexer
+    if _indexer is not None:
+        _indexer.close()
+        _indexer = None

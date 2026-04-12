@@ -14,8 +14,6 @@ from pipeline.agents.step_messages import (
 
 ALL_AGENTS = [
     "PaperAnalyzer",
-    "ThemeExtractor",
-    "ClaimExtractor",
     "ThemeDedup",
     "ThemeReviewer",
     "Aggregator",

@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     model_config = {"env_prefix": "PIPELINE_", "env_file": ".env", "env_file_encoding": "utf-8"}
 
     # Server
-    host: str = "0.0.0.0"
+    host: str = "127.0.0.1"
     port: int = 8002
     reload: bool = False
     workers: int = 1

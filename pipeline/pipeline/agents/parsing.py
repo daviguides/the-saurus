@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import random
 import time
 from collections.abc import Awaitable, Callable
 from typing import Any
@@ -138,7 +139,8 @@ async def run_agent_with_retry[T: BaseModel](
             )
 
         if attempt < max_retries:
-            delay = retry_delay * attempt
+            # B7: Exponential backoff with jitter
+            delay = retry_delay * (2 ** (attempt - 1)) + random.uniform(0, retry_delay * 0.5)
             logger.info(
                 "%s retrying in %.1fs...", agent_name, delay,
             )

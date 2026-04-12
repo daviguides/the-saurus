@@ -67,8 +67,9 @@ class ProgressTracker:
             self._stage_counter += 1
             completed = self._stage_counter
         await self._update_status(stage, JobState.RUNNING)
+        # C5: Don't emit STAGE_COMPLETED here — let stage_complete handle it
         await self.emitter.emit(
-            EventType.STAGE_COMPLETED if completed == self._stage_total else EventType.PAPER_PROCESSED,
+            EventType.PAPER_PROCESSED,
             {
                 "stage": stage,
                 "item_id": item_id,

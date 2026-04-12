@@ -1,5 +1,6 @@
 """FastAPI application for the pipeline service."""
 
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
@@ -9,8 +10,10 @@ from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
 from pipeline.api import router
+from pipeline.api.routes import get_running_tasks
 from pipeline.config import settings
 from pipeline.core import JobState, JobStatus, read_status, write_status
+from pipeline.core.qdrant import close_indexer
 from pipeline.ws import websocket_stream
 
 logger = logging.getLogger(__name__)
@@ -57,6 +60,18 @@ async def lifespan(app: FastAPI):
     jobs_dir.mkdir(parents=True, exist_ok=True)
     await _recover_orphan_jobs(jobs_dir)
     yield
+    # E2/R2: Cancel running tasks on shutdown
+    running = get_running_tasks()
+    for job_id, task in list(running.items()):
+        if not task.done():
+            task.cancel()
+            logger.info("Cancelled running task for job %s", job_id)
+    # Wait briefly for tasks to finish cancellation
+    if running:
+        await asyncio.gather(*running.values(), return_exceptions=True)
+        running.clear()
+    # R1: Close Qdrant client
+    close_indexer()
 
 
 app = FastAPI(
