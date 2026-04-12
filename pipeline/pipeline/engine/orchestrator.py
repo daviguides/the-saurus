@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Coroutine
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -17,6 +18,7 @@ from pipeline.agents import (
 )
 from pipeline.agents.event_bridge import create_agent_event_callback
 from pipeline.core import (
+    EventEmitter,
     EventType,
     JobState,
     JobStatus,
@@ -36,240 +38,344 @@ from .stages import Stage
 logger = logging.getLogger(__name__)
 
 
+# ---------------------------------------------------------------------------
+# Inter-stage typed models
+# ---------------------------------------------------------------------------
+
+AnalysisResults = list[tuple[PaperEntry, dict[str, Any]]]
+"""Per-paper analysis output: list of (paper, {themes, claims}) pairs."""
+
+DedupResult = dict[str, Any]
+"""Theme dedup output: {theme_map, themes}."""
+
+ReviewResults = list[dict[str, Any]]
+"""Per-theme review output: list of review dicts."""
+
+
+@dataclass
+class PipelineContext:
+    """Shared state threaded through all pipeline stages."""
+
+    job_id: str
+    job_path: Path
+    jobs_dir: Path
+    papers: list[PaperEntry]
+    paper_contents: dict[str, str]
+    emitter: EventEmitter
+    tracker: ProgressTracker
+    indexer: Any | None
+    qdrant_tasks: set[asyncio.Task] = field(default_factory=set)
+
+    def fire_qdrant(self, coro: Coroutine, *, operation: str = "write") -> None:
+        """Schedule a Qdrant write as fire-and-forget background task."""
+        task = asyncio.create_task(_safe_qdrant(coro, operation=operation))
+        self.qdrant_tasks.add(task)
+        task.add_done_callback(self.qdrant_tasks.discard)
+
+
+# ---------------------------------------------------------------------------
+# Pipeline entry point
+# ---------------------------------------------------------------------------
+
+
+async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
+    """Orchestrate the pipeline stages."""
+    ctx = await _setup_pipeline(job_id, jobs_dir)
+    try:
+        analysis_results = await _run_paper_analysis(ctx)
+        dedup_result = await _run_theme_dedup(ctx, analysis_results)
+        review_results = await _run_theme_review(ctx, dedup_result, analysis_results)
+        await _run_aggregation(ctx, review_results, analysis_results)
+        await _finalize_pipeline(ctx)
+    except Exception as exc:
+        await _handle_pipeline_failure(ctx, exc)
+    finally:
+        _cleanup(ctx)
+
+
+# ---------------------------------------------------------------------------
+# Setup / teardown helpers
+# ---------------------------------------------------------------------------
+
+
+async def _setup_pipeline(job_id: str, jobs_dir: Path) -> PipelineContext:
+    """Load papers, initialize emitter/tracker/indexer, mark job as running."""
+    emitter = get_or_create_emitter(job_id, jobs_dir)
+    job_path = jobs_dir / job_id
+
+    # Load papers
+    papers_data = await read_yaml(job_path / "papers.yaml")
+    if not papers_data:
+        raise ValueError("No papers found in papers.yaml")
+    papers = [PaperEntry.model_validate(p) for p in papers_data]
+
+    # Load paper markdown content
+    paper_contents: dict[str, str] = {}
+    for paper in papers:
+        md_path = job_path / f"{paper.paper_id}.md"
+        if md_path.exists():
+            paper_contents[paper.paper_id] = await asyncio.to_thread(md_path.read_text)
+
+    tracker = ProgressTracker(job_id, jobs_dir, emitter, len(papers))
+
+    # Initialize Qdrant (graceful — None if unavailable)
+    indexer = get_indexer()
+    if indexer:
+        try:
+            await indexer.ensure_collections()
+            logger.info("Qdrant initialized — indexing enabled")
+        except Exception:
+            logger.warning("Qdrant available but collection init failed — indexing disabled")
+            indexer = None
+    else:
+        logger.info("Qdrant not available — indexing disabled, YAML is source of truth")
+
+    ctx = PipelineContext(
+        job_id=job_id,
+        job_path=job_path,
+        jobs_dir=jobs_dir,
+        papers=papers,
+        paper_contents=paper_contents,
+        emitter=emitter,
+        tracker=tracker,
+        indexer=indexer,
+    )
+
+    # Mark job as running
+    now = datetime.now(UTC)
+    status = JobStatus(
+        job_id=job_id,
+        status=JobState.RUNNING,
+        stage=Stage.PAPER_ANALYSIS,
+        progress=0.0,
+        paper_count=len(papers),
+        created_at=now,
+        updated_at=now,
+    )
+    await write_status(job_id, status, jobs_dir)
+    await emitter.emit(EventType.JOB_STARTED, {"paper_count": len(papers)})
+
+    return ctx
+
+
+async def _finalize_pipeline(ctx: PipelineContext) -> None:
+    """Wait for Qdrant writes and mark job as completed."""
+    if ctx.qdrant_tasks:
+        await asyncio.gather(*ctx.qdrant_tasks, return_exceptions=True)
+
+    now = datetime.now(UTC)
+    final_status = JobStatus(
+        job_id=ctx.job_id,
+        status=JobState.COMPLETED,
+        stage=Stage.AGGREGATION,
+        progress=1.0,
+        paper_count=len(ctx.papers),
+        created_at=ctx.tracker._created_at,
+        updated_at=now,
+    )
+    await write_status(ctx.job_id, final_status, ctx.jobs_dir)
+    await ctx.emitter.emit(EventType.JOB_COMPLETED, {"progress": 1.0})
+
+
+async def _handle_pipeline_failure(ctx: PipelineContext, exc: Exception) -> None:
+    """Drain Qdrant writes, set FAILED status, emit failure event."""
+    if ctx.qdrant_tasks:
+        await asyncio.gather(*ctx.qdrant_tasks, return_exceptions=True)
+
+    logger.error("Pipeline failed for job %s: %s", ctx.job_id, exc, exc_info=True)
+    now = datetime.now(UTC)
+    # Preserve original created_at from existing status
+    existing_status = (
+        await read_yaml(ctx.job_path / "status.yaml") if ctx.job_path.exists() else None
+    )
+    original_created = (
+        existing_status.get("created_at", now) if existing_status else now
+    )
+    error_msg = "Pipeline failed. Check server logs for details."
+    error_status = JobStatus(
+        job_id=ctx.job_id,
+        status=JobState.FAILED,
+        stage="",
+        progress=0.0,
+        paper_count=0,
+        created_at=original_created,
+        updated_at=now,
+        error=error_msg,
+    )
+    await write_status(ctx.job_id, error_status, ctx.jobs_dir)
+    await ctx.emitter.emit(EventType.JOB_FAILED, {"error": error_msg})
+
+
+def _cleanup(ctx: PipelineContext) -> None:
+    """Clean up per-job registries to prevent memory leaks."""
+    remove_emitter(ctx.job_id)
+    # E8: Clean up per-job persistence lock
+    release_lock(ctx.job_id)
+
+
+# ---------------------------------------------------------------------------
+# Stage functions
+# ---------------------------------------------------------------------------
+
+
+async def _run_paper_analysis(ctx: PipelineContext) -> AnalysisResults:
+    """Stage 1: Paper Analysis — extract themes + claims per paper (parallel)."""
+    analyzer = PaperAnalyzerAgent()
+    await ctx.tracker.stage_start(Stage.PAPER_ANALYSIS, len(ctx.papers))
+    analysis_results = await _run_parallel_per_paper(
+        ctx.papers, ctx.paper_contents, analyzer, ctx.tracker, Stage.PAPER_ANALYSIS,
+        ctx.job_path, emitter=ctx.emitter,
+    )
+    # Persist per-paper themes and claims (split from unified result)
+    for paper, result in analysis_results:
+        themes_data = {"themes": result.get("themes", [])}
+        claims_data = {"claims": result.get("claims", [])}
+        await write_yaml(
+            ctx.job_path / "themes" / f"{paper.paper_id}.yaml",
+            themes_data,
+            job_id=ctx.job_id,
+        )
+        await write_yaml(
+            ctx.job_path / "claims" / f"{paper.paper_id}.yaml",
+            claims_data,
+            job_id=ctx.job_id,
+        )
+        if ctx.indexer:
+            op = f"index_themes({paper.paper_id})"
+            ctx.fire_qdrant(
+                ctx.indexer.index_themes(ctx.job_id, paper.paper_id, themes_data),
+                operation=op,
+            )
+            op = f"index_claims({paper.paper_id})"
+            ctx.fire_qdrant(
+                ctx.indexer.index_claims(ctx.job_id, paper.paper_id, claims_data),
+                operation=op,
+            )
+        await ctx.emitter.emit(
+            EventType.PAPER_ANALYZED,
+            {
+                "paper_id": paper.paper_id,
+                "theme_count": len(result.get("themes", [])),
+                "claim_count": len(result.get("claims", [])),
+            },
+        )
+    await ctx.tracker.stage_complete(Stage.PAPER_ANALYSIS)
+    return analysis_results
+
+
+async def _run_theme_dedup(
+    ctx: PipelineContext, analysis_results: AnalysisResults,
+) -> DedupResult:
+    """Stage 2: Theme Dedup — semantic deduplication across all papers (single pass)."""
+    all_themes: list[dict[str, Any]] = []
+    for _paper, result in analysis_results:
+        all_themes.extend(result.get("themes", []))
+
+    theme_dedup = ThemeDedupAgent()
+    await ctx.tracker.stage_start(Stage.THEME_DEDUP, 1)
+    dedup_cb = create_agent_event_callback(
+        ctx.emitter, "ThemeDedup", Stage.THEME_DEDUP,
+        context={"theme_count": len(all_themes)},
+    )
+    dedup_result = await theme_dedup.run({"themes": all_themes}, on_event=dedup_cb)
+    await write_yaml(ctx.job_path / "theme_map.yaml", dedup_result, job_id=ctx.job_id)
+    if ctx.indexer:
+        ctx.fire_qdrant(
+            ctx.indexer.index_theme_map(ctx.job_id, dedup_result),
+            operation="index_theme_map",
+        )
+    await ctx.emitter.emit(
+        EventType.THEME_DEDUPLICATED,
+        {"theme_count": len(dedup_result.get("themes", []))},
+    )
+    await ctx.tracker.stage_complete(Stage.THEME_DEDUP)
+    return dedup_result
+
+
+async def _run_theme_review(
+    ctx: PipelineContext,
+    dedup_result: DedupResult,
+    analysis_results: AnalysisResults,
+) -> ReviewResults:
+    """Stage 3: Theme Review — synthesize claims per theme (batched, 5 per LLM call)."""
+    canonical_themes = dedup_result.get("themes", [])
+    all_claims: list[dict[str, Any]] = []
+    for _paper, result in analysis_results:
+        all_claims.extend(result.get("claims", []))
+
+    theme_reviewer = ThemeReviewerAgent()
+    await ctx.tracker.stage_start(Stage.THEME_REVIEW, len(canonical_themes))
+    review_cb = create_agent_event_callback(
+        ctx.emitter, "ThemeReviewer", Stage.THEME_REVIEW,
+        context={"theme_count": len(canonical_themes)},
+    )
+    review_results = await theme_reviewer.run_batch(
+        canonical_themes, all_claims, on_event=review_cb,
+    )
+    # Persist per-theme reviews
+    for review_out in review_results:
+        theme_id = review_out.get("theme_id", "")
+        if theme_id:
+            await write_yaml(
+                ctx.job_path / "theme_reviews" / f"{theme_id}.yaml",
+                review_out,
+                job_id=ctx.job_id,
+            )
+            if ctx.indexer:
+                op = f"index_theme_review({theme_id})"
+                ctx.fire_qdrant(
+                    ctx.indexer.index_theme_review(ctx.job_id, review_out),
+                    operation=op,
+                )
+            await ctx.tracker.stage_item_done(Stage.THEME_REVIEW, theme_id)
+    await ctx.tracker.stage_complete(Stage.THEME_REVIEW)
+    return review_results
+
+
+async def _run_aggregation(
+    ctx: PipelineContext,
+    review_results: ReviewResults,
+    analysis_results: AnalysisResults,
+) -> None:
+    """Stage 4: Aggregation — produce cohesive literature review with citations."""
+    all_claims: list[dict[str, Any]] = []
+    for _paper, result in analysis_results:
+        all_claims.extend(result.get("claims", []))
+
+    aggregator = AggregatorAgent()
+    await ctx.tracker.stage_start(Stage.AGGREGATION, 1)
+    agg_cb = create_agent_event_callback(
+        ctx.emitter, "Aggregator", Stage.AGGREGATION,
+        context={"theme_count": len(review_results)},
+    )
+    review = await aggregator.run({
+        "theme_reviews": review_results,
+        "claims": all_claims,
+        "papers": [
+            {"paper_id": p.paper_id, "title": p.title, "authors": p.authors}
+            for p in ctx.papers
+        ],
+    }, on_event=agg_cb)
+    await write_yaml(ctx.job_path / "review.yaml", review, job_id=ctx.job_id)
+    if ctx.indexer:
+        ctx.fire_qdrant(
+            ctx.indexer.index_review(ctx.job_id, review), operation="index_review",
+        )
+    await ctx.emitter.emit(EventType.REVIEW_GENERATED, {"title": review.get("title", "")})
+    await ctx.tracker.stage_complete(Stage.AGGREGATION)
+
+
+# ---------------------------------------------------------------------------
+# Parallel execution helper
+# ---------------------------------------------------------------------------
+
+
 async def _safe_qdrant(coro: Coroutine, *, operation: str = "unknown") -> None:
     """Run a Qdrant write coroutine, swallowing any errors."""
     try:
         await coro
     except Exception:
         logger.debug("Qdrant %s failed (non-blocking)", operation, exc_info=True)
-
-
-async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
-    """Run the full pipeline for a job. Intended to be launched via asyncio.create_task."""
-    emitter = get_or_create_emitter(job_id, jobs_dir)
-    job_path = jobs_dir / job_id
-    qdrant_tasks: set[asyncio.Task] = set()
-
-    def _fire_qdrant(coro: Coroutine, *, operation: str = "write") -> None:
-        """Schedule a Qdrant write as fire-and-forget background task."""
-        task = asyncio.create_task(_safe_qdrant(coro, operation=operation))
-        qdrant_tasks.add(task)
-        task.add_done_callback(qdrant_tasks.discard)
-
-    current_stage: str | None = None
-    try:
-        # Load papers
-        papers_data = await read_yaml(job_path / "papers.yaml")
-        if not papers_data:
-            raise ValueError("No papers found in papers.yaml")
-        papers = [PaperEntry.model_validate(p) for p in papers_data]
-
-        # Load paper markdown content
-        paper_contents: dict[str, str] = {}
-        for paper in papers:
-            md_path = job_path / f"{paper.paper_id}.md"
-            if md_path.exists():
-                paper_contents[paper.paper_id] = await asyncio.to_thread(md_path.read_text)
-
-        tracker = ProgressTracker(job_id, jobs_dir, emitter, len(papers))
-
-        # Initialize Qdrant (graceful — None if unavailable)
-        indexer = get_indexer()
-        if indexer:
-            try:
-                await indexer.ensure_collections()
-                logger.info("Qdrant initialized — indexing enabled")
-            except Exception:
-                logger.warning("Qdrant available but collection init failed — indexing disabled")
-                indexer = None
-        else:
-            logger.info("Qdrant not available — indexing disabled, YAML is source of truth")
-
-        # Mark job as running
-        now = datetime.now(UTC)
-        status = JobStatus(
-            job_id=job_id,
-            status=JobState.RUNNING,
-            stage=Stage.PAPER_ANALYSIS,
-            progress=0.0,
-            paper_count=len(papers),
-            created_at=now,
-            updated_at=now,
-        )
-        await write_status(job_id, status, jobs_dir)
-        await emitter.emit(EventType.JOB_STARTED, {"paper_count": len(papers)})
-
-        # --- Stage 1: Paper Analysis (themes + claims in one pass, per-paper, parallel) ---
-        current_stage = Stage.PAPER_ANALYSIS
-        analyzer = PaperAnalyzerAgent()
-        await tracker.stage_start(Stage.PAPER_ANALYSIS, len(papers))
-        analysis_results = await _run_parallel_per_paper(
-            papers, paper_contents, analyzer, tracker, Stage.PAPER_ANALYSIS, job_path,
-            emitter=emitter,
-        )
-        # Persist per-paper themes and claims (split from unified result)
-        for paper, result in analysis_results:
-            themes_data = {"themes": result.get("themes", [])}
-            claims_data = {"claims": result.get("claims", [])}
-            await write_yaml(
-                job_path / "themes" / f"{paper.paper_id}.yaml",
-                themes_data,
-                job_id=job_id,
-            )
-            await write_yaml(
-                job_path / "claims" / f"{paper.paper_id}.yaml",
-                claims_data,
-                job_id=job_id,
-            )
-            if indexer:
-                op = f"index_themes({paper.paper_id})"
-                _fire_qdrant(indexer.index_themes(job_id, paper.paper_id, themes_data), operation=op)
-                op = f"index_claims({paper.paper_id})"
-                _fire_qdrant(indexer.index_claims(job_id, paper.paper_id, claims_data), operation=op)
-            await emitter.emit(
-                EventType.PAPER_ANALYZED,
-                {
-                    "paper_id": paper.paper_id,
-                    "theme_count": len(result.get("themes", [])),
-                    "claim_count": len(result.get("claims", [])),
-                },
-            )
-        await tracker.stage_complete(Stage.PAPER_ANALYSIS)
-
-        # === SYNC BARRIER: all per-paper analysis complete ===
-
-        # --- Stage 2: Theme Dedup (single pass) ---
-        current_stage = Stage.THEME_DEDUP
-        all_themes = []
-        for _paper, result in analysis_results:
-            all_themes.extend(result.get("themes", []))
-
-        theme_dedup = ThemeDedupAgent()
-        await tracker.stage_start(Stage.THEME_DEDUP, 1)
-        dedup_cb = create_agent_event_callback(
-            emitter, "ThemeDedup", Stage.THEME_DEDUP,
-            context={"theme_count": len(all_themes)},
-        )
-        dedup_result = await theme_dedup.run({"themes": all_themes}, on_event=dedup_cb)
-        await write_yaml(job_path / "theme_map.yaml", dedup_result, job_id=job_id)
-        if indexer:
-            _fire_qdrant(indexer.index_theme_map(job_id, dedup_result), operation="index_theme_map")
-        await emitter.emit(
-            EventType.THEME_DEDUPLICATED,
-            {"theme_count": len(dedup_result.get("themes", []))},
-        )
-        await tracker.stage_complete(Stage.THEME_DEDUP)
-
-        # === SYNC BARRIER: dedup complete ===
-
-        # --- Stage 3: Theme Review (batched — 5 themes per LLM call) ---
-        current_stage = Stage.THEME_REVIEW
-        canonical_themes = dedup_result.get("themes", [])
-        all_claims = []
-        for _paper, result in analysis_results:
-            all_claims.extend(result.get("claims", []))
-
-        theme_reviewer = ThemeReviewerAgent()
-        await tracker.stage_start(Stage.THEME_REVIEW, len(canonical_themes))
-        review_cb = create_agent_event_callback(
-            emitter, "ThemeReviewer", Stage.THEME_REVIEW,
-            context={"theme_count": len(canonical_themes)},
-        )
-        review_results = await theme_reviewer.run_batch(
-            canonical_themes, all_claims, on_event=review_cb,
-        )
-        # Persist per-theme reviews
-        for review_out in review_results:
-            theme_id = review_out.get("theme_id", "")
-            if theme_id:
-                await write_yaml(
-                    job_path / "theme_reviews" / f"{theme_id}.yaml",
-                    review_out,
-                    job_id=job_id,
-                )
-                if indexer:
-                    op = f"index_theme_review({theme_id})"
-                    _fire_qdrant(indexer.index_theme_review(job_id, review_out), operation=op)
-                await tracker.stage_item_done(Stage.THEME_REVIEW, theme_id)
-        await tracker.stage_complete(Stage.THEME_REVIEW)
-
-        # === SYNC BARRIER: all theme reviews complete ===
-
-        # --- Stage 4: Aggregation (single pass) ---
-        current_stage = Stage.AGGREGATION
-        aggregator = AggregatorAgent()
-        await tracker.stage_start(Stage.AGGREGATION, 1)
-        agg_cb = create_agent_event_callback(
-            emitter, "Aggregator", Stage.AGGREGATION,
-            context={"theme_count": len(review_results)},
-        )
-        review = await aggregator.run({
-            "theme_reviews": review_results,
-            "claims": all_claims,
-            "papers": [
-                {"paper_id": p.paper_id, "title": p.title, "authors": p.authors}
-                for p in papers
-            ],
-        }, on_event=agg_cb)
-        await write_yaml(job_path / "review.yaml", review, job_id=job_id)
-        if indexer:
-            _fire_qdrant(indexer.index_review(job_id, review), operation="index_review")
-        await emitter.emit(EventType.REVIEW_GENERATED, {"title": review.get("title", "")})
-        await tracker.stage_complete(Stage.AGGREGATION)
-
-        # Wait for all pending Qdrant writes before marking complete
-        if qdrant_tasks:
-            await asyncio.gather(*qdrant_tasks, return_exceptions=True)
-
-        # Mark job as completed (preserve original created_at from tracker)
-        now = datetime.now(UTC)
-        final_status = JobStatus(
-            job_id=job_id,
-            status=JobState.COMPLETED,
-            stage=Stage.AGGREGATION,
-            progress=1.0,
-            paper_count=len(papers),
-            created_at=tracker._created_at,
-            updated_at=now,
-        )
-        await write_status(job_id, final_status, jobs_dir)
-        await emitter.emit(EventType.JOB_COMPLETED, {"progress": 1.0})
-
-    except Exception as exc:
-        # Drain any pending Qdrant writes on failure too
-        if qdrant_tasks:
-            await asyncio.gather(*qdrant_tasks, return_exceptions=True)
-
-        logger.error("Pipeline failed for job %s: %s", job_id, exc, exc_info=True)
-        now = datetime.now(UTC)
-        # Preserve original created_at from existing status
-        existing_status = await read_yaml(job_path / "status.yaml") if job_path.exists() else None
-        original_created = (
-            existing_status.get("created_at", now) if existing_status else now
-        )
-        error_msg = (
-            f"Pipeline failed at stage {current_stage}"
-            if current_stage
-            else "Pipeline failed during initialization"
-        )
-        error_status = JobStatus(
-            job_id=job_id,
-            status=JobState.FAILED,
-            stage=current_stage or "",
-            progress=0.0,
-            paper_count=0,
-            created_at=original_created,
-            updated_at=now,
-            error=error_msg,
-        )
-        await write_status(job_id, error_status, jobs_dir)
-        await emitter.emit(EventType.JOB_FAILED, {"error": error_msg})
-
-    finally:
-        # Clean up per-job registries to prevent memory leaks
-        remove_emitter(job_id)
-        # E8: Clean up per-job persistence lock
-        release_lock(job_id)
 
 
 async def _run_parallel_per_paper(
