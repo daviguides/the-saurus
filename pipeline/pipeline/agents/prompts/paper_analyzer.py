@@ -44,25 +44,8 @@ the claim without the full paper.
 - Only reference [p.X,§Y] markers you can see in the text.
 - Do not invent claims or positions.
 
-OUTPUT FORMAT:
-Return your analysis as a JSON object inside a ```json code block. The JSON must match this structure exactly:
-```json
-{
-  "themes": [
-    {
-      "name": "Theme Name",
-      "description": "One sentence description",
-      "positions": [{"page": 1, "paragraph": 3}, {"page": 2, "paragraph": 1}],
-      "claims": [
-        {
-          "text": "Exact claim from paper",
-          "position": {"page": 1, "paragraph": 3},
-          "deep": "Full paragraph context verbatim",
-          "summary": "One sentence summary"
-        }
-      ]
-    }
-  ]
-}
-```
+QUALITY CHECKLIST:
+- Every theme has at least one claim with a valid position.
+- No invented claims or positions — only what appears in the text.
+- Themes cover the paper's major contributions, not minor asides.
 """

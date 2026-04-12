@@ -46,7 +46,7 @@ class ThemeDedupAgent:
             name="ThemeDedup",
             model=create_model(),
             instructions=THEME_DEDUP_PROMPT,
-            markdown=True,
+            response_model=ThemeDedupResult,
         )
 
     async def run(
@@ -73,8 +73,6 @@ class ThemeDedupAgent:
                 "stage": "theme_dedup",
                 "theme_count": len(all_themes),
                 "raw_theme_count": len(all_themes),
-                "job_dir": data.get("job_dir", ""),
-                "_emitter": data.get("_emitter"),
             },
             on_event=on_event,
         )

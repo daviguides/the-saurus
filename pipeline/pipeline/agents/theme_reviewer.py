@@ -63,7 +63,7 @@ class ThemeReviewerAgent:
             name="ThemeReviewer",
             model=create_model(),
             instructions=THEME_REVIEWER_PROMPT,
-            markdown=True,
+            response_model=BatchThemeReviewResult,
         )
         self._batch_size = batch_size
 
@@ -73,8 +73,6 @@ class ThemeReviewerAgent:
         all_claims: list[dict[str, Any]],
         *,
         on_event: Callable[[Any], Awaitable[None]] | None = None,
-        job_dir: str = "",
-        emitter: Any = None,
     ) -> list[dict[str, Any]]:
         """Process all themes in batches, return list of review dicts."""
         # Build claim index by theme_id
@@ -116,8 +114,6 @@ class ThemeReviewerAgent:
                     "batch": f"{batch_idx}/{len(batches)}",
                     "themes_in_batch": len(batch),
                     "total_claims": sum(len(v) for v in batch_claims.values()),
-                    "job_dir": job_dir,
-                    "_emitter": emitter,
                 },
                 on_event=on_event,
             )

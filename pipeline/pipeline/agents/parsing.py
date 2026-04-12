@@ -1,113 +1,35 @@
-"""Parse LLM responses into Pydantic models with retry logic and observability.
-
-Calls the Gemini API directly for finer control over response handling,
-retries, and structured output parsing. Agno Agent objects carry name +
-instructions while the LLM call goes through google.genai.Client.
-"""
+"""Run Agno agents with retry logic and observability."""
 
 from __future__ import annotations
 
 import asyncio
 import logging
-import re
 import time
 from collections.abc import Awaitable, Callable
-from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel
 
+from agno.agent import Agent as AgnoAgent, RunCompletedEvent, RunErrorEvent
+
 logger = logging.getLogger(__name__)
 
-LLM_TIMEOUT = 300.0  # seconds — large papers can take 190s+
 
-_gemini_client: object | None = None
-
-
-def _get_gemini_client() -> object:
-    """Get or create singleton Gemini API client."""
-    global _gemini_client
-    if _gemini_client is None:
-        import google.genai as genai
-
-        from pipeline.config import settings
-        _gemini_client = genai.Client(api_key=settings.llm_api_key)
-    return _gemini_client
-
-
-class AgentResponseError(Exception):
-    """Raised when the LLM response cannot be parsed after retries."""
+LLM_TIMEOUT = 300.0  # seconds
 
 
 def estimate_tokens(text: str) -> int:
     """Rough token estimate: ~4 chars per token for English."""
-    return len(text) // 4
+    CHARS_PER_TOKEN = 4
+    return len(text) // CHARS_PER_TOKEN
 
 
-def parse_agent_response[T: BaseModel](raw: object, model_class: type[T]) -> T:
-    """Parse an LLM response into the expected Pydantic model."""
-    if isinstance(raw, model_class):
-        return raw
-
-    if raw is None:
-        raise AgentResponseError(f"LLM returned None, expected {model_class.__name__}")
-
-    if isinstance(raw, str):
-        cleaned = raw.strip()
-        if not cleaned:
-            raise AgentResponseError(
-                f"LLM returned empty string, expected {model_class.__name__}"
-            )
-        json_match = re.search(r"```(?:json)?\s*([\s\S]*?)```", cleaned)
-        if json_match:
-            cleaned = json_match.group(1).strip()
-        return model_class.model_validate_json(cleaned)
-
-    if isinstance(raw, dict):
-        return model_class.model_validate(raw)
-
-    return model_class.model_validate_json(str(raw))
-
-
-async def _emit_event(
-    ctx: dict[str, Any],
-    event_type: str,
-    agent_name: str,
-    extra: dict[str, Any] | None = None,
-) -> None:
-    """Emit a synthetic agent event through the pipeline EventEmitter."""
-    emitter = ctx.get("_emitter")
-    if emitter is None:
-        return
-    from pipeline.agents.step_messages import get_step_message, get_technical_message
-    from pipeline.core.events import EventType
-
-    payload: dict[str, Any] = {
-        "agent_name": agent_name,
-        "stage": ctx.get("stage", ""),
-    }
-    if ctx.get("paper_id"):
-        payload["paper_id"] = ctx["paper_id"]
-    if extra:
-        payload.update(extra)
-
-    payload["message"] = get_step_message(event_type, agent_name, ctx)
-    payload["technical_message"] = get_technical_message(event_type, agent_name, payload)
-
-    event_type_enum = getattr(EventType, event_type.upper(), event_type)
-    try:
-        await emitter.emit(event_type_enum, payload)
-    except Exception:
-        logger.warning("[%s] Failed to emit %s event", agent_name, event_type)
-
-
-def _ctx_str(ctx: dict[str, Any]) -> str:
-    """Format context dict for log messages, excluding internal keys."""
-    return " ".join(f"{k}={v}" for k, v in ctx.items() if not k.startswith("_"))
+class AgentResponseError(Exception):
+    """Raised when agent produces invalid or empty response."""
 
 
 async def run_agent_with_retry[T: BaseModel](
-    agent: Any,
+    agent: AgnoAgent,
     message: str,
     output_schema: type[T],
     *,
@@ -117,10 +39,10 @@ async def run_agent_with_retry[T: BaseModel](
     context: dict[str, Any] | None = None,
     on_event: Callable[[Any], Awaitable[None]] | None = None,
 ) -> T:
-    """Call Gemini API directly with retry logic, timeout, and Pydantic parsing.
+    """Run Agno agent with retry logic, timeout, and event streaming.
 
-    Uses the agent's name and instructions for prompt composition while calling
-    the Gemini API directly for full control over response handling and parsing.
+    Uses agent.arun() with streaming to capture granular lifecycle
+    events (started, content, tool_call, completed, error).
     """
     from pipeline.agents.models import llm_semaphore
     from pipeline.config import settings
@@ -131,144 +53,99 @@ async def run_agent_with_retry[T: BaseModel](
         retry_delay = settings.llm_retry_delay
 
     ctx = context or {}
+    agent_name = agent.name or agent.__class__.__name__
+    stage = ctx.get("stage", "")
+    paper_id = ctx.get("paper_id", "")
 
-    job_dir: Path | None = None
-    if ctx.get("job_dir"):
-        job_dir = Path(ctx["job_dir"]) / "raw"
-
-    agent_name = getattr(agent, "name", agent.__class__.__name__)
-    instructions = getattr(agent, "instructions", "") or ""
-    if not instructions:
-        inner = getattr(agent, "_agent", None)
-        if inner:
-            instructions = getattr(inner, "instructions", "") or ""
-
-    model_id = settings.llm_model_id
-    msg_chars = len(message)
-    msg_tokens = estimate_tokens(message)
-
+    input_tokens = estimate_tokens(message)
     logger.info(
-        "[%s] Starting | input_chars=%d input_tokens=~%d schema=%s model=%s %s",
-        agent_name, msg_chars, msg_tokens, output_schema.__name__, model_id, _ctx_str(ctx),
+        "Starting %s (stream) | input_chars=%d input_tokens~%d stage=%s",
+        agent_name, len(message), input_tokens, stage,
     )
-
-    client = _get_gemini_client()
-    full_prompt = f"{instructions}\n\n{message}"
 
     last_error: Exception | None = None
 
     for attempt in range(1, max_retries + 1):
-        t0 = time.monotonic()
-
-        await _emit_event(ctx, "agent_started", agent_name, {
-            "model": model_id,
-            "input_tokens": msg_tokens,
-            "attempt": attempt,
-        })
-
         try:
             async with llm_semaphore:
                 logger.info(
-                    "[%s] Acquired semaphore (attempt %d/%d) %s",
-                    agent_name, attempt, max_retries, _ctx_str(ctx),
+                    "%s Acquired semaphore (attempt %d/%d) paper_id=%s stage=%s",
+                    agent_name, attempt, max_retries, paper_id, stage,
                 )
+
                 async with asyncio.timeout(timeout):
-                    result = await asyncio.to_thread(
-                        client.models.generate_content,
-                        model=model_id,
-                        contents=full_prompt,
+                    result_content: T | None = None
+                    run_error: str | None = None
+
+                    response_stream = await agent.arun(
+                        message,
+                        stream=True,
+                        stream_events=True,
                     )
 
-            elapsed = time.monotonic() - t0
-            elapsed_ms = int(elapsed * 1000)
+                    async for event in response_stream:
+                        # Forward all events to the callback
+                        if on_event is not None:
+                            try:
+                                await on_event(event)
+                            except Exception:
+                                logger.debug(
+                                    "Event callback error", exc_info=True,
+                                )
 
-            # Extract response
-            raw: str | None = None
-            finish_reason = None
-            safety_ratings = None
+                        if isinstance(event, RunCompletedEvent):
+                            result_content = event.content
+                        elif isinstance(event, RunErrorEvent):
+                            run_error = str(event.content) if event.content else "Unknown error"
 
-            if result.candidates:
-                candidate = result.candidates[0]
-                finish_reason = candidate.finish_reason
-                safety_ratings = candidate.safety_ratings
-                if candidate.content and candidate.content.parts:
-                    raw = candidate.content.parts[0].text
+                    if run_error:
+                        raise AgentResponseError(
+                            f"{agent_name} returned error: {run_error}"
+                        )
 
-            raw_len = len(raw) if raw else 0
-            logger.info(
-                "[%s] Gemini responded | attempt=%d/%d elapsed=%.1fs len=%d finish=%s %s",
-                agent_name, attempt, max_retries, elapsed, raw_len, finish_reason, _ctx_str(ctx),
-            )
+                    if result_content is None:
+                        raise AgentResponseError(
+                            f"{agent_name} returned empty response"
+                        )
 
-            if not raw:
-                logger.warning(
-                    "[%s] Empty response | finish=%s safety=%s %s",
-                    agent_name, finish_reason, safety_ratings, _ctx_str(ctx),
-                )
-                raise AgentResponseError(
-                    f"Gemini returned empty response (finish={finish_reason}, safety={safety_ratings})"
-                )
-
-            # Save raw response for debugging
-            if job_dir:
-                try:
-                    job_dir.mkdir(parents=True, exist_ok=True)
-                    paper_id = ctx.get("paper_id", "unknown")
-                    stage = ctx.get("stage", agent_name)
-                    filename = f"{paper_id}_{stage}_attempt{attempt}.txt"
-                    (job_dir / filename).write_text(raw[:500_000])
-                except Exception:
-                    logger.debug("Failed to save raw response", exc_info=True)
-
-            parsed = parse_agent_response(raw, output_schema)
-            logger.info(
-                "[%s] Parsed OK | attempt=%d/%d elapsed=%.1fs %s",
-                agent_name, attempt, max_retries, elapsed, _ctx_str(ctx),
-            )
-
-            await _emit_event(ctx, "agent_completed", agent_name, {
-                "elapsed_ms": elapsed_ms,
-                "response_len": raw_len,
-            })
-
-            return parsed
+                    # Validate against output schema if needed
+                    if isinstance(result_content, output_schema):
+                        return result_content
+                    elif isinstance(result_content, dict):
+                        return output_schema.model_validate(result_content)
+                    elif isinstance(result_content, str):
+                        return output_schema.model_validate_json(result_content)
+                    else:
+                        return output_schema.model_validate(result_content)
 
         except TimeoutError:
-            elapsed = time.monotonic() - t0
-            last_error = TimeoutError(f"LLM call timed out after {timeout}s")
-            logger.error(
-                "[%s] TIMEOUT | attempt=%d/%d elapsed=%.1fs timeout=%.0fs %s",
-                agent_name, attempt, max_retries, elapsed, timeout, _ctx_str(ctx),
+            last_error = TimeoutError(
+                f"{agent_name} timed out after {timeout}s"
             )
-            await _emit_event(ctx, "agent_error", agent_name, {
-                "error": f"Timeout after {timeout:.0f}s",
-                "error_type": "timeout",
-                "elapsed_ms": int(elapsed * 1000),
-                "attempt": attempt,
-            })
-
-        except Exception as exc:
-            elapsed = time.monotonic() - t0
-            last_error = exc
-            logger.error(
-                "[%s] ERROR | attempt=%d/%d elapsed=%.1fs error=%s %s",
-                agent_name, attempt, max_retries, elapsed, str(exc)[:300], _ctx_str(ctx),
+            logger.warning(
+                "%s timed out (attempt %d/%d)",
+                agent_name, attempt, max_retries,
             )
-            await _emit_event(ctx, "agent_error", agent_name, {
-                "error": str(exc)[:200],
-                "error_type": type(exc).__name__,
-                "elapsed_ms": int(elapsed * 1000),
-                "attempt": attempt,
-            })
+        except AgentResponseError as e:
+            last_error = e
+            logger.warning(
+                "%s response error (attempt %d/%d): %s",
+                agent_name, attempt, max_retries, e,
+            )
+        except Exception as e:
+            last_error = e
+            logger.warning(
+                "%s unexpected error (attempt %d/%d): %s",
+                agent_name, attempt, max_retries, e,
+            )
 
         if attempt < max_retries:
-            wait = retry_delay * attempt
+            delay = retry_delay * attempt
             logger.info(
-                "[%s] Retrying in %.1fs (attempt %d/%d) %s",
-                agent_name, wait, attempt + 1, max_retries, _ctx_str(ctx),
+                "%s retrying in %.1fs...", agent_name, delay,
             )
-            await asyncio.sleep(wait)
+            await asyncio.sleep(delay)
 
     raise AgentResponseError(
-        f"[{agent_name}] Failed after {max_retries} attempts: {last_error}"
+        f"{agent_name} failed after {max_retries} attempts: {last_error}"
     )

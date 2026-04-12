@@ -62,7 +62,7 @@ class PaperAnalyzerAgent:
             name="PaperAnalyzer",
             model=create_model(),
             instructions=PAPER_ANALYZER_PROMPT,
-            markdown=True,
+            response_model=PaperAnalysisResult,
         )
 
     async def run(
@@ -80,8 +80,6 @@ class PaperAnalyzerAgent:
                 "paper_id": paper_id,
                 "paper_title": data.get("title", ""),
                 "stage": "paper_analysis",
-                "job_dir": data.get("job_dir", ""),
-                "_emitter": data.get("_emitter"),
             },
             on_event=on_event,
         )

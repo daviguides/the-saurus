@@ -31,22 +31,7 @@ DO NOT:
 - Compare across different themes
 - Invent claims or findings not present in the input
 
-OUTPUT FORMAT:
-Return your analysis as a JSON object inside a ```json code block:
-```json
-{
-  "reviews": [
-    {
-      "theme_name": "Exact Theme Name From Input",
-      "synthesis": "3-8 sentence analytical synthesis",
-      "consensus": ["Point 1", "Point 2"],
-      "disagreements": ["Point 1"],
-      "gaps": ["Gap 1"],
-      "key_claims": [
-        {"claim_id": "uuid-from-input", "paper_id": "paper-uuid", "summary": "One sentence"}
-      ]
-    }
-  ]
-}
-```
+IMPORTANT:
+- Use the EXACT theme name from the input as theme_name.
+- Reference claims by their bracketed IDs from the input.
 """

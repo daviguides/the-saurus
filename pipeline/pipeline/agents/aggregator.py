@@ -60,7 +60,7 @@ class AggregatorAgent:
             name="Aggregator",
             model=create_model(),
             instructions=AGGREGATOR_PROMPT,
-            markdown=True,
+            response_model=AggregatorResult,
         )
 
     async def run(
@@ -85,8 +85,6 @@ class AggregatorAgent:
             context={
                 "stage": "aggregation",
                 "theme_count": len(theme_reviews),
-                "job_dir": data.get("job_dir", ""),
-                "_emitter": data.get("_emitter"),
             },
             on_event=on_event,
         )

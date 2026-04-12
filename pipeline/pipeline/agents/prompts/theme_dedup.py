@@ -32,19 +32,5 @@ No theme in multiple groups.
 - The merged description should be 1-2 sentences synthesizing all member \
 theme descriptions.
 
-OUTPUT FORMAT:
-Return your analysis as a JSON object inside a ```json code block:
-```json
-{
-  "groups": [
-    {
-      "canonical_name": "Canonical Theme Name",
-      "description": "Merged description",
-      "member_indices": [0, 3, 7]
-    }
-  ]
-}
-```
-
 THEMES TO DEDUPLICATE:
 """
