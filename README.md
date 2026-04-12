@@ -158,14 +158,25 @@ See each service's `.env.example` for all available settings.
 
 ## Testing
 
+### Unit Tests
+
+Each backend service has its own pytest suite covering agents, orchestration, persistence, API routes, and schemas. No running services or API keys required.
+
+| Service | Tests | Command |
+|---------|-------|---------|
+| Pipeline | 219 | `cd pipeline && uv run pytest tests/ -v` |
+| Assistant WS | 56 | `cd assistant-ws && uv run pytest tests/ -v` |
+| Pipeline Test Client | 18 | `cd pipeline-test-client && uv run pytest tests/ -v` |
+| Assistant Test Client | 16 | `cd assistant-test-client && uv run pytest tests/ -v` |
+
 ```bash
 make test    # Run all unit test suites
 make lint    # Lint all Python services
 ```
 
-### Test Clients
+### End-to-End Test Clients
 
-Two standalone CLI tools for end-to-end testing against running services. They can be used interactively during development or autonomously by AI coding agents (like Claude Code) to validate changes, diagnose issues, and verify fixes against local or remote environments.
+Two standalone CLI tools that run against live services (local or remote). They exercise the full stack: HTTP uploads, WebSocket event streaming, Socket.IO chat, LLM calls, and Qdrant queries. Useful for validating deployments, diagnosing production issues, or letting AI coding agents (like Claude Code) verify changes autonomously.
 
 **Pipeline Test Client** (`pipeline-test-client/`): Tests the full pipeline flow over HTTP + WebSocket.
 
