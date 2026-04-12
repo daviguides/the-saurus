@@ -3,7 +3,7 @@ description: Upload a single PDF and verify the pipeline produces a review
 timeout_seconds: 300
 
 files:
-  - path: sample.pdf
+  - path: papers/exercise_cognitive_function_brain.pdf
 
 steps:
   - action: upload

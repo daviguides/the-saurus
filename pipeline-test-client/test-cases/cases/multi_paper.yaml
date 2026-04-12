@@ -3,8 +3,8 @@ description: Upload multiple PDFs and validate cross-paper theme deduplication a
 timeout_seconds: 600
 
 files:
-  - path: paper_a.pdf
-  - path: paper_b.pdf
+  - path: papers/exercise_cognitive_function_brain.pdf
+  - path: papers/circadian_rest_activity_cognition.pdf
 
 steps:
   - action: upload
