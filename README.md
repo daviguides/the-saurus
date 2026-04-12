@@ -65,6 +65,10 @@ make dev-pipeline
 
 # Terminal 2: React app (port 5173)
 make dev-app
+
+# Terminal 3 (optional): Restate durable execution server
+make dev-restate
+make register-restate  # one-time registration
 ```
 
 Open [http://localhost:5173](http://localhost:5173) and upload PDFs.
@@ -101,7 +105,7 @@ make down    # Stop all services
 │  app (React 19)                              assistant-ui (MF)  │
 │  Upload → Pipeline Trace → Review              Chat Drawer     │
 ├─────────────────────────────────────────────────────────────────┤
-│  pipeline (FastAPI)          │  assistant-ws    │  papers-mcp    │
+│  pipeline (FastAPI+Restate)  │  assistant-ws    │  papers-mcp    │
 │  POST /jobs → run_pipeline   │  Socket.IO chat  │  Qdrant RAG    │
 │  WS /jobs/{id}/stream        │  Agno Team       │  FastMCP       │
 ├─────────────────────────────────────────────────────────────────┤
@@ -125,7 +129,7 @@ All agents use the Agno framework with Pydantic structured output and streaming 
 | Layer | Technology |
 |-------|------------|
 | Frontend | React 19, TypeScript, Rsbuild, Tailwind v4, Module Federation 2.0 |
-| Pipeline | Python 3.13+, FastAPI, Agno, Gemini 2.5 Flash |
+| Pipeline | Python 3.13+, FastAPI, Restate, Agno, Gemini 2.5 Flash |
 | Assistant | Agno Team, Socket.IO, GPT-4o-mini |
 | RAG | Qdrant, Gemini text-embedding-004, FastMCP |
 | Persistence | YAML (state), NDJSON (events), filesystem |

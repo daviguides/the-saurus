@@ -9,7 +9,8 @@ SHELL := /bin/bash
 	eval-setup eval-langfuse eval-langfuse-down \
 	eval-generate-pipeline eval-generate-assistant eval-run-pipeline \
 	eval-pipeline eval-assistant eval-safety eval-all \
-	eval-score-pipeline eval-score-assistant eval-update-baseline
+	eval-score-pipeline eval-score-assistant eval-update-baseline \
+	dev-restate register-restate stop-restate
 
 $(LOGS_DIR):
 	mkdir -p $(LOGS_DIR)
@@ -183,3 +184,19 @@ eval-score-assistant:
 
 eval-update-baseline:
 	cd evals && uv run python -m pipeline.golden.update_baseline
+
+# ─── Restate ──────────────────────────────────────────────────────
+
+dev-restate:
+	docker run --name restate_dev --rm -d \
+	  -p 8080:8080 -p 9070:9070 -p 9071:9071 \
+	  --add-host=host.docker.internal:host-gateway \
+	  docker.restate.dev/restatedev/restate:latest
+	@echo "Restate running on :8080 (ingress), :9070 (admin)"
+
+register-restate:
+	@curl -s localhost:9070/deployments --json '{"uri": "http://host.docker.internal:8002/restate/v1"}' | python3 -m json.tool
+	@echo "Registered pipeline workflow with Restate"
+
+stop-restate:
+	docker stop restate_dev 2>/dev/null || true

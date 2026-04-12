@@ -9,6 +9,7 @@ from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
 from uuid import uuid4
 
+import httpx
 from fastapi import APIRouter, HTTPException, Query, UploadFile
 
 from pipeline.config import settings
@@ -192,10 +193,20 @@ async def create_job(files: list[UploadFile]) -> CreateJobResponse:
     if job_id in _running_tasks and not _running_tasks[job_id].done():
         raise HTTPException(status_code=409, detail="Job is already running")
 
-    # Launch pipeline as background task
-    task = asyncio.create_task(run_pipeline(job_id, jobs_dir))
-    _running_tasks[job_id] = task
-    task.add_done_callback(lambda t: _running_tasks.pop(job_id, None))
+    # Launch pipeline via Restate durable execution
+    try:
+        async with httpx.AsyncClient() as client:
+            await client.post(
+                f"{settings.restate_ingress_url}/PipelineWorkflow/{job_id}/run/send",
+                json={"jobs_dir": str(jobs_dir)},
+                headers={"Idempotency-Key": f"job-{job_id}"},
+                timeout=5.0,
+            )
+    except Exception:
+        logger.warning("Restate unavailable, falling back to in-process execution")
+        task = asyncio.create_task(run_pipeline(job_id, jobs_dir))
+        _running_tasks[job_id] = task
+        task.add_done_callback(lambda t: _running_tasks.pop(job_id, None))
 
     return CreateJobResponse(
         job_id=job_id,

@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
+import restate
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -14,6 +15,7 @@ from pipeline.api.routes import get_running_tasks
 from pipeline.config import settings
 from pipeline.core import JobState, JobStatus, read_status, write_status
 from pipeline.core.qdrant import close_indexer
+from pipeline.engine.workflow import pipeline_workflow
 from pipeline.ws import websocket_stream
 
 logger = logging.getLogger(__name__)
@@ -98,6 +100,9 @@ app.add_middleware(
 )
 
 app.include_router(router, dependencies=[Depends(verify_api_key)])
+
+restate_app = restate.app(services=[pipeline_workflow])
+app.mount("/restate/v1", restate_app)
 
 
 @app.websocket("/jobs/{job_id}/stream")

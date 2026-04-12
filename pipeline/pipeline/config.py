@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     qdrant_api_key: str | None = None
     qdrant_embedding_model: str = "gemini-embedding-001"
 
+    # Restate
+    restate_ingress_url: str = "http://localhost:8080"
+
     # WebSocket
     ws_path: str = "/ws"
 
