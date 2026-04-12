@@ -1,0 +1,19 @@
+name: Multi-Paper Pipeline Flow
+description: Upload multiple PDFs and validate cross-paper theme deduplication and review
+timeout_seconds: 600
+
+files:
+  - path: paper_a.pdf
+  - path: paper_b.pdf
+
+steps:
+  - action: upload
+  - action: wait_complete
+    expect_status: completed
+  - action: check_papers
+    expect_paper_count: 2
+    expect_theme_count_min: 4
+    expect_claim_count_min: 8
+  - action: check_review
+    expect_review_sections_min: 3
+    expect_review_has_citations: true

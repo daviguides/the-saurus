@@ -25,7 +25,7 @@ app = typer.Typer(
 # Global options stored via callback
 _state: dict = {"url": "http://localhost:8002", "timeout": 300.0, "verbose": False}
 
-CASES_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "cases"
+CASES_DIR = Path(__file__).resolve().parent.parent.parent / "test-cases" / "cases"
 
 
 @app.callback()

@@ -39,9 +39,9 @@ uv run pytest tests/ -v
 
 ## Test Cases
 
-YAML files in `data/cases/`. Each defines files to upload and steps with assertions (upload, wait_complete, check_status, check_papers, check_review).
+YAML files in `test-cases/cases/`. Each defines files to upload and steps with assertions (upload, wait_complete, check_status, check_papers, check_review).
 
-Place PDF files in `data/` and reference them by relative path in test cases.
+Place PDF files in `test-cases/` and reference them by relative path in test cases.
 
 ## Structure
 
