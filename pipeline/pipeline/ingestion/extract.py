@@ -66,38 +66,19 @@ def extract_pymupdf(pdf_bytes: bytes) -> IngestedPaper:
 
     with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
         page_count = len(doc)
-        paragraphs: list[Paragraph] = []
 
-        # First pass: collect all body font sizes to determine median
+        # Single pass: collect raw block data AND body font sizes together
         body_sizes: list[float] = []
-        for page in doc:
-            d = page.get_text("dict")
-            for block in d["blocks"]:
-                if block["type"] != 0:
-                    continue
-                for line in block["lines"]:
-                    for span in line["spans"]:
-                        if "Bold" not in span["font"] and span["text"].strip():
-                            body_sizes.append(span["size"])
-
-        median_body_size = median(body_sizes) if body_sizes else 10.0
-        heading_threshold = median_body_size + 1.0
-
-        # Second pass: extract paragraphs
-        title = ""
-        authors: list[str] = []
-        max_font_size_page1 = 0.0
-        title_block_idx: int | None = None
+        raw_blocks: list[tuple[int, int, str, float, bool]] = []
+        # Each raw_block: (page_idx, block_idx, block_text, block_max_size, has_bold)
 
         for page_idx, page in enumerate(doc):
             d = page.get_text("dict")
-            para_idx = 0
 
             for block_idx, block in enumerate(d["blocks"]):
                 if block["type"] != 0:
                     continue
 
-                # Collect block text and font info
                 block_text_parts: list[str] = []
                 block_max_size = 0.0
                 has_bold = False
@@ -109,45 +90,67 @@ def extract_pymupdf(pdf_bytes: bytes) -> IngestedPaper:
                         block_max_size = max(block_max_size, span["size"])
                         if "Bold" in span["font"]:
                             has_bold = True
+                        elif span["text"].strip():
+                            body_sizes.append(span["size"])
                     block_text_parts.append(line_text)
 
                 block_text = "\n".join(block_text_parts).strip()
                 if not block_text:
                     continue
 
-                para_idx += 1
-                is_heading = has_bold and block_max_size > heading_threshold
-                heading_level = 0
+                raw_blocks.append((page_idx, block_idx, block_text, block_max_size, has_bold))
 
-                # Title detection: largest font on page 1
-                if page_idx == 0:
-                    if block_max_size > max_font_size_page1:
-                        max_font_size_page1 = block_max_size
-                        title = block_text.replace("\n", " ")
-                        title_block_idx = block_idx
-                        is_heading = True
-                        heading_level = 1
-                    elif (
-                        not authors
-                        and title_block_idx is not None
-                        and block_idx > title_block_idx
-                        and not is_heading
-                    ):
-                        # First non-heading block after title = authors
-                        authors = _parse_authors(block_text.replace("\n", " "))
+        # Compute median body font size from collected data
+        median_body_size = median(body_sizes) if body_sizes else 10.0
+        heading_threshold = median_body_size + 1.0
 
-                if is_heading and heading_level == 0:
-                    heading_level = 2
+        # Classify headings using the median (iterates in-memory list, not PDF)
+        paragraphs: list[Paragraph] = []
+        title = ""
+        authors: list[str] = []
+        max_font_size_page1 = 0.0
+        title_block_idx: int | None = None
+        prev_page_idx = -1
+        para_idx = 0
 
-                paragraphs.append(
-                    Paragraph(
-                        page=page_idx + 1,
-                        index=para_idx,
-                        text=block_text.replace("\n", " "),
-                        is_heading=is_heading,
-                        heading_level=heading_level,
-                    )
+        for page_idx, block_idx, block_text, block_max_size, has_bold in raw_blocks:
+            if page_idx != prev_page_idx:
+                para_idx = 0
+                prev_page_idx = page_idx
+
+            para_idx += 1
+            is_heading = has_bold and block_max_size > heading_threshold
+            heading_level = 0
+
+            # Title detection: largest font on page 1
+            if page_idx == 0:
+                if block_max_size > max_font_size_page1:
+                    max_font_size_page1 = block_max_size
+                    title = block_text.replace("\n", " ")
+                    title_block_idx = block_idx
+                    is_heading = True
+                    heading_level = 1
+                elif (
+                    not authors
+                    and title_block_idx is not None
+                    and block_idx > title_block_idx
+                    and not is_heading
+                ):
+                    # First non-heading block after title = authors
+                    authors = _parse_authors(block_text.replace("\n", " "))
+
+            if is_heading and heading_level == 0:
+                heading_level = 2
+
+            paragraphs.append(
+                Paragraph(
+                    page=page_idx + 1,
+                    index=para_idx,
+                    text=block_text.replace("\n", " "),
+                    is_heading=is_heading,
+                    heading_level=heading_level,
                 )
+            )
 
     return IngestedPaper(
         title=title,
@@ -163,12 +166,13 @@ def extract_pdfplumber(pdf_bytes: bytes) -> IngestedPaper:
 
     with pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
         page_count = len(pdf.pages)
-        paragraphs: list[Paragraph] = []
 
-        # Collect body sizes across all pages for threshold
+        # Single pass: extract words once per page, store for reuse
         body_sizes: list[float] = []
+        pages_words: list[list[dict]] = []
         for page in pdf.pages:
             words = page.extract_words(extra_attrs=["fontname", "size"])
+            pages_words.append(words)
             for w in words:
                 if "Bold" not in w.get("fontname", ""):
                     body_sizes.append(w.get("size", 10.0))
@@ -177,13 +181,13 @@ def extract_pdfplumber(pdf_bytes: bytes) -> IngestedPaper:
         heading_threshold = median_body_size + 1.0
         line_height = median_body_size * 1.4  # approximate leading
 
+        paragraphs: list[Paragraph] = []
         title = ""
         authors: list[str] = []
         max_font_size_page1 = 0.0
         title_found = False
 
-        for page_idx, page in enumerate(pdf.pages):
-            words = page.extract_words(extra_attrs=["fontname", "size"])
+        for page_idx, words in enumerate(pages_words):
             if not words:
                 continue
 

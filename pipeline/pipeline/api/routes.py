@@ -9,7 +9,7 @@ from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, UploadFile
+from fastapi import APIRouter, HTTPException, Query, UploadFile
 
 from pipeline.config import settings
 from pipeline.core import (
@@ -215,12 +215,13 @@ async def get_status(job_id: str) -> StatusResponse:
 
 @router.get("/jobs/{job_id}/events", response_model=EventsResponse)
 async def get_events(
-    job_id: str, after_event_id: str | None = None, limit: int | None = None
+    job_id: str,
+    after_event_id: str | None = Query(None),
+    limit: int = Query(1000, ge=1, le=10000),
 ) -> EventsResponse:
     _get_job_dir(job_id)
     events = await read_events(job_id, _jobs_dir(), after_event_id=after_event_id)
-    if limit is not None and limit > 0:
-        events = events[:limit]
+    events = events[:limit]
     return EventsResponse(events=events)
 
 
@@ -233,13 +234,12 @@ async def get_papers(job_id: str) -> PapersResponse:
     papers = [PaperEntry.model_validate(p) for p in data]
 
     # Enrich each paper with themes and claims from per-paper YAML files
-    # Read all YAML files in parallel to avoid sequential I/O
+    # Read all YAML files in a single parallel gather to avoid sequential I/O
     theme_coros = [read_yaml(job_path / "themes" / f"{p.paper_id}.yaml") for p in papers]
     claim_coros = [read_yaml(job_path / "claims" / f"{p.paper_id}.yaml") for p in papers]
-    all_themes_data, all_claims_data = (
-        await asyncio.gather(*theme_coros),
-        await asyncio.gather(*claim_coros),
-    )
+    all_results = await asyncio.gather(*theme_coros, *claim_coros)
+    all_themes_data = all_results[: len(papers)]
+    all_claims_data = all_results[len(papers) :]
 
     enriched: list[EnrichedPaper] = []
     for paper, themes_data, claims_data in zip(papers, all_themes_data, all_claims_data):
