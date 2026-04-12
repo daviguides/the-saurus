@@ -8,6 +8,9 @@ build/
 .env
 .ruff_cache/
 .pytest_cache/
+.coverage
+.hypothesis/
+.deepeval/
 
 node_modules/
 assistant-ui/dist/
