@@ -17,6 +17,10 @@ export function createSocket(): Socket {
     return socketInstance;
   }
 
+  if (socketInstance) {
+    socketInstance.disconnect();
+  }
+
   socketInstance = io(SOCKET_URL, {
     auth: {
       session_id: getStoredSessionId(),
@@ -29,6 +33,16 @@ export function createSocket(): Socket {
   return socketInstance;
 }
 
-export function getSocket(): Socket | null {
-  return socketInstance;
+export function disconnectSocket(): void {
+  if (socketInstance) {
+    socketInstance.disconnect();
+    socketInstance = null;
+  }
+}
+
+// HMR cleanup: disconnect existing socket on module hot replace
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    disconnectSocket();
+  });
 }

@@ -17,7 +17,6 @@ import WelcomeContent from "../../ui/components/WelcomeContent";
 export interface EmbeddedAppProps {
   isOpen?: boolean;
   isDark?: boolean;
-  onClose?: () => void;
   context?: {
     jobId: string | null;
     currentView: "papers" | "review";
@@ -48,7 +47,7 @@ export default function EmbeddedApp({
 
   const handleSend = useCallback(
     (text: string) => {
-      sendMessage(text, context as Record<string, unknown> | undefined);
+      sendMessage(text, context ? { jobId: context.jobId, currentView: context.currentView } : undefined);
     },
     [sendMessage, context],
   );

@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic import BaseModel
 
 
@@ -5,7 +7,7 @@ class ThemeResult(BaseModel):
     paper_id: str
     name: str
     description: str = ""
-    positions: list[dict] = []
+    positions: list[dict[str, Any]] = []
 
 
 class ClaimResult(BaseModel):
@@ -17,7 +19,7 @@ class ClaimResult(BaseModel):
     paragraph: int = 0
     deep: str = ""
     summary: str = ""
-    source: dict = {}
+    source: dict[str, Any] = {}
 
 
 class ClaimSearchResult(BaseModel):
@@ -39,7 +41,7 @@ class ThemeReviewResult(BaseModel):
     consensus: list[str] = []
     disagreements: list[str] = []
     gaps: list[str] = []
-    key_claims: list[dict] = []
+    key_claims: list[dict[str, Any]] = []
 
 
 class CitationRef(BaseModel):
@@ -55,7 +57,7 @@ class PaperReference(BaseModel):
     paper_id: str
     paper_title: str = ""
     authors: list[str] = []
-    cited_in: list[dict] = []
+    cited_in: list[dict[str, Any]] = []
 
 
 class ReviewSection(BaseModel):

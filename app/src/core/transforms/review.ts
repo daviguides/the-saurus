@@ -109,6 +109,7 @@ export function transformReview(
       paperCount: enrichedPapers.length,
       themeCount: allThemes.size,
       claimCount,
+      // TODO: compute from actual pipeline elapsed time when available
       generationTimeMs: 0,
     },
     generatedAt: Date.now(),

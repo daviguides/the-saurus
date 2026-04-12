@@ -17,8 +17,7 @@
     "socket.io-client": "^4.8.3",
     "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^15.6.1",
-    "lucide-react": "^0.460.0",
-    "clsx": "^2.1.0"
+    "lucide-react": "^0.460.0"
   },
   "devDependencies": {
     "@fontsource-variable/fira-code": "^5.0.0",

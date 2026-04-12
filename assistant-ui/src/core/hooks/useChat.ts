@@ -7,6 +7,7 @@ import type {
   DoneEvent,
   ReferenceItem,
   ReferencesEvent,
+  ErrorEvent,
 } from "../types/websocket";
 
 export function useChat(socket: Socket | null) {
@@ -64,7 +65,7 @@ export function useChat(socket: Socket | null) {
       refsBuffer.current = [];
     };
 
-    const onError = (data: { message: string }) => {
+    const onError = (data: ErrorEvent) => {
       setIsStreaming(false);
       setCurrentStep(null);
       setMessages((prev) => {
@@ -74,7 +75,9 @@ export function useChat(socket: Socket | null) {
             ...prev.slice(0, -1),
             {
               ...last,
-              content: last.content || `Error: ${data.message}`,
+              content: last.content
+                ? `${last.content}\n\nError: ${data.message}`
+                : `Error: ${data.message}`,
               isStreaming: false,
             },
           ];
@@ -100,7 +103,7 @@ export function useChat(socket: Socket | null) {
 
   const sendMessage = useCallback(
     (text: string, context?: Record<string, unknown>) => {
-      if (!socket || !text.trim()) return;
+      if (!socket || !text.trim() || isStreaming) return;
 
       const userMsg: Message = {
         id: crypto.randomUUID(),
@@ -124,7 +127,7 @@ export function useChat(socket: Socket | null) {
 
       socket.emit("message", { text, ...(context && { context }) });
     },
-    [socket],
+    [socket, isStreaming],
   );
 
   return { messages, isStreaming, currentStep, sendMessage };

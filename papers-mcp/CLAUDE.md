@@ -31,9 +31,9 @@ Gemini `text-embedding-004` (API, same key as pipeline).
 
 ## Config
 
-`.env` with `MCP_` prefix.
+`.env` with `PAPERS_` prefix.
 
-Key variables: `MCP_QDRANT_URL`, `MCP_HOST`, `MCP_PORT`
+Key variables: `PAPERS_QDRANT_URL`, `PAPERS_MCP_HOST`, `PAPERS_MCP_PORT`, `PAPERS_EMBEDDING_API_KEY`
 
 ## How It Fits
 

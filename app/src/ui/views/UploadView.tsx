@@ -62,8 +62,8 @@ export default function UploadView() {
           const enriched = await fetchEnrichedPapers(effectiveJobId);
           loadPapers(transformPapers(enriched));
           fetchAndLoadReview(effectiveJobId);
-        } catch {
-          // Fall back gracefully
+        } catch (err) {
+          console.error("Failed to load results:", err);
         }
       }, 500);
       return () => clearTimeout(timer);

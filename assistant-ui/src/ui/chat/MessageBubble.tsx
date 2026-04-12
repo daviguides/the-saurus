@@ -1,5 +1,6 @@
 import type { Message } from "../../core/types/chat";
 import ReactMarkdown from "react-markdown";
+import type { ExtraProps } from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
@@ -25,17 +26,17 @@ export default function MessageBubble({ message }: Props) {
           <div className="prose-content">
             <ReactMarkdown
               components={{
-                code({ className, children, ...props }) {
+                code({ className, children, node, ...props }: React.ComponentPropsWithRef<"code"> & ExtraProps) {
                   const match = /language-(\w+)/.exec(className || "");
-                  const inline = !match;
-                  return inline ? (
+                  const isInline = !node?.properties?.className;
+                  return isInline ? (
                     <code {...props}>
                       {children}
                     </code>
                   ) : (
                     <SyntaxHighlighter
                       style={oneDark}
-                      language={match[1]}
+                      language={match?.[1] ?? "text"}
                       PreTag="div"
                       customStyle={{ background: "transparent" }}
                     >
@@ -54,7 +55,7 @@ export default function MessageBubble({ message }: Props) {
           <div className="mt-3 pt-3 border-t border-border">
             <p className="text-xs text-text-muted mb-1">Sources:</p>
             {message.references.map((ref, i) => (
-              <div key={i} className="text-xs text-text-secondary mb-1">
+              <div key={ref.doi || ref.title || i} className="text-xs text-text-secondary mb-1">
                 <span className="font-medium">{ref.title}</span>
                 {ref.year && <span> ({ref.year})</span>}
                 {ref.doi && (

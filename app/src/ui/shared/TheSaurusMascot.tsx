@@ -10,7 +10,7 @@ export default function TheSaurusMascot({ size = 120, className }: Props) {
             height={size}
             viewBox="0 0 120 120"
             fill="none"
-            stroke="#82A78F"
+            stroke="currentColor"
             strokeLinecap="round"
             strokeLinejoin="round"
             className={className}
@@ -36,7 +36,7 @@ export default function TheSaurusMascot({ size = 120, className }: Props) {
             {/* 3. Óculos e Olho (Estilo Thesaurus) */}
             <circle cx="40" cy="26" r="3.5" strokeWidth="1.5" />
             <path d="M 43.5 26 L 50 25" strokeWidth="1.5" />
-            <circle cx="39" cy="26" r="1" fill="#82A78F" stroke="none" />
+            <circle cx="39" cy="26" r="1" fill="currentColor" stroke="none" />
 
             {/* 4. Bracinhos de T-Rex */}
             <path d="M 44 62 L 34 65 L 34 69 M 34 65 L 37 69" strokeWidth="1.5" />

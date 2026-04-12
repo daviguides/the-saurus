@@ -17,17 +17,17 @@ const moduleFederationConfig = {
   shared: {
     react: {
       singleton: true,
-      eager: true,
+      eager: false,
       requiredVersion: "^19.0.0",
     },
     "react-dom": {
       singleton: true,
-      eager: true,
+      eager: false,
       requiredVersion: "^19.0.0",
     },
     "socket.io-client": {
       singleton: true,
-      eager: true,
+      eager: false,
       requiredVersion: "^4.0.0",
     },
   },

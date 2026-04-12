@@ -12,10 +12,14 @@ function CopyButton({ text }: { text: string }) {
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy to clipboard:", err);
+    }
   };
 
   useEffect(() => () => clearTimeout(timeoutRef.current), []);
