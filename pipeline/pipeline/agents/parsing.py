@@ -23,6 +23,18 @@ logger = logging.getLogger(__name__)
 
 LLM_TIMEOUT = 300.0  # seconds — large papers can take 190s+
 
+_gemini_client: object | None = None
+
+
+def _get_gemini_client() -> object:
+    """Get or create singleton Gemini API client."""
+    global _gemini_client
+    if _gemini_client is None:
+        import google.genai as genai
+        from pipeline.config import settings
+        _gemini_client = genai.Client(api_key=settings.llm_api_key)
+    return _gemini_client
+
 
 class AgentResponseError(Exception):
     """Raised when the LLM response cannot be parsed after retries."""
@@ -113,7 +125,6 @@ async def run_agent_with_retry(
     """
     from pipeline.agents.models import llm_semaphore
     from pipeline.config import settings
-    import google.genai as genai
 
     if max_retries is None:
         max_retries = settings.llm_max_retries
@@ -142,7 +153,7 @@ async def run_agent_with_retry(
         agent_name, msg_chars, msg_tokens, output_schema.__name__, model_id, _ctx_str(ctx),
     )
 
-    client = genai.Client(api_key=settings.llm_api_key)
+    client = _get_gemini_client()
     full_prompt = f"{instructions}\n\n{message}"
 
     last_error: Exception | None = None
