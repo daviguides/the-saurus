@@ -16,6 +16,6 @@ RUN useradd --create-home --shell /bin/bash app \
     && chown -R app:app /app
 USER app
 
-EXPOSE 8001
+EXPOSE 8002
 
 CMD [".venv/bin/python", "scripts/run_server.py"]

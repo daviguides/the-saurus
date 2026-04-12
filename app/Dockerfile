@@ -2,17 +2,15 @@ FROM node:20-slim AS build
 
 WORKDIR /app
 
-ENV RSBUILD_MF_REMOTE=true
-
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
 COPY . .
-RUN pnpm build:federated
+RUN pnpm build
 
 FROM nginx:alpine
 COPY --from=build /app/dist /usr/share/nginx/html
-EXPOSE 3000
+EXPOSE 5173
 CMD ["nginx", "-g", "daemon off;"]

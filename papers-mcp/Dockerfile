@@ -1,15 +1,19 @@
-FROM python:3.13-slim-bookworm
+FROM python:3.14-slim-bookworm
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
 WORKDIR /app
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-cache --no-dev
 
 COPY . .
 
-RUN useradd --create-home app
+RUN useradd --create-home --shell /bin/bash app \
+    && chown -R app:app /app
 USER app
 
 EXPOSE 8012
