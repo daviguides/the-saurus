@@ -133,10 +133,10 @@ the-saurus/
 ├── assistant-ws/           # Chat WebSocket backend (Agno Team)
 ├── papers-mcp/             # MCP server (6 tools over Qdrant)
 ├── pipeline/               # Core pipeline engine (multi-agent orchestrator)
+├── evals/                  # Evaluation suite (RAGAS + DeepEval + Langfuse)
 ├── pipeline-test-client/   # CLI for end-to-end pipeline testing
 ├── assistant-test-client/  # CLI for end-to-end assistant testing
 ├── shared/                 # Design tokens (CSS variables, light + dark)
-├── docs/                   # Architecture docs with diagrams
 ├── Makefile                # Dev commands
 └── docker-compose.yml
 ```
@@ -209,6 +209,56 @@ make log-stop        # Stop all logged services
 ```
 
 Agno `debug_mode` is enabled by default, so logs include full prompts sent to the LLM, structured output schemas, streaming events, and response content.
+
+## Evaluation and Observability
+
+Both the pipeline and assistant services have dedicated evaluation suites and observability instrumentation, housed in the `evals/` workspace.
+
+### Observability (Langfuse)
+
+LLM calls from both services are traced via [Langfuse](https://langfuse.com/) (self-hosted), capturing prompts, completions, token usage, latency, and agent lifecycle events. Agno agent calls are auto-instrumented via OpenLIT + OpenTelemetry.
+
+```bash
+make eval-langfuse       # Start Langfuse locally (Docker)
+# Open http://localhost:3000, create account, copy API keys to evals/.env
+```
+
+| Service | What is traced | LLM |
+|---------|---------------|-----|
+| Pipeline | 4 agents (PaperAnalyzer, ThemeDedup, ThemeReviewer, Aggregator), structured output, streaming events | Gemini 2.5 Flash |
+| Assistant | Agno Team coordinator, MCP tool calls to Qdrant, conversation turns | GPT-4o-mini |
+
+### Evaluation (RAGAS + DeepEval)
+
+[RAGAS](https://docs.ragas.io/) generates synthetic test datasets from the golden PDFs and provides RAG-specific metrics. [DeepEval](https://deepeval.com/) runs pytest-native assertions against pipeline and assistant outputs, with Gemini as the LLM judge.
+
+**Pipeline evals:** faithfulness (claims cite sources), citation accuracy ([N] refs resolve to real papers), theme quality (meaningful, non-redundant), schema completeness (structured output has all fields), safety (bias, toxicity, hallucination).
+
+**Assistant evals:** answer relevancy (grounded in pipeline data), tool correctness (right MCP tool selected), safety.
+
+### Prompt Regression Workflow
+
+```bash
+# 1. Run the pipeline against golden test PDFs
+make eval-run-pipeline
+
+# 2. Evaluate the output
+make eval-pipeline
+
+# 3. If scores are good after a prompt change, update the baseline
+make eval-update-baseline
+```
+
+A CI workflow (`.github/workflows/eval-regression.yml`) runs evals automatically on PRs that touch prompts or agent code.
+
+### Production Scoring
+
+Score a sample of production traces (10% by default) with RAGAS metrics, pushing results back to Langfuse for dashboarding:
+
+```bash
+make eval-score-pipeline     # Score pipeline traces
+make eval-score-assistant    # Score assistant traces
+```
 
 ## The Name
 
