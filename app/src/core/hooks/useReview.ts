@@ -1,9 +1,16 @@
-import { useState, useCallback, useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import type { ReviewData } from "../types/review";
 import { fetchReview, fetchEnrichedPapers } from "../services/api";
 import { transformReview } from "../transforms/review";
 
-let reviewData: ReviewData | null = null;
+// Shared store so all consumers see the same loading/error/data state
+interface ReviewStore {
+  data: ReviewData | null;
+  loading: boolean;
+  error: string | null;
+}
+
+let store: ReviewStore = { data: null, loading: false, error: null };
 const listeners = new Set<() => void>();
 
 function notify() {
@@ -16,28 +23,26 @@ function subscribe(listener: () => void) {
 }
 
 function getSnapshot() {
-  return reviewData;
+  return store;
 }
 
 export function useReview() {
-  const review = useSyncExternalStore(subscribe, getSnapshot);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { data: review, loading, error } = useSyncExternalStore(subscribe, getSnapshot);
 
   const loadReview = useCallback((data: ReviewData) => {
-    reviewData = data;
+    store = { ...store, data, loading: false, error: null };
     notify();
   }, []);
 
   const clearReview = useCallback(() => {
-    reviewData = null;
+    store = { data: null, loading: false, error: null };
     notify();
   }, []);
 
   const fetchAndLoad = useCallback(
     async (jobId: string) => {
-      setLoading(true);
-      setError(null);
+      store = { ...store, loading: true, error: null };
+      notify();
       try {
         const [rawReview, enrichedPapers] = await Promise.all([
           fetchReview(jobId),
@@ -48,9 +53,8 @@ export function useReview() {
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to load review";
-        setError(message);
-      } finally {
-        setLoading(false);
+        store = { ...store, loading: false, error: message };
+        notify();
       }
     },
     [loadReview],

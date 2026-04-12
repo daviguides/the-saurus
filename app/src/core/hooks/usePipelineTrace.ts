@@ -131,6 +131,8 @@ function pipelineReducer(state: PipelineState, action: PipelineAction): Pipeline
     }
 
     case "EVENT_RECEIVED":
+      // Intentionally creates a new array for React immutability.
+      // If performance becomes an issue, consider moving events to a useRef.
       return {
         ...state,
         events: [...state.events, action.payload],
@@ -240,7 +242,7 @@ function mapEventToActions(
   paperLookup: Map<string, string>,
 ): PipelineAction[] {
   const actions: PipelineAction[] = [];
-  const p = raw.payload;
+  const p = raw.payload as TypedPayload;
 
   // Agent-level events: construct typed AgentEvent, no reducer side-effects
   if (raw.event_type.startsWith("agent_")) {
@@ -254,9 +256,9 @@ function mapEventToActions(
     id: raw.event_id,
     eventType: raw.event_type as StagePipelineEvent["eventType"],
     timestamp: new Date(raw.timestamp).getTime(),
-    stage: (p.stage as string) ?? undefined,
-    paperId: (p.item_id as string) ?? (p.paper_id as string) ?? undefined,
-    paperTitle: paperLookup.get((p.item_id as string) ?? (p.paper_id as string) ?? ""),
+    stage: p.stage ?? undefined,
+    paperId: p.item_id ?? p.paper_id ?? undefined,
+    paperTitle: paperLookup.get(p.item_id ?? p.paper_id ?? ""),
     message: humanMessage(raw),
   };
   actions.push({ type: "EVENT_RECEIVED", payload: streamEvent });
@@ -265,30 +267,30 @@ function mapEventToActions(
     case "job_started":
       actions.push({
         type: "START_PIPELINE",
-        payload: { totalPapers: (p.paper_count as number) ?? 0 },
+        payload: { totalPapers: p.paper_count ?? 0 },
       });
       break;
     case "stage_started":
-      actions.push({ type: "STAGE_STARTED", payload: { stage: p.stage as string } });
+      actions.push({ type: "STAGE_STARTED", payload: { stage: p.stage ?? "" } });
       break;
     case "paper_processed":
       actions.push({
         type: "PAPER_PROCESSED",
         payload: {
-          stage: p.stage as string,
-          paperId: p.item_id as string,
-          paperTitle: paperLookup.get(p.item_id as string) ?? (p.item_id as string),
+          stage: p.stage ?? "",
+          paperId: p.item_id ?? "",
+          paperTitle: paperLookup.get(p.item_id ?? "") ?? (p.item_id ?? ""),
         },
       });
       break;
     case "stage_completed":
-      actions.push({ type: "STAGE_COMPLETED", payload: { stage: p.stage as string } });
+      actions.push({ type: "STAGE_COMPLETED", payload: { stage: p.stage ?? "" } });
       break;
     case "job_completed":
       actions.push({ type: "PIPELINE_COMPLETED" });
       break;
     case "job_failed":
-      actions.push({ type: "PIPELINE_FAILED", payload: { message: (p.error as string) ?? "Unknown error" } });
+      actions.push({ type: "PIPELINE_FAILED", payload: { message: p.error ?? "Unknown error" } });
       break;
   }
 
@@ -360,8 +362,8 @@ export function usePipelineTrace(jobId: string | null) {
       let status: Awaited<ReturnType<typeof fetchJobStatus>>;
       try {
         status = await fetchJobStatus(jobId!);
-      } catch {
-        // Job not found — clear and stay idle
+      } catch (e) {
+        console.error("Failed to fetch job status:", e);
         return;
       }
       if (cancelled) return;
@@ -390,8 +392,8 @@ export function usePipelineTrace(jobId: string | null) {
         for (const event of events) {
           dispatchEvent(event);
         }
-      } catch {
-        // If events fetch fails, still connect WS to get live events
+      } catch (e) {
+        console.error("Failed to fetch events for recovery:", e);
       }
 
       if (cancelled) return;
