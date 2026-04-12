@@ -194,9 +194,19 @@ dev-restate:
 	  docker.restate.dev/restatedev/restate:latest
 	@echo "Restate running on :8080 (ingress), :9070 (admin)"
 
+dev-restate-endpoint:
+	cd pipeline && uv run python scripts/run_restate_endpoint.py
+
+log-restate-endpoint: | $(LOGS_DIR)
+	@cd pipeline && nohup uv run python scripts/run_restate_endpoint.py \
+		> $(LOGS_DIR)/restate-endpoint.log 2>&1 & echo $$! > $(LOGS_DIR)/restate-endpoint.pid
+	@echo "Restate endpoint running (PID $$(cat $(LOGS_DIR)/restate-endpoint.pid)), logs at $(LOGS_DIR)/restate-endpoint.log"
+
 register-restate:
-	@curl -s localhost:9070/deployments --json '{"uri": "http://host.docker.internal:8002/restate/v1"}' | python3 -m json.tool
+	@curl -s localhost:9070/deployments -H "Content-Type: application/json" \
+		-d '{"uri": "http://host.docker.internal:9080", "use_http_11": true}' | python3 -m json.tool
 	@echo "Registered pipeline workflow with Restate"
 
 stop-restate:
 	docker stop restate_dev 2>/dev/null || true
+	@kill $$(cat $(LOGS_DIR)/restate-endpoint.pid 2>/dev/null) 2>/dev/null || true

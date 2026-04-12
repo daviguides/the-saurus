@@ -101,8 +101,8 @@ app.add_middleware(
 
 app.include_router(router, dependencies=[Depends(verify_api_key)])
 
+# Restate SDK endpoint (served on separate port via scripts/run_restate_endpoint.py)
 restate_app = restate.app(services=[pipeline_workflow])
-app.mount("/restate/v1", restate_app)
 
 
 @app.websocket("/jobs/{job_id}/stream")
