@@ -1,54 +1,150 @@
-.PHONY: dev dev-ws dev-mcp dev-pipeline dev-app dev-ui up down lint test \
-	eval-setup eval-langfuse eval-langfuse-down eval-generate-pipeline \
-	eval-generate-assistant eval-run-pipeline eval-pipeline eval-assistant \
-	eval-safety eval-all eval-score-pipeline eval-score-assistant eval-update-baseline
+LOGS_DIR := logs
+SHELL := /bin/bash
 
-# Development (run each service individually)
+.PHONY: dev-ws dev-mcp dev-pipeline dev-app dev-ui dev-qdrant \
+	log-pipeline log-ws log-mcp log-app log-ui \
+	up down lint test setup \
+	test-pipeline test-ws test-mcp test-all \
+	pipeline-test assistant-test \
+	eval-setup eval-langfuse eval-langfuse-down \
+	eval-generate-pipeline eval-generate-assistant eval-run-pipeline \
+	eval-pipeline eval-assistant eval-safety eval-all \
+	eval-score-pipeline eval-score-assistant eval-update-baseline
+
+$(LOGS_DIR):
+	mkdir -p $(LOGS_DIR)
+
+# ─── Development (interactive, foreground) ─────────────────────────
+
+dev-pipeline:
+	cd pipeline && uv run python scripts/run_server.py
+
 dev-ws:
 	cd assistant-ws && uv run python scripts/run_server.py
 
 dev-mcp:
 	cd papers-mcp && uv run python scripts/run_server.py
 
-dev-pipeline:
-	cd pipeline && uv run python scripts/run_server.py
-
 dev-app:
 	cd app && pnpm dev
 
 dev-ui:
-	cd assistant-ui && pnpm dev
+	cd assistant-ui && pnpm dev:federated
 
 dev-qdrant:
 	docker run -d --name qdrant -p 6333:6333 -p 6334:6334 qdrant/qdrant
 
-# Docker Compose
+# ─── Logged mode (background, output to logs/) ────────────────────
+#
+# Usage:  make log-pipeline
+# Claude: tail -f logs/pipeline.log  (or Read tool on logs/pipeline.log)
+
+log-pipeline: $(LOGS_DIR)
+	cd pipeline && uv run python scripts/run_server.py > ../$(LOGS_DIR)/pipeline.log 2>&1 & \
+	echo "$$!" > ../$(LOGS_DIR)/pipeline.pid && \
+	echo "Pipeline running (PID $$(cat ../$(LOGS_DIR)/pipeline.pid)), logs at $(LOGS_DIR)/pipeline.log"
+
+log-ws: $(LOGS_DIR)
+	cd assistant-ws && uv run python scripts/run_server.py > ../$(LOGS_DIR)/assistant-ws.log 2>&1 & \
+	echo "$$!" > ../$(LOGS_DIR)/assistant-ws.pid && \
+	echo "Assistant WS running (PID $$(cat ../$(LOGS_DIR)/assistant-ws.pid)), logs at $(LOGS_DIR)/assistant-ws.log"
+
+log-mcp: $(LOGS_DIR)
+	cd papers-mcp && uv run python scripts/run_server.py > ../$(LOGS_DIR)/papers-mcp.log 2>&1 & \
+	echo "$$!" > ../$(LOGS_DIR)/papers-mcp.pid && \
+	echo "Papers MCP running (PID $$(cat ../$(LOGS_DIR)/papers-mcp.pid)), logs at $(LOGS_DIR)/papers-mcp.log"
+
+log-app: $(LOGS_DIR)
+	cd app && pnpm dev > ../$(LOGS_DIR)/app.log 2>&1 & \
+	echo "$$!" > ../$(LOGS_DIR)/app.pid && \
+	echo "App running (PID $$(cat ../$(LOGS_DIR)/app.pid)), logs at $(LOGS_DIR)/app.log"
+
+log-ui: $(LOGS_DIR)
+	cd assistant-ui && pnpm dev:federated > ../$(LOGS_DIR)/assistant-ui.log 2>&1 & \
+	echo "$$!" > ../$(LOGS_DIR)/assistant-ui.pid && \
+	echo "Assistant UI running (PID $$(cat ../$(LOGS_DIR)/assistant-ui.pid)), logs at $(LOGS_DIR)/assistant-ui.log"
+
+# Start core services in logged mode (pipeline + app)
+log-core: log-pipeline log-app
+	@echo "Core services started. Logs in $(LOGS_DIR)/"
+
+# Start all services in logged mode
+log-all: log-pipeline log-ws log-mcp log-app log-ui
+	@echo "All services started. Logs in $(LOGS_DIR)/"
+
+# Stop all logged services
+log-stop:
+	@for pidfile in $(LOGS_DIR)/*.pid; do \
+		if [ -f "$$pidfile" ]; then \
+			pid=$$(cat "$$pidfile"); \
+			if kill -0 "$$pid" 2>/dev/null; then \
+				kill "$$pid" && echo "Stopped $$(basename $$pidfile .pid) (PID $$pid)"; \
+			fi; \
+			rm -f "$$pidfile"; \
+		fi; \
+	done
+
+# Clean log files
+log-clean:
+	rm -f $(LOGS_DIR)/*.log $(LOGS_DIR)/*.pid
+
+# ─── Docker Compose ────────────────────────────────────────────────
+
 up:
 	docker compose up --build -d
 
 down:
 	docker compose down
 
-# Quality
-lint:
-	cd assistant-ws && uv run ruff check .
-	cd papers-mcp && uv run ruff check .
-	cd pipeline && uv run ruff check .
+# ─── Testing ───────────────────────────────────────────────────────
 
-test:
-	cd assistant-ws && uv run pytest tests/ -v
-	cd papers-mcp && uv run pytest tests/ -v
+test-pipeline:
 	cd pipeline && uv run pytest tests/ -v
 
-# Setup
+test-ws:
+	cd assistant-ws && uv run pytest tests/ -v
+
+test-mcp:
+	cd papers-mcp && uv run pytest tests/ -v
+
+test-all: test-pipeline test-ws test-mcp
+	@echo "All test suites passed."
+
+test: test-all
+
+# ─── Test Clients ──────────────────────────────────────────────────
+
+pipeline-test:
+	cd pipeline-test-client && uv run pipeline-test $(ARGS)
+
+assistant-test:
+	cd assistant-test-client && uv run assistant-test $(ARGS)
+
+# ─── Quality ───────────────────────────────────────────────────────
+
+lint:
+	cd pipeline && uv run ruff check .
+	cd assistant-ws && uv run ruff check .
+	cd papers-mcp && uv run ruff check .
+
+format:
+	cd pipeline && uv run ruff format .
+	cd assistant-ws && uv run ruff format .
+	cd papers-mcp && uv run ruff format .
+
+# ─── Setup ─────────────────────────────────────────────────────────
+
 setup:
+	cd pipeline && uv sync
 	cd assistant-ws && uv sync
 	cd papers-mcp && uv sync
-	cd pipeline && uv sync
+	cd pipeline-test-client && uv sync
+	cd assistant-test-client && uv sync
 	cd app && pnpm install
 	cd assistant-ui && pnpm install
 
-# Evals
+# ─── Evals ─────────────────────────────────────────────────────────
+
 eval-setup:
 	cd evals && uv sync
 
