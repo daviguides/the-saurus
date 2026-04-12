@@ -1,0 +1,615 @@
+{
+  "events": [
+    {
+      "event_id": "7ab0192f-756a-439a-ab40-533d7ee0ae20",
+      "event_type": "job_created",
+      "timestamp": "2026-04-12T16:00:46.007826Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "paper_count": 2,
+        "filenames": [
+          "circadian_rest_activity_cognition.pdf",
+          "exercise_cognitive_function_brain.pdf"
+        ]
+      }
+    },
+    {
+      "event_id": "ac61cc47-e12e-409a-8257-7069e0d9bef2",
+      "event_type": "job_started",
+      "timestamp": "2026-04-12T16:00:46.038904Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "paper_count": 2
+      }
+    },
+    {
+      "event_id": "237fd73f-c87f-4a75-bc90-e9f945ce9a59",
+      "event_type": "stage_started",
+      "timestamp": "2026-04-12T16:00:46.039486Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "stage": "paper_analysis",
+        "total": 2
+      }
+    },
+    {
+      "event_id": "e0aa6cf5-fa79-42aa-b2c3-c6852850f89d",
+      "event_type": "agent_started",
+      "timestamp": "2026-04-12T16:00:46.041837Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "agent_name": "PaperAnalyzer",
+        "stage": "paper_analysis",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "model": "gemini-2.5-flash",
+        "message": "Analyzing 'Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions'...",
+        "technical_message": "[PaperAnalyzer]"
+      }
+    },
+    {
+      "event_id": "5f48aa71-6c8a-42fd-bc2b-0ad175bebb91",
+      "event_type": "agent_started",
+      "timestamp": "2026-04-12T16:00:46.042803Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "agent_name": "PaperAnalyzer",
+        "stage": "paper_analysis",
+        "paper_id": "550660da-9719-43f0-a2db-cc25cd71dc66",
+        "model": "gemini-2.5-flash",
+        "message": "Analyzing 'Editorial: Effects of Physical Exercise on Brain and Cognitive Functioning'...",
+        "technical_message": "[PaperAnalyzer]"
+      }
+    },
+    {
+      "event_id": "6eb9a3d1-a366-4e85-8206-a8c9de1623bc",
+      "event_type": "agent_content",
+      "timestamp": "2026-04-12T16:02:17.354632Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "agent_name": "PaperAnalyzer",
+        "stage": "paper_analysis",
+        "paper_id": "550660da-9719-43f0-a2db-cc25cd71dc66",
+        "content_len": 84294,
+        "content_type": "PaperAnalysisResult",
+        "message": "Generating response...",
+        "technical_message": "[PaperAnalyzer]"
+      }
+    },
+    {
+      "event_id": "162fb2fa-2d2d-446b-8f84-06e4dfed2c59",
+      "event_type": "agent_completed",
+      "timestamp": "2026-04-12T16:02:17.406561Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "agent_name": "PaperAnalyzer",
+        "stage": "paper_analysis",
+        "paper_id": "550660da-9719-43f0-a2db-cc25cd71dc66",
+        "elapsed_ms": 91365,
+        "message": "Analysis complete",
+        "technical_message": "[PaperAnalyzer] (91365ms)"
+      }
+    },
+    {
+      "event_id": "d49542e0-4c04-431e-9ede-5263adf7eef2",
+      "event_type": "agent_error",
+      "timestamp": "2026-04-12T16:02:17.407554Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "agent_name": "PaperAnalyzer",
+        "stage": "paper_analysis",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "error": "RunErrorEvent(created_at=1776009737, event='RunError', agent_id='paperanalyzer', agent_name='PaperAnalyzer', run_id='9bd13cbe-0214-4ed8-aa80-7712eda24a8f', parent_run_id=None, session_id='b43c4fd3-...",
+        "error_type": "",
+        "elapsed_ms": 91367,
+        "message": "Analysis failed",
+        "technical_message": "[PaperAnalyzer] (91367ms) ERROR: RunErrorEvent(created_at=1776009737, event='RunError', agent_id='paperanalyzer', agent_name='PaperAnalyzer', run_id='9bd13cbe-0214-4ed8-aa80-7712eda24a8f', parent_run_id=None, session_id='b43c4fd3-..."
+      }
+    },
+    {
+      "event_id": "4f8fd06e-2f85-4b49-bbcc-723c32828c11",
+      "event_type": "paper_processed",
+      "timestamp": "2026-04-12T16:02:18.159807Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "stage": "paper_analysis",
+        "item_id": "550660da-9719-43f0-a2db-cc25cd71dc66",
+        "completed": 1,
+        "total": 2,
+        "progress": 0.125
+      }
+    },
+    {
+      "event_id": "52437173-65d5-4a3b-a775-38b00fb55488",
+      "event_type": "agent_started",
+      "timestamp": "2026-04-12T16:02:24.316238Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "agent_name": "PaperAnalyzer",
+        "stage": "paper_analysis",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "model": "gemini-2.5-flash",
+        "message": "Analyzing 'Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions'...",
+        "technical_message": "[PaperAnalyzer]"
+      }
+    },
+    {
+      "event_id": "45350bf0-7d2a-4327-af82-67ef7f413f80",
+      "event_type": "agent_content",
+      "timestamp": "2026-04-12T16:04:02.174902Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "agent_name": "PaperAnalyzer",
+        "stage": "paper_analysis",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "content_len": 73993,
+        "content_type": "PaperAnalysisResult",
+        "message": "Generating response...",
+        "technical_message": "[PaperAnalyzer]"
+      }
+    },
+    {
+      "event_id": "15fe3066-1822-4b9c-b4c8-90f8df18bc37",
+      "event_type": "agent_completed",
+      "timestamp": "2026-04-12T16:04:02.244246Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "agent_name": "PaperAnalyzer",
+        "stage": "paper_analysis",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "elapsed_ms": 97929,
+        "message": "Analysis complete",
+        "technical_message": "[PaperAnalyzer] (97929ms)"
+      }
+    },
+    {
+      "event_id": "55afbc7d-b5df-4270-a5e9-474e0a426269",
+      "event_type": "paper_processed",
+      "timestamp": "2026-04-12T16:04:03.044147Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "stage": "paper_analysis",
+        "item_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "completed": 2,
+        "total": 2,
+        "progress": 0.25
+      }
+    },
+    {
+      "event_id": "da180796-fd4a-40bd-a58b-b4c1c3e61de4",
+      "event_type": "paper_analyzed",
+      "timestamp": "2026-04-12T16:04:03.082042Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "theme_count": 9,
+        "claim_count": 114
+      }
+    },
+    {
+      "event_id": "82ca356e-7431-4152-a390-3b9008f3b791",
+      "event_type": "paper_analyzed",
+      "timestamp": "2026-04-12T16:04:03.118975Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "paper_id": "550660da-9719-43f0-a2db-cc25cd71dc66",
+        "theme_count": 8,
+        "claim_count": 46
+      }
+    },
+    {
+      "event_id": "76f0908a-5863-44f1-9328-3396e2b7e9cb",
+      "event_type": "stage_completed",
+      "timestamp": "2026-04-12T16:04:03.121835Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "stage": "paper_analysis",
+        "progress": 0.25
+      }
+    },
+    {
+      "event_id": "cb3bc572-6940-4740-9c02-0f1c87f592c4",
+      "event_type": "stage_started",
+      "timestamp": "2026-04-12T16:04:03.122355Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "stage": "theme_dedup",
+        "total": 1
+      }
+    },
+    {
+      "event_id": "bf87c83d-f13c-4fac-b089-8fb79af8c3a4",
+      "event_type": "agent_started",
+      "timestamp": "2026-04-12T16:04:03.123757Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "agent_name": "ThemeDedup",
+        "stage": "theme_dedup",
+        "model": "gemini-2.5-flash",
+        "message": "Deduplicating 17 themes across papers...",
+        "technical_message": "[ThemeDedup]"
+      }
+    },
+    {
+      "event_id": "cc4aa3cb-c280-49f4-8cd2-33f822b124c0",
+      "event_type": "agent_content",
+      "timestamp": "2026-04-12T16:04:20.494212Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "agent_name": "ThemeDedup",
+        "stage": "theme_dedup",
+        "content_len": 3211,
+        "content_type": "ThemeDedupResult",
+        "message": "Generating response...",
+        "technical_message": "[ThemeDedup]"
+      }
+    },
+    {
+      "event_id": "f9c6ddd0-0bc2-4ee7-a59a-4525be4f33fe",
+      "event_type": "agent_completed",
+      "timestamp": "2026-04-12T16:04:20.503633Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "agent_name": "ThemeDedup",
+        "stage": "theme_dedup",
+        "elapsed_ms": 17380,
+        "message": "Deduplication complete",
+        "technical_message": "[ThemeDedup] (17380ms)"
+      }
+    },
+    {
+      "event_id": "25a28def-97ed-4d0b-8fdc-9bea8ad5c45c",
+      "event_type": "theme_deduplicated",
+      "timestamp": "2026-04-12T16:04:21.249461Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "theme_count": 10
+      }
+    },
+    {
+      "event_id": "50a5631d-2644-4f1a-a7c6-fd4d4afbe381",
+      "event_type": "stage_completed",
+      "timestamp": "2026-04-12T16:04:21.252182Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "stage": "theme_dedup",
+        "progress": 0.5
+      }
+    },
+    {
+      "event_id": "a4173419-c5dd-486e-9cf0-7c8a8fe9d5ff",
+      "event_type": "stage_started",
+      "timestamp": "2026-04-12T16:04:21.253073Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "stage": "theme_review",
+        "total": 10
+      }
+    },
+    {
+      "event_id": "b040c4fe-6d6c-4677-8c2c-1e49b6d6dd77",
+      "event_type": "agent_started",
+      "timestamp": "2026-04-12T16:04:21.255609Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "agent_name": "ThemeReviewer",
+        "stage": "theme_review",
+        "model": "gemini-2.5-flash",
+        "message": "Reviewing themes (batch {batch})...",
+        "technical_message": "[ThemeReviewer]"
+      }
+    },
+    {
+      "event_id": "23f2d79a-9c02-4b38-ab7e-5c3b149f113e",
+      "event_type": "agent_started",
+      "timestamp": "2026-04-12T16:04:21.257650Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "agent_name": "ThemeReviewer",
+        "stage": "theme_review",
+        "model": "gemini-2.5-flash",
+        "message": "Reviewing themes (batch {batch})...",
+        "technical_message": "[ThemeReviewer]"
+      }
+    },
+    {
+      "event_id": "e7722fed-3127-41ee-9058-d5d8b0f65373",
+      "event_type": "agent_content",
+      "timestamp": "2026-04-12T16:04:57.875946Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "agent_name": "ThemeReviewer",
+        "stage": "theme_review",
+        "content_len": 17565,
+        "content_type": "BatchThemeReviewResult",
+        "message": "Generating response...",
+        "technical_message": "[ThemeReviewer]"
+      }
+    },
+    {
+      "event_id": "178eeb66-4d69-43bc-bb6e-92e30cfcc0ce",
+      "event_type": "agent_completed",
+      "timestamp": "2026-04-12T16:04:57.898744Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "agent_name": "ThemeReviewer",
+        "stage": "theme_review",
+        "elapsed_ms": 36641,
+        "message": "Theme review complete",
+        "technical_message": "[ThemeReviewer] (36641ms)"
+      }
+    },
+    {
+      "event_id": "507436e3-e94b-4555-b56b-43c79089ec89",
+      "event_type": "agent_error",
+      "timestamp": "2026-04-12T16:04:57.900053Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "agent_name": "ThemeReviewer",
+        "stage": "theme_review",
+        "error": "RunErrorEvent(created_at=1776009897, event='RunError', agent_id='themereviewer', agent_name='ThemeReviewer', run_id='45c4512a-6467-41dd-aa49-629ca2a1dccd', parent_run_id=None, session_id='54f7765a-...",
+        "error_type": "",
+        "elapsed_ms": 36643,
+        "message": "Theme review failed",
+        "technical_message": "[ThemeReviewer] (36643ms) ERROR: RunErrorEvent(created_at=1776009897, event='RunError', agent_id='themereviewer', agent_name='ThemeReviewer', run_id='45c4512a-6467-41dd-aa49-629ca2a1dccd', parent_run_id=None, session_id='54f7765a-..."
+      }
+    },
+    {
+      "event_id": "e9594620-3fe5-40f6-8755-6ce0d96b0ae1",
+      "event_type": "agent_started",
+      "timestamp": "2026-04-12T16:05:04.391830Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "agent_name": "ThemeReviewer",
+        "stage": "theme_review",
+        "model": "gemini-2.5-flash",
+        "message": "Reviewing themes (batch {batch})...",
+        "technical_message": "[ThemeReviewer]"
+      }
+    },
+    {
+      "event_id": "ced84a4d-908c-41cb-9758-a583e7d40a78",
+      "event_type": "agent_content",
+      "timestamp": "2026-04-12T16:06:49.705602Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "agent_name": "ThemeReviewer",
+        "stage": "theme_review",
+        "content_len": 25016,
+        "content_type": "BatchThemeReviewResult",
+        "message": "Generating response...",
+        "technical_message": "[ThemeReviewer]"
+      }
+    },
+    {
+      "event_id": "9e781066-f8f1-44b2-b6be-ae949e9f966c",
+      "event_type": "agent_completed",
+      "timestamp": "2026-04-12T16:06:49.730932Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "agent_name": "ThemeReviewer",
+        "stage": "theme_review",
+        "elapsed_ms": 105340,
+        "message": "Theme review complete",
+        "technical_message": "[ThemeReviewer] (105340ms)"
+      }
+    },
+    {
+      "event_id": "8923b58f-117a-458b-a27d-2038f0b4083e",
+      "event_type": "paper_processed",
+      "timestamp": "2026-04-12T16:06:50.441011Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "stage": "theme_review",
+        "item_id": "eb1dfd30-8496-4b1e-9938-e17a86365366",
+        "completed": 1,
+        "total": 10,
+        "progress": 0.525
+      }
+    },
+    {
+      "event_id": "5a8b366e-80ea-42d5-b8fa-3059c5f591ff",
+      "event_type": "paper_processed",
+      "timestamp": "2026-04-12T16:06:50.445614Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "stage": "theme_review",
+        "item_id": "5aa6c3eb-0875-411e-a50e-92adbcf726ee",
+        "completed": 2,
+        "total": 10,
+        "progress": 0.55
+      }
+    },
+    {
+      "event_id": "0ffaab08-8857-4c58-bdb8-0b20b2775e54",
+      "event_type": "paper_processed",
+      "timestamp": "2026-04-12T16:06:50.449855Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "stage": "theme_review",
+        "item_id": "5e4c659a-3a07-4f48-b776-c25f620445b3",
+        "completed": 3,
+        "total": 10,
+        "progress": 0.575
+      }
+    },
+    {
+      "event_id": "40eb76bc-7248-4054-a66c-cc0bf6cbb76e",
+      "event_type": "paper_processed",
+      "timestamp": "2026-04-12T16:06:50.454296Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "stage": "theme_review",
+        "item_id": "7488f656-94f9-4862-b4d7-d15d037e792e",
+        "completed": 4,
+        "total": 10,
+        "progress": 0.6
+      }
+    },
+    {
+      "event_id": "e35f229a-6a29-40af-8b39-a4ead15c0d0b",
+      "event_type": "paper_processed",
+      "timestamp": "2026-04-12T16:06:50.457257Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "stage": "theme_review",
+        "item_id": "f5ddde3f-1817-4dca-a734-e7a1ac0b8e24",
+        "completed": 5,
+        "total": 10,
+        "progress": 0.625
+      }
+    },
+    {
+      "event_id": "60ea4f71-849d-416b-acb3-e7d41a5ba1e5",
+      "event_type": "paper_processed",
+      "timestamp": "2026-04-12T16:06:50.460142Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "stage": "theme_review",
+        "item_id": "a7a55d90-4104-4090-9543-62a1ab448946",
+        "completed": 6,
+        "total": 10,
+        "progress": 0.65
+      }
+    },
+    {
+      "event_id": "f2c36fe0-f64c-4084-8040-5ffbdbb66022",
+      "event_type": "paper_processed",
+      "timestamp": "2026-04-12T16:06:50.462607Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "stage": "theme_review",
+        "item_id": "b8c409bf-7d3c-4025-9709-e947f7362883",
+        "completed": 7,
+        "total": 10,
+        "progress": 0.675
+      }
+    },
+    {
+      "event_id": "5e7c949a-eb6e-4c62-b6f0-504554c4cef8",
+      "event_type": "paper_processed",
+      "timestamp": "2026-04-12T16:06:50.465278Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "stage": "theme_review",
+        "item_id": "b3a30c26-619e-446f-a353-b5701680147e",
+        "completed": 8,
+        "total": 10,
+        "progress": 0.7
+      }
+    },
+    {
+      "event_id": "8995881a-8409-4d64-8d62-01364aecb11b",
+      "event_type": "paper_processed",
+      "timestamp": "2026-04-12T16:06:50.467940Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "stage": "theme_review",
+        "item_id": "9d69965d-af65-4417-a847-f69d20444203",
+        "completed": 9,
+        "total": 10,
+        "progress": 0.725
+      }
+    },
+    {
+      "event_id": "77a33465-8f9d-444b-a984-6d02abee2d90",
+      "event_type": "paper_processed",
+      "timestamp": "2026-04-12T16:06:50.470181Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "stage": "theme_review",
+        "item_id": "617b4768-156e-45f7-a8f3-bda331eef29c",
+        "completed": 10,
+        "total": 10,
+        "progress": 0.75
+      }
+    },
+    {
+      "event_id": "ea97fe0e-6c0a-4b13-b4c0-49a8a374d192",
+      "event_type": "stage_completed",
+      "timestamp": "2026-04-12T16:06:50.470641Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "stage": "theme_review",
+        "progress": 0.75
+      }
+    },
+    {
+      "event_id": "e345fb26-1653-4452-935c-ff5dde7a68d0",
+      "event_type": "stage_started",
+      "timestamp": "2026-04-12T16:06:50.471101Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "stage": "aggregation",
+        "total": 1
+      }
+    },
+    {
+      "event_id": "88cc1686-b1bd-4db1-a831-cee3e2712b2c",
+      "event_type": "agent_started",
+      "timestamp": "2026-04-12T16:06:50.473016Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "agent_name": "Aggregator",
+        "stage": "aggregation",
+        "model": "gemini-2.5-flash",
+        "message": "Synthesizing literature review from 10 themes...",
+        "technical_message": "[Aggregator]"
+      }
+    },
+    {
+      "event_id": "9945de32-c2b1-4c15-b7f9-743d54b03b05",
+      "event_type": "agent_content",
+      "timestamp": "2026-04-12T16:07:39.741191Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "agent_name": "Aggregator",
+        "stage": "aggregation",
+        "content_len": 20870,
+        "content_type": "AggregatorResult",
+        "message": "Generating response...",
+        "technical_message": "[Aggregator]"
+      }
+    },
+    {
+      "event_id": "29fc9b5f-4275-452e-8052-a4c17243cbdd",
+      "event_type": "agent_completed",
+      "timestamp": "2026-04-12T16:07:39.781719Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "agent_name": "Aggregator",
+        "stage": "aggregation",
+        "elapsed_ms": 49309,
+        "message": "Literature review generated",
+        "technical_message": "[Aggregator] (49309ms)"
+      }
+    },
+    {
+      "event_id": "f5b9ee4c-0d4c-4df4-8b80-12548f2c18b7",
+      "event_type": "review_generated",
+      "timestamp": "2026-04-12T16:07:40.505651Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "title": "Circadian Rhythms, Physical Activity, and Cognitive Health Across the Lifespan"
+      }
+    },
+    {
+      "event_id": "9168e963-6eff-4762-9d05-8d9f4f420fc8",
+      "event_type": "stage_completed",
+      "timestamp": "2026-04-12T16:07:40.507410Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "stage": "aggregation",
+        "progress": 1.0
+      }
+    },
+    {
+      "event_id": "92c9a764-4447-4b4b-a248-6a379797194e",
+      "event_type": "job_completed",
+      "timestamp": "2026-04-12T16:07:41.433271Z",
+      "job_id": "85d11d10-cbf7-4b83-b130-a6d8f347977e",
+      "payload": {
+        "progress": 1.0
+      }
+    }
+  ]
+}

@@ -1,0 +1,840 @@
+{
+  "review": {
+    "title": "Circadian Rhythms, Physical Activity, and Cognitive Health Across the Lifespan",
+    "abstract": "This literature review synthesizes current research on the interplay between Circadian Rest-Activity Rhythms (CRARs), physical activity, and cognitive function. CRARs, typically measured via actigraphy, are linked to memory performance, with their associations significantly modulated by demographic factors such as age, sex, race, and APOE e4 status. Concurrently, a physically active lifestyle consistently demonstrates benefits for cognitive health and brain plasticity across all age groups, mitigating risks of cognitive decline and neurodegeneration. While direct main effects of CRARs on diverse cognitive domains are limited, integrated physical and cognitive training shows superior cognitive advantages. Future research should focus on replicating findings in diverse cohorts, elucidating underlying mechanisms, and developing targeted interventions.",
+    "sections": [
+      {
+        "theme_id": "Circadian Rest-Activity Rhythms (CRARs) Characterization",
+        "label": "Circadian Rest-Activity Rhythms (CRARs) Characterization",
+        "content": "Circadian Rest-Activity Rhythms (CRARs) are commonly quantified as 24-hour activity profiles derived from wrist actigraph data, serving as a reliable proxy for human circadian rhythms [1, 2]. These rhythms are characterized using a comprehensive suite of metrics encompassing rhythm strength (e.g., amplitude, relative amplitude, interdaily stability, mesor), timing (e.g., acrophase, L5, M10), and fragmentation (e.g., intradaily variability) [3](cite:3 \"p.2,§2\"). Research indicates that aging significantly influences CRARs, leading to characteristic alterations such as reduced amplitude and earlier activity peaks, which are hypothesized to subsequently impact cognitive function in later life [4](cite:4 \"p.2,§8\"). Existing literature further suggests that greater fragmentation, weaker strength, and delayed phase of CRARs are generally associated with poorer cognitive performance and accelerated cognitive decline [5](cite:5 \"p.3,§2\").",
+        "claim_ids": [
+          "0ac2005f-370d-49a4-8d91-130d21264eb8",
+          "5fd9e92b-aa79-47bc-9ffb-9327682087ca",
+          "9669df4b-e0e1-4045-aefc-4fe1f5e51521",
+          "7f0ad760-b6c8-47e1-9b82-72a47d343d0f",
+          "9389b535-de62-4ad6-ab19-7ff672660c1a"
+        ],
+        "citation_refs": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      {
+        "theme_id": "Main Effects of CRARs on Cognition",
+        "label": "Main Effects of CRARs on Cognition",
+        "content": "Direct associations between CRARs and cognitive performance appear to be primarily concentrated on memory function. Specifically, a later L5 time, indicating a delayed circadian phase, has been cross-sectionally linked to poorer memory performance [6, 7]. Conversely, robust rhythm stability, quantified by greater interdaily stability, consistently predicts slower longitudinal memory decline in middle-aged and older adults [6, 8]. Despite these findings, fully adjusted models generally reveal a notable absence of significant main effects of CRARs on other cognitive domains, including language ability, executive function, visuospatial performance, and attention [9](cite:9 \"p.7,§24\"). This suggests that while CRARs have a direct role in memory, their influence on other cognitive functions may be indirect or complex, often manifesting through interactions with participant characteristics rather than standalone main effects [10](cite:10 \"p.9,§32\").",
+        "claim_ids": [
+          "12757c78-f272-481a-a1cb-da3e366abd6c",
+          "2b7c12af-35ed-4df5-b20d-926e292fef11",
+          "a22a0609-2f68-4fdf-9d5b-7ccc48160a5b",
+          "0eb71de0-52ce-4b4b-8ea4-bbfc3fdd9bd2",
+          "d8bceca8-5e03-411e-9708-cc95977f7ef1"
+        ],
+        "citation_refs": [
+          6,
+          7,
+          8,
+          9,
+          10
+        ]
+      },
+      {
+        "theme_id": "Moderators of CRAR-Cognition Associations",
+        "label": "Moderators of CRAR-Cognition Associations",
+        "content": "The associations between CRARs and cognitive performance or decline are not uniform but are significantly moderated by several key demographic and genetic factors, including age, sex, race, and APOE e4 carrier status [11](cite:11 \"p.2,§3\"). Age, for instance, often presents as a crucial moderator, revealing divergent or even opposing relationships between specific CRAR parameters and cognitive outcomes, such as language or visuospatial performance, when comparing younger older adults (e.g., age 65) to older older adults (e.g., age 85). Sex also plays a moderating role, exemplified by greater interdaily stability correlating with better visuospatial performance exclusively in men, but not in women [12](cite:12 \"p.10,§31\").\n\nRace-based differences are particularly salient, with CRAR associations with longitudinal changes in language and visuospatial performance often being stronger or even reversed in Black participants compared to White participants. This suggests that circadian rhythmicity might be a more potent predictor of cognitive change within Black adult populations [13](cite:13 \"p.12,§28\"). Furthermore, APOE e4 carrier status consistently intensifies the associations between CRAR parameters and cognitive outcomes, supporting a 'dual vulnerability' hypothesis. This hypothesis posits that a genetic predisposition for Alzheimer's disease, when combined with specific CRAR patterns, escalates the risk of cognitive decline [14](cite:14 \"p.12,§28\"). These findings highlight the intricate and individualized nature of CRAR-cognition relationships, emphasizing the importance of considering these moderating factors in future research and clinical applications.",
+        "claim_ids": [
+          "3af0f972-4d37-4633-8511-97456b2c71ac",
+          "c3f7f75e-a276-4e49-8e1a-c29b0e4bf2dc",
+          "bb188ff4-07fd-4d9e-b2c2-d4420ecb25e3",
+          "886fe99a-c975-4dc1-b750-90309054f716"
+        ],
+        "citation_refs": [
+          11,
+          12,
+          13,
+          14
+        ]
+      },
+      {
+        "theme_id": "Study Design and Methodology",
+        "label": "Study Design and Methodology",
+        "content": "A robust longitudinal design, drawing participants from the Baltimore Longitudinal Study of Aging (BLSA), was employed to investigate these relationships. The study included 422 cognitively healthy adults aged 50 and above, with a substantial portion undergoing repeat cognitive assessments over an average period of 3.12 years [15](cite:15 \"p.1,§19\"). Circadian Rest-Activity Rhythms were assessed using Actiwatch-2 wrist actigraphs, with data collected over seven 24-hour periods to capture activity counts and ambient light [16](cite:16 \"p.3,§8\").\n\nThe actigraphy data underwent rigorous preprocessing in R, involving removal of missing data, log-transformation, and averaging activity counts into 10-minute bins to derive subject-specific rest-activity rhythms [17](cite:17 \"p.4,§2\"). Both parametric cosinor CRAR metrics, assuming a cosine curve, were computed using the 'cosinor' package [18](cite:18 \"p.4,§4\"), and non-parametric circadian indices were calculated using the 'ActCR' package, accommodating non-cosinor CRAR shapes [19](cite:19 \"p.4,§7\"). Cognitive performance across five domains was evaluated using standardized neuropsychological batteries, yielding composite z-scores for analysis. Linear mixed-effects models were the primary statistical approach, allowing for the examination of both cross-sectional associations of baseline CRARs with cognitive performance and longitudinal associations with cognitive change [20](cite:20 \"p.5,§4\"). Crucially, moderation by age, sex, race, and APOE e4 status on CRAR-cognition associations was investigated through two-way and three-way interaction terms in fully adjusted models [21](cite:21 \"p.5,§4\").",
+        "claim_ids": [
+          "631c67f2-f13d-4281-bd02-f9613b624782",
+          "501c14a7-20f0-4007-abf2-e18bbfdc17b8",
+          "77d28224-f5d6-46eb-bf44-516d01e1d53a",
+          "9e15666b-f513-4977-b715-675abcff2baa",
+          "3da034fd-6589-44b7-b59e-2cd1050aeb83",
+          "621723f3-0a19-41dc-8ec6-1832dbf12720",
+          "d7f8907a-b23e-460b-9d95-811635412ebb"
+        ],
+        "citation_refs": [
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21
+        ]
+      },
+      {
+        "theme_id": "Study Limitations",
+        "label": "Study Limitations",
+        "content": "Despite its comprehensive approach, the study acknowledges several limitations that warrant consideration for the interpretation and generalizability of its findings. A primary concern is the inherent risk of Type I error and potential false positives due to the extensive number of statistical comparisons performed. This decision was made to mitigate Type II errors given the novel scope of the research [22, 23]. A significant constraint on generalizability arises from the use of a highly educated and exceptionally healthy sample of older adults from the BLSA cohort. This limits the direct applicability of the results to the broader, more diverse older adult population, which often includes individuals with varying health statuses and socioeconomic backgrounds [24](cite:24 \"p.13,§3\"). Additionally, the relatively short duration of actigraphy data collection is identified as a methodological shortcoming that could impact the precision and stability of CRAR parameter estimates [25](cite:25 \"p.13,§3\"). To address these issues, future research necessitates replication in more representative and independent cohorts to validate and extend these findings [26](cite:26 \"p.13,§3\").",
+        "claim_ids": [
+          "acfbb3a0-f792-4532-9048-9f6547ddbc8f",
+          "ba839629-41a7-4aa9-a0cb-a009bd568840",
+          "cd23f2f6-bb14-493e-8d13-f1f2a7a596b3",
+          "ac3b0312-123a-47a6-ba3b-0f533f64c255",
+          "08e25e49-7ff4-4e74-86c9-2c95db1e8663"
+        ],
+        "citation_refs": [
+          22,
+          23,
+          24,
+          25,
+          26
+        ]
+      },
+      {
+        "theme_id": "Future Research Directions and Implications",
+        "label": "Future Research Directions and Implications",
+        "content": "Moving forward, a critical area for future research involves further investigation into the intricate mechanisms that connect CRARs to cognition throughout the lifespan [27](cite:27 \"p.10,§30\"). There is a pronounced need for replication of findings in larger, independent samples, ideally utilizing more robust cognitive outcomes such as mild cognitive impairment (MCI) and dementia, and incorporating Alzheimer's disease (AD) biomarkers to elucidate underlying neurodegenerative processes [30](cite:30 \"p.13,§3\"). Furthermore, research should focus on exploring sex differences, genetic predispositions, and the impact of CRARs in conjunction with social and environmental factors, such as discrimination, on cognitive health in vulnerable populations like Black adults [28](cite:28 \"p.12,§28\"). The development and evaluation of cognitive health interventions targeting CRARs in older adults, particularly in these identified vulnerable subgroups, are also highlighted as crucial next steps [29](cite:29 \"p.13,§2\"). Such interventions hold promise for enhancing overall brain health and preventing cognitive decline, underscoring the interconnectedness of daily rhythms and long-term well-being, which aligns with the broader benefits observed for physical activity.",
+        "claim_ids": [
+          "8ea4b8c7-e922-4736-9709-09c524caa6f0",
+          "37908d88-3aee-43c9-b6a5-308fefcd5359",
+          "2b65f1be-3bdd-4208-9a9a-f4fe399b8f5f",
+          "8951408c-37b5-4a5e-8d4b-f35419b87b77"
+        ],
+        "citation_refs": [
+          27,
+          28,
+          29,
+          30
+        ]
+      },
+      {
+        "theme_id": "Impact of Physical Activity on Cognition Across Lifespan",
+        "label": "Impact of Physical Activity on Cognition Across Lifespan",
+        "content": "Beyond circadian rhythms, a substantial body of evidence underscores the profound positive impact of a physically active lifestyle on cognitive function throughout the lifespan. Regular physical activity is consistently associated with a reduced risk of dementia, enhanced cognitive function, and favorable physiological changes within the brain [31](cite:31 \"p.1,§15\"). It plays a protective role against age-related cognitive decline by specifically improving executive functions and memory [33](cite:33 \"p.1,§15\"). Conversely, sedentary lifestyles are linked to increased risks of cardiovascular diseases and premature mortality, highlighting the detrimental effects of inactivity on overall health and cognition [32](cite:32 \"p.1,§15\"). Despite these observed benefits, a complete understanding of the precise mechanisms through which age and specific types of physical activity influence brain states remains an area requiring further investigation [34](cite:34 \"p.1,§15\").",
+        "claim_ids": [
+          "5853b0de-d252-4908-8a5e-cca1e044d801",
+          "3ac48f05-3181-4b1a-8022-ac435dfd57b7",
+          "0d444055-1a28-4626-8ed3-a909d1176d5c",
+          "e79ad879-29bf-4cb0-b000-8d399c3bac74"
+        ],
+        "citation_refs": [
+          31,
+          32,
+          33,
+          34
+        ]
+      },
+      {
+        "theme_id": "Brain Plasticity and Neural Mechanisms of Physical Activity",
+        "label": "Brain Plasticity and Neural Mechanisms of Physical Activity",
+        "content": "The brain's remarkable capacity for lifelong plasticity and its ability to adapt to environmental changes through modifications in function and neural connectivity are significantly influenced by physical activity [35](cite:35 \"p.1,§15\"). Studies demonstrate that an individual's baseline brain organization, particularly network modularity, can predict training outcomes related to executive functions and overall cognition in children [36](cite:36 \"p.1,§17\"). Long-term motor training, as evidenced in athletes, is associated with substantial functional reorganization of the brain and enhanced neural efficiency [37](cite:37 \"p.2,§3\"). Acute physical interventions also show promise; for instance, short walking breaks have been observed to improve working memory performance while simultaneously reducing cerebral blood flow, suggesting a neural efficiency effect where the brain operates more effectively with less effort [38](cite:38 \"p.2,§4\"). In older adults, sustained aerobic exercise has been shown to improve cardiovascular fitness and preserve the structural integrity of gray matter in crucial brain regions, further illustrating the neuroprotective benefits of an active lifestyle [39](cite:39 \"p.2,§6\").",
+        "claim_ids": [
+          "2728d685-6105-4225-920e-ef429a44b92f",
+          "c6930328-da6c-4422-8bfb-6d0dcdba224e",
+          "0466913c-52e0-4549-af58-1968781dad07",
+          "fe535586-d905-441d-bf6d-87c4af188515",
+          "ff82c1d8-46b7-49ee-8d90-3556dc0d93b4"
+        ],
+        "citation_refs": [
+          35,
+          36,
+          37,
+          38,
+          39
+        ]
+      },
+      {
+        "theme_id": "Physical Activity and Cognition in Specific Populations and Conditions",
+        "label": "Physical Activity and Cognition in Specific Populations and Conditions",
+        "content": "The cognitive benefits of physical activity are evident across diverse populations and conditions, with varied impacts depending on age and individual health status. In children, the effectiveness of physical activity in improving cognition and scholastic performance is influenced by their baseline brain organization [40](cite:40 \"p.2,§2\"). Adolescents who participate in sports demonstrate positive impacts on fluid reasoning and critical soft skills [41](cite:41 \"p.2,§2\"). Young adults show a correlation between physical activity levels, executive functions, and inhibitory control [42](cite:42 \"p.2,§3\"). For middle-aged adults, both acute resistance training and short walking breaks enhance executive functions and improve performance on cognitively demanding tasks [43](cite:43 \"p.2,§4\"), while sedentary behavior is generally detrimental to cognitive performance. In older adults, interventions focusing on aerobic fitness contribute to the maintenance of brain health.\n\nCrucially, individuals with Type 2 Diabetes Mellitus (T2DM), a population particularly vulnerable to cognitive decline, especially in memory and executive functions, derive significant cognitive benefits from exercise. Research indicates that exercise alone significantly improves global cognition in T2DM patients, irrespective of the specific intervention type, duration, or their existing cognitive impairment [44](cite:44 \"p.2,§7\"). This highlights physical activity as a potent and broadly effective intervention for preserving and enhancing cognitive function across various life stages and health challenges.",
+        "claim_ids": [
+          "1631d75e-2af0-4a46-ba18-6b327c08abc3",
+          "eacc6f21-1f19-4d89-af25-8b76356abd00",
+          "7ac2d8b2-f660-4b11-a9fe-c4ec6c226156",
+          "77854b3f-9512-47ad-b831-e942402f7653",
+          "b15d4ccb-4072-4efd-ab52-1110d383c97f"
+        ],
+        "citation_refs": [
+          40,
+          41,
+          42,
+          43,
+          44
+        ]
+      },
+      {
+        "theme_id": "Combined Physical and Cognitive Training Interventions",
+        "label": "Combined Physical and Cognitive Training Interventions",
+        "content": "Given the individual benefits of both physical activity and cognitive engagement, research has explored the efficacy of combined training interventions. A comprehensive systematic review and meta-analysis assessing these combined approaches, particularly in healthy older adults, concluded that such integrated training offered a small but sustained advantage on overall cognitive outcomes [45, 46]. Specifically, this approach proved more beneficial than single cognitive training for improving critical functions such as attention, executive functions, and processing speed [47](cite:47 \"p.2,§7\"). The findings further suggest that the cognitive benefits of these interventions are maximized when delivered in social settings, indicating a potential social interaction component in enhancing efficacy. However, it was also noted that individual training could yield comparable improvements in physical attributes like balance, suggesting nuances in modality and setting effectiveness across different outcomes [48](cite:48 \"p.2,§7\"). These results underscore the potential of holistic intervention strategies for promoting cognitive health in aging populations.",
+        "claim_ids": [
+          "60e32330-fed7-43a3-bb50-8172c03b8381",
+          "376e81f9-bbbf-4417-b72a-2a5e804f994a",
+          "80725a38-3e55-4102-b894-2b14e3ed9904",
+          "db47e3e6-0f3d-42a8-9730-78f47eb3f2dc"
+        ],
+        "citation_refs": [
+          45,
+          46,
+          47,
+          48
+        ]
+      }
+    ],
+    "citations": [
+      {
+        "ref_number": 1,
+        "claim_id": "0ac2005f-370d-49a4-8d91-130d21264eb8",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 1,
+        "paragraph": 18
+      },
+      {
+        "ref_number": 2,
+        "claim_id": "5fd9e92b-aa79-47bc-9ffb-9327682087ca",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 2,
+        "paragraph": 8
+      },
+      {
+        "ref_number": 3,
+        "claim_id": "9669df4b-e0e1-4045-aefc-4fe1f5e51521",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 2,
+        "paragraph": 2
+      },
+      {
+        "ref_number": 4,
+        "claim_id": "7f0ad760-b6c8-47e1-9b82-72a47d343d0f",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 2,
+        "paragraph": 8
+      },
+      {
+        "ref_number": 5,
+        "claim_id": "9389b535-de62-4ad6-ab19-7ff672660c1a",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 3,
+        "paragraph": 2
+      },
+      {
+        "ref_number": 6,
+        "claim_id": "12757c78-f272-481a-a1cb-da3e366abd6c",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 2,
+        "paragraph": 3
+      },
+      {
+        "ref_number": 7,
+        "claim_id": "2b7c12af-35ed-4df5-b20d-926e292fef11",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 5,
+        "paragraph": 9
+      },
+      {
+        "ref_number": 8,
+        "claim_id": "a22a0609-2f68-4fdf-9d5b-7ccc48160a5b",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 5,
+        "paragraph": 9
+      },
+      {
+        "ref_number": 9,
+        "claim_id": "0eb71de0-52ce-4b4b-8ea4-bbfc3fdd9bd2",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 7,
+        "paragraph": 24
+      },
+      {
+        "ref_number": 10,
+        "claim_id": "d8bceca8-5e03-411e-9708-cc95977f7ef1",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 9,
+        "paragraph": 32
+      },
+      {
+        "ref_number": 11,
+        "claim_id": "3af0f972-4d37-4633-8511-97456b2c71ac",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 2,
+        "paragraph": 3
+      },
+      {
+        "ref_number": 12,
+        "claim_id": "c3f7f75e-a276-4e49-8e1a-c29b0e4bf2dc",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 10,
+        "paragraph": 31
+      },
+      {
+        "ref_number": 13,
+        "claim_id": "bb188ff4-07fd-4d9e-b2c2-d4420ecb25e3",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 12,
+        "paragraph": 28
+      },
+      {
+        "ref_number": 14,
+        "claim_id": "886fe99a-c975-4dc1-b750-90309054f716",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 12,
+        "paragraph": 28
+      },
+      {
+        "ref_number": 15,
+        "claim_id": "631c67f2-f13d-4281-bd02-f9613b624782",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 1,
+        "paragraph": 19
+      },
+      {
+        "ref_number": 16,
+        "claim_id": "501c14a7-20f0-4007-abf2-e18bbfdc17b8",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 3,
+        "paragraph": 8
+      },
+      {
+        "ref_number": 17,
+        "claim_id": "77d28224-f5d6-46eb-bf44-516d01e1d53a",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 4,
+        "paragraph": 2
+      },
+      {
+        "ref_number": 18,
+        "claim_id": "9e15666b-f513-4977-b715-675abcff2baa",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 4,
+        "paragraph": 4
+      },
+      {
+        "ref_number": 19,
+        "claim_id": "3da034fd-6589-44b7-b59e-2cd1050aeb83",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 4,
+        "paragraph": 7
+      },
+      {
+        "ref_number": 20,
+        "claim_id": "621723f3-0a19-41dc-8ec6-1832dbf12720",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 5,
+        "paragraph": 4
+      },
+      {
+        "ref_number": 21,
+        "claim_id": "d7f8907a-b23e-460b-9d95-811635412ebb",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 5,
+        "paragraph": 4
+      },
+      {
+        "ref_number": 22,
+        "claim_id": "acfbb3a0-f792-4532-9048-9f6547ddbc8f",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 13,
+        "paragraph": 3
+      },
+      {
+        "ref_number": 23,
+        "claim_id": "ba839629-41a7-4aa9-a0cb-a009bd568840",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 13,
+        "paragraph": 3
+      },
+      {
+        "ref_number": 24,
+        "claim_id": "cd23f2f6-bb14-493e-8d13-f1f2a7a596b3",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 13,
+        "paragraph": 3
+      },
+      {
+        "ref_number": 25,
+        "claim_id": "ac3b0312-123a-47a6-ba3b-0f533f64c255",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 13,
+        "paragraph": 3
+      },
+      {
+        "ref_number": 26,
+        "claim_id": "08e25e49-7ff4-4e74-86c9-2c95db1e8663",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 13,
+        "paragraph": 3
+      },
+      {
+        "ref_number": 27,
+        "claim_id": "8ea4b8c7-e922-4736-9709-09c524caa6f0",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 10,
+        "paragraph": 30
+      },
+      {
+        "ref_number": 28,
+        "claim_id": "37908d88-3aee-43c9-b6a5-308fefcd5359",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 12,
+        "paragraph": 28
+      },
+      {
+        "ref_number": 29,
+        "claim_id": "2b65f1be-3bdd-4208-9a9a-f4fe399b8f5f",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 13,
+        "paragraph": 2
+      },
+      {
+        "ref_number": 30,
+        "claim_id": "8951408c-37b5-4a5e-8d4b-f35419b87b77",
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "page": 13,
+        "paragraph": 3
+      },
+      {
+        "ref_number": 31,
+        "claim_id": "5853b0de-d252-4908-8a5e-cca1e044d801",
+        "paper_id": "550660da-9719-43f0-a2db-cc25cd71dc66",
+        "paper_title": "Editorial: Effects of Physical Exercise on Brain and Cognitive Functioning",
+        "page": 1,
+        "paragraph": 15
+      },
+      {
+        "ref_number": 32,
+        "claim_id": "3ac48f05-3181-4b1a-8022-ac435dfd57b7",
+        "paper_id": "550660da-9719-43f0-a2db-cc25cd71dc66",
+        "paper_title": "Editorial: Effects of Physical Exercise on Brain and Cognitive Functioning",
+        "page": 1,
+        "paragraph": 15
+      },
+      {
+        "ref_number": 33,
+        "claim_id": "0d444055-1a28-4626-8ed3-a909d1176d5c",
+        "paper_id": "550660da-9719-43f0-a2db-cc25cd71dc66",
+        "paper_title": "Editorial: Effects of Physical Exercise on Brain and Cognitive Functioning",
+        "page": 1,
+        "paragraph": 15
+      },
+      {
+        "ref_number": 34,
+        "claim_id": "e79ad879-29bf-4cb0-b000-8d399c3bac74",
+        "paper_id": "550660da-9719-43f0-a2db-cc25cd71dc66",
+        "paper_title": "Editorial: Effects of Physical Exercise on Brain and Cognitive Functioning",
+        "page": 1,
+        "paragraph": 15
+      },
+      {
+        "ref_number": 35,
+        "claim_id": "2728d685-6105-4225-920e-ef429a44b92f",
+        "paper_id": "550660da-9719-43f0-a2db-cc25cd71dc66",
+        "paper_title": "Editorial: Effects of Physical Exercise on Brain and Cognitive Functioning",
+        "page": 1,
+        "paragraph": 15
+      },
+      {
+        "ref_number": 36,
+        "claim_id": "c6930328-da6c-4422-8bfb-6d0dcdba224e",
+        "paper_id": "550660da-9719-43f0-a2db-cc25cd71dc66",
+        "paper_title": "Editorial: Effects of Physical Exercise on Brain and Cognitive Functioning",
+        "page": 1,
+        "paragraph": 17
+      },
+      {
+        "ref_number": 37,
+        "claim_id": "0466913c-52e0-4549-af58-1968781dad07",
+        "paper_id": "550660da-9719-43f0-a2db-cc25cd71dc66",
+        "paper_title": "Editorial: Effects of Physical Exercise on Brain and Cognitive Functioning",
+        "page": 2,
+        "paragraph": 3
+      },
+      {
+        "ref_number": 38,
+        "claim_id": "fe535586-d905-441d-bf6d-87c4af188515",
+        "paper_id": "550660da-9719-43f0-a2db-cc25cd71dc66",
+        "paper_title": "Editorial: Effects of Physical Exercise on Brain and Cognitive Functioning",
+        "page": 2,
+        "paragraph": 4
+      },
+      {
+        "ref_number": 39,
+        "claim_id": "ff82c1d8-46b7-49ee-8d90-3556dc0d93b4",
+        "paper_id": "550660da-9719-43f0-a2db-cc25cd71dc66",
+        "paper_title": "Editorial: Effects of Physical Exercise on Brain and Cognitive Functioning",
+        "page": 2,
+        "paragraph": 6
+      },
+      {
+        "ref_number": 40,
+        "claim_id": "1631d75e-2af0-4a46-ba18-6b327c08abc3",
+        "paper_id": "550660da-9719-43f0-a2db-cc25cd71dc66",
+        "paper_title": "Editorial: Effects of Physical Exercise on Brain and Cognitive Functioning",
+        "page": 2,
+        "paragraph": 2
+      },
+      {
+        "ref_number": 41,
+        "claim_id": "eacc6f21-1f19-4d89-af25-8b76356abd00",
+        "paper_id": "550660da-9719-43f0-a2db-cc25cd71dc66",
+        "paper_title": "Editorial: Effects of Physical Exercise on Brain and Cognitive Functioning",
+        "page": 2,
+        "paragraph": 2
+      },
+      {
+        "ref_number": 42,
+        "claim_id": "7ac2d8b2-f660-4b11-a9fe-c4ec6c226156",
+        "paper_id": "550660da-9719-43f0-a2db-cc25cd71dc66",
+        "paper_title": "Editorial: Effects of Physical Exercise on Brain and Cognitive Functioning",
+        "page": 2,
+        "paragraph": 3
+      },
+      {
+        "ref_number": 43,
+        "claim_id": "77854b3f-9512-47ad-b831-e942402f7653",
+        "paper_id": "550660da-9719-43f0-a2db-cc25cd71dc66",
+        "paper_title": "Editorial: Effects of Physical Exercise on Brain and Cognitive Functioning",
+        "page": 2,
+        "paragraph": 4
+      },
+      {
+        "ref_number": 44,
+        "claim_id": "b15d4ccb-4072-4efd-ab52-1110d383c97f",
+        "paper_id": "550660da-9719-43f0-a2db-cc25cd71dc66",
+        "paper_title": "Editorial: Effects of Physical Exercise on Brain and Cognitive Functioning",
+        "page": 2,
+        "paragraph": 7
+      },
+      {
+        "ref_number": 45,
+        "claim_id": "60e32330-fed7-43a3-bb50-8172c03b8381",
+        "paper_id": "550660da-9719-43f0-a2db-cc25cd71dc66",
+        "paper_title": "Editorial: Effects of Physical Exercise on Brain and Cognitive Functioning",
+        "page": 2,
+        "paragraph": 7
+      },
+      {
+        "ref_number": 46,
+        "claim_id": "376e81f9-bbbf-4417-b72a-2a5e804f994a",
+        "paper_id": "550660da-9719-43f0-a2db-cc25cd71dc66",
+        "paper_title": "Editorial: Effects of Physical Exercise on Brain and Cognitive Functioning",
+        "page": 2,
+        "paragraph": 7
+      },
+      {
+        "ref_number": 47,
+        "claim_id": "80725a38-3e55-4102-b894-2b14e3ed9904",
+        "paper_id": "550660da-9719-43f0-a2db-cc25cd71dc66",
+        "paper_title": "Editorial: Effects of Physical Exercise on Brain and Cognitive Functioning",
+        "page": 2,
+        "paragraph": 7
+      },
+      {
+        "ref_number": 48,
+        "claim_id": "db47e3e6-0f3d-42a8-9730-78f47eb3f2dc",
+        "paper_id": "550660da-9719-43f0-a2db-cc25cd71dc66",
+        "paper_title": "Editorial: Effects of Physical Exercise on Brain and Cognitive Functioning",
+        "page": 2,
+        "paragraph": 7
+      }
+    ],
+    "references": [
+      {
+        "paper_id": "d6fa0748-bf5e-4f34-964f-5483ef5d543f",
+        "paper_title": "Associations of circadian rest/activity rhythms with cognition in middle-aged and older adults: Demographic and genetic interactions",
+        "authors": [
+          "PUBLISHED 12 October 2022"
+        ],
+        "cited_in": [
+          {
+            "ref_number": 1,
+            "page": 1,
+            "paragraph": 18
+          },
+          {
+            "ref_number": 2,
+            "page": 2,
+            "paragraph": 8
+          },
+          {
+            "ref_number": 3,
+            "page": 2,
+            "paragraph": 2
+          },
+          {
+            "ref_number": 4,
+            "page": 2,
+            "paragraph": 8
+          },
+          {
+            "ref_number": 5,
+            "page": 3,
+            "paragraph": 2
+          },
+          {
+            "ref_number": 6,
+            "page": 2,
+            "paragraph": 3
+          },
+          {
+            "ref_number": 7,
+            "page": 5,
+            "paragraph": 9
+          },
+          {
+            "ref_number": 8,
+            "page": 5,
+            "paragraph": 9
+          },
+          {
+            "ref_number": 9,
+            "page": 7,
+            "paragraph": 24
+          },
+          {
+            "ref_number": 10,
+            "page": 9,
+            "paragraph": 32
+          },
+          {
+            "ref_number": 11,
+            "page": 2,
+            "paragraph": 3
+          },
+          {
+            "ref_number": 12,
+            "page": 10,
+            "paragraph": 31
+          },
+          {
+            "ref_number": 13,
+            "page": 12,
+            "paragraph": 28
+          },
+          {
+            "ref_number": 14,
+            "page": 12,
+            "paragraph": 28
+          },
+          {
+            "ref_number": 15,
+            "page": 1,
+            "paragraph": 19
+          },
+          {
+            "ref_number": 16,
+            "page": 3,
+            "paragraph": 8
+          },
+          {
+            "ref_number": 17,
+            "page": 4,
+            "paragraph": 2
+          },
+          {
+            "ref_number": 18,
+            "page": 4,
+            "paragraph": 4
+          },
+          {
+            "ref_number": 19,
+            "page": 4,
+            "paragraph": 7
+          },
+          {
+            "ref_number": 20,
+            "page": 5,
+            "paragraph": 4
+          },
+          {
+            "ref_number": 21,
+            "page": 5,
+            "paragraph": 4
+          },
+          {
+            "ref_number": 22,
+            "page": 13,
+            "paragraph": 3
+          },
+          {
+            "ref_number": 23,
+            "page": 13,
+            "paragraph": 3
+          },
+          {
+            "ref_number": 24,
+            "page": 13,
+            "paragraph": 3
+          },
+          {
+            "ref_number": 25,
+            "page": 13,
+            "paragraph": 3
+          },
+          {
+            "ref_number": 26,
+            "page": 13,
+            "paragraph": 3
+          },
+          {
+            "ref_number": 27,
+            "page": 10,
+            "paragraph": 30
+          },
+          {
+            "ref_number": 28,
+            "page": 12,
+            "paragraph": 28
+          },
+          {
+            "ref_number": 29,
+            "page": 13,
+            "paragraph": 2
+          },
+          {
+            "ref_number": 30,
+            "page": 13,
+            "paragraph": 3
+          }
+        ]
+      },
+      {
+        "paper_id": "550660da-9719-43f0-a2db-cc25cd71dc66",
+        "paper_title": "Editorial: Effects of Physical Exercise on Brain and Cognitive Functioning",
+        "authors": [
+          "Frontiers in Human Neuroscience | www.frontiersin.org 1 May 2022 | Volume 16 | Article 939112"
+        ],
+        "cited_in": [
+          {
+            "ref_number": 31,
+            "page": 1,
+            "paragraph": 15
+          },
+          {
+            "ref_number": 32,
+            "page": 1,
+            "paragraph": 15
+          },
+          {
+            "ref_number": 33,
+            "page": 1,
+            "paragraph": 15
+          },
+          {
+            "ref_number": 34,
+            "page": 1,
+            "paragraph": 15
+          },
+          {
+            "ref_number": 35,
+            "page": 1,
+            "paragraph": 15
+          },
+          {
+            "ref_number": 36,
+            "page": 1,
+            "paragraph": 17
+          },
+          {
+            "ref_number": 37,
+            "page": 2,
+            "paragraph": 3
+          },
+          {
+            "ref_number": 38,
+            "page": 2,
+            "paragraph": 4
+          },
+          {
+            "ref_number": 39,
+            "page": 2,
+            "paragraph": 6
+          },
+          {
+            "ref_number": 40,
+            "page": 2,
+            "paragraph": 2
+          },
+          {
+            "ref_number": 41,
+            "page": 2,
+            "paragraph": 2
+          },
+          {
+            "ref_number": 42,
+            "page": 2,
+            "paragraph": 3
+          },
+          {
+            "ref_number": 43,
+            "page": 2,
+            "paragraph": 4
+          },
+          {
+            "ref_number": 44,
+            "page": 2,
+            "paragraph": 7
+          },
+          {
+            "ref_number": 45,
+            "page": 2,
+            "paragraph": 7
+          },
+          {
+            "ref_number": 46,
+            "page": 2,
+            "paragraph": 7
+          },
+          {
+            "ref_number": 47,
+            "page": 2,
+            "paragraph": 7
+          },
+          {
+            "ref_number": 48,
+            "page": 2,
+            "paragraph": 7
+          }
+        ]
+      }
+    ]
+  }
+}

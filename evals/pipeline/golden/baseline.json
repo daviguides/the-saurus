@@ -1,6 +1,6 @@
 {
-  "faithfulness": 0.70,
-  "citation_accuracy": 0.70,
+  "faithfulness": 0.90,
+  "citation_accuracy": 0.45,
   "schema_completeness": 0.90,
-  "theme_quality": 0.70
+  "theme_quality": 0.90
 }

@@ -47,10 +47,21 @@ def _build_review_test_case(
         f"## {s.get('label', '')}\n{s.get('content', '')}"
         for s in review.get("sections", [])
     )
+    # Build references section
+    references_text = ""
+    references = review.get("references", [])
+    if references:
+        refs = "\n".join(
+            f"[{r.get('ref_number', i+1)}] {r.get('paper_title', '')}"
+            for i, r in enumerate(references)
+        )
+        references_text = f"\n\n## References\n{refs}"
+
     full_review = (
         f"# {review.get('title', '')}\n\n"
         f"{review.get('abstract', '')}\n\n"
         f"{sections_text}"
+        f"{references_text}"
     )
 
     # Build context from paper claims
