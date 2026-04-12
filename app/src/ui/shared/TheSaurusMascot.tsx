@@ -14,7 +14,7 @@ export default function TheSaurusMascot({ size = 120, className }: Props) {
             strokeLinecap="round"
             strokeLinejoin="round"
             className={className}
-            aria-label="O mascote The Saurus devorando documentos"
+            aria-label="The Saurus mascot"
         >
             {/* 1. Documentos / Papers */}
             <g strokeWidth="1.5">

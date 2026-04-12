@@ -10,6 +10,46 @@ import type {
   RawPipelineEvent,
 } from "../types/pipeline";
 import { PIPELINE_STAGES } from "../types/pipeline";
+
+// --- Typed payload interfaces for raw pipeline events ---
+
+interface JobStartedPayload {
+  paper_count?: number;
+  stage?: string;
+  message?: string;
+}
+
+interface StagePayload {
+  stage?: string;
+  item_id?: string;
+  paper_id?: string;
+  completed?: number;
+  total?: number;
+  message?: string;
+  error?: string;
+  theme_count?: number;
+  claim_count?: number;
+  title?: string;
+}
+
+interface AgentPayload {
+  stage?: string;
+  paper_id?: string;
+  message?: string;
+  agent_name?: string;
+  technical_message?: string;
+  model?: string;
+  tool_name?: string;
+  tool_args_preview?: string;
+  result_len?: number;
+  elapsed_ms?: number;
+  content_len?: number;
+  content_type?: string;
+  error?: string;
+  error_type?: string;
+}
+
+type TypedPayload = JobStartedPayload & StagePayload & AgentPayload;
 import {
   PIPELINE_API_URL,
   fetchPapers,
@@ -110,7 +150,7 @@ function pipelineReducer(state: PipelineState, action: PipelineAction): Pipeline
 // --- Event Mapping ---
 
 function humanMessage(raw: RawPipelineEvent): string {
-  const p = raw.payload;
+  const p = raw.payload as TypedPayload;
   switch (raw.event_type) {
     case "job_started":
       return `Pipeline started (${p.paper_count} papers)`;
@@ -140,55 +180,55 @@ function humanMessage(raw: RawPipelineEvent): string {
 }
 
 function mapAgentEvent(raw: RawPipelineEvent, paperLookup: Map<string, string>): AgentEvent {
-  const p = raw.payload;
+  const p = raw.payload as TypedPayload;
   const eventType = raw.event_type as AgentEventType;
   const base = {
     id: raw.event_id,
     eventType,
     timestamp: new Date(raw.timestamp).getTime(),
-    stage: (p.stage as string) ?? undefined,
-    paperId: (p.paper_id as string) ?? undefined,
-    paperTitle: paperLookup.get((p.paper_id as string) ?? ""),
-    message: (p.message as string) ?? raw.event_type,
-    agentName: (p.agent_name as string) ?? "Unknown",
-    humanMessage: (p.message as string) ?? raw.event_type,
-    technicalMessage: (p.technical_message as string) ?? raw.event_type,
+    stage: p.stage ?? undefined,
+    paperId: p.paper_id ?? undefined,
+    paperTitle: paperLookup.get(p.paper_id ?? ""),
+    message: p.message ?? raw.event_type,
+    agentName: p.agent_name ?? "Unknown",
+    humanMessage: p.message ?? raw.event_type,
+    technicalMessage: p.technical_message ?? raw.event_type,
   };
 
   switch (eventType) {
     case "agent_started":
-      return { ...base, eventType: "agent_started", model: (p.model as string) ?? undefined };
+      return { ...base, eventType: "agent_started", model: p.model ?? undefined };
     case "agent_tool_call":
       return {
         ...base,
         eventType: "agent_tool_call",
-        toolName: (p.tool_name as string) ?? "",
-        toolArgsPreview: (p.tool_args_preview as string) ?? undefined,
+        toolName: p.tool_name ?? "",
+        toolArgsPreview: p.tool_args_preview ?? undefined,
       };
     case "agent_tool_result":
       return {
         ...base,
         eventType: "agent_tool_result",
-        toolName: (p.tool_name as string) ?? "",
-        resultLen: (p.result_len as number) ?? 0,
-        elapsedMs: (p.elapsed_ms as number) ?? undefined,
+        toolName: p.tool_name ?? "",
+        resultLen: p.result_len ?? 0,
+        elapsedMs: p.elapsed_ms ?? undefined,
       };
     case "agent_content":
       return {
         ...base,
         eventType: "agent_content",
-        contentLen: (p.content_len as number) ?? 0,
-        contentType: (p.content_type as string) ?? "text",
+        contentLen: p.content_len ?? 0,
+        contentType: p.content_type ?? "text",
       };
     case "agent_completed":
-      return { ...base, eventType: "agent_completed", elapsedMs: (p.elapsed_ms as number) ?? undefined };
+      return { ...base, eventType: "agent_completed", elapsedMs: p.elapsed_ms ?? undefined };
     case "agent_error":
       return {
         ...base,
         eventType: "agent_error",
-        error: (p.error as string) ?? "Unknown error",
-        errorType: (p.error_type as string) ?? "",
-        elapsedMs: (p.elapsed_ms as number) ?? undefined,
+        error: p.error ?? "Unknown error",
+        errorType: p.error_type ?? "",
+        elapsedMs: p.elapsed_ms ?? undefined,
       };
     default:
       return { ...base, eventType: "agent_completed" } as AgentEvent;

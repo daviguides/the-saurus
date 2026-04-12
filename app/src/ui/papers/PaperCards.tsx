@@ -79,7 +79,7 @@ function PaperCard({ paper }: { paper: Paper }) {
                         {theme && (
                           <>
                             {" · "}
-                            <span style={{ color: theme.colorIndex >= 0 ? undefined : undefined }}>
+                            <span>
                               {theme.label}
                             </span>
                           </>

@@ -60,8 +60,8 @@ export function usePapers() {
     setSelectedIds(new Set());
   }, []);
 
-  const loadMockComplete = useCallback((mockPapers: Paper[]) => {
-    setPapers(mockPapers);
+  const loadPapers = useCallback((newPapers: Paper[]) => {
+    setPapers(newPapers);
   }, []);
 
   return {
@@ -73,6 +73,6 @@ export function usePapers() {
     toggleSelect,
     selectAll,
     deselectAll,
-    loadMockComplete,
+    loadPapers,
   };
 }

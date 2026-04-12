@@ -27,7 +27,7 @@ function CrossfadeSlot({ active, children }: { active: boolean; children: React.
 }
 
 export default function UploadView() {
-  const { loadMockComplete } = usePapers();
+  const { loadPapers } = usePapers();
 
   const {
     status: uploadStatus,
@@ -60,7 +60,7 @@ export default function UploadView() {
       const timer = setTimeout(async () => {
         try {
           const enriched = await fetchEnrichedPapers(effectiveJobId);
-          loadMockComplete(transformPapers(enriched));
+          loadPapers(transformPapers(enriched));
           fetchAndLoadReview(effectiveJobId);
         } catch {
           // Fall back gracefully
@@ -68,7 +68,7 @@ export default function UploadView() {
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [isCompleted, effectiveJobId, loadMockComplete, fetchAndLoadReview]);
+  }, [isCompleted, effectiveJobId, loadPapers, fetchAndLoadReview]);
 
   const handleFilesAdded = useCallback(
     (files: File[]) => {
