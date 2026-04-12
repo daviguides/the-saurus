@@ -161,6 +161,59 @@ uv run ruff check pipeline/            # Lint
 uv run ruff format pipeline/           # Format
 ```
 
+## Integration Testing with pipeline-test-client
+
+The `pipeline-test-client/` package provides a CLI for end-to-end testing against a running pipeline server. Use it to validate the full flow: upload PDFs, stream events, and verify the generated review.
+
+### Running the server in logged mode (for Claude to observe)
+
+```bash
+# From repo root:
+make log-pipeline                    # Starts pipeline in background, logs to logs/pipeline.log
+```
+
+Claude can then read logs:
+```bash
+tail -f logs/pipeline.log            # Via Bash tool (streaming)
+# or
+Read logs/pipeline.log               # Via Read tool (snapshot)
+```
+
+### Running test cases
+
+```bash
+# From repo root:
+make pipeline-test ARGS="run pipeline-test-client/test-cases/papers/exercise_cognitive_function_brain.pdf"
+
+# Or from the test client directory:
+cd pipeline-test-client
+uv run pipeline-test run ../pipeline-test-client/test-cases/papers/exercise_cognitive_function_brain.pdf
+
+# Run a YAML test case with assertions:
+uv run pipeline-test test-flow test-cases/cases/basic_flow.yaml
+
+# Individual commands:
+uv run pipeline-test upload <pdf_paths>     # Upload PDFs, get job_id
+uv run pipeline-test status <job_id>        # Check job status
+uv run pipeline-test stream <job_id>        # Watch live events
+uv run pipeline-test review <job_id>        # Show generated review
+uv run pipeline-test papers <job_id>        # Show extracted papers/themes/claims
+```
+
+### Test PDFs
+
+Located at `pipeline-test-client/test-cases/papers/`:
+- `exercise_cognitive_function_brain.pdf` (known good)
+- `circadian_rest_activity_cognition.pdf`
+
+### Workflow for Claude
+
+1. Start the server: `make log-pipeline` (from repo root)
+2. Run a test: `cd pipeline-test-client && uv run pipeline-test run test-cases/papers/exercise_cognitive_function_brain.pdf`
+3. Observe logs: `tail -100 logs/pipeline.log` (Agno debug mode shows prompts, LLM responses, event streaming)
+4. If something fails, read the full log for Agno-level diagnostics
+5. Stop the server: `make log-stop`
+
 ## Conventions
 
 - Python 3.13+, ruff for lint/format, pytest + pytest-asyncio for tests
