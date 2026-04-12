@@ -96,8 +96,6 @@ make down    # Stop all services
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-See [`docs/architecture.md`](docs/architecture.md) for detailed diagrams covering the full pipeline flow, agent data model, event architecture, and service topology.
-
 ## Pipeline
 
 | Stage | Agent | Parallelism | Description |
