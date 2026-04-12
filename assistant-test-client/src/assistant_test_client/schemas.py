@@ -28,6 +28,10 @@ class ErrorEvent(BaseModel):
     message: str
 
 
+# Union type for event handlers
+Event = TokenEvent | StepEvent | DoneEvent | ErrorEvent
+
+
 class ChatResponse(BaseModel):
     """Aggregated result of a single send_message call."""
 

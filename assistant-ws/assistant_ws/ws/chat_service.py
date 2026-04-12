@@ -99,40 +99,38 @@ class ChatService:
                 team = await get_or_create_team(session_id)
                 full_response = ""
 
-                async for event in asyncio.wait_for(
-                    _consume_stream(team, text, session_id),
-                    timeout=settings.team_run_timeout_seconds,
-                ):
-                    ev = event.event
+                async with asyncio.timeout(settings.team_run_timeout_seconds):
+                    async for event in _consume_stream(team, text, session_id):
+                        ev = event.event
 
-                    # Team-level content delta -> stream token to client
-                    if ev == TeamRunEvent.run_content.value and event.content:
-                        chunk = str(event.content)
-                        full_response += chunk
-                        token_evt = TokenEvent(content=chunk)
-                        await sio.emit("token", token_evt.model_dump(), to=sid, namespace="/chat")
+                        # Team-level content delta -> stream token to client
+                        if ev == TeamRunEvent.run_content.value and event.content:
+                            chunk = str(event.content)
+                            full_response += chunk
+                            token_evt = TokenEvent(content=chunk)
+                            await sio.emit("token", token_evt.model_dump(), to=sid, namespace="/chat")
 
-                    # Agent tool call started -> emit step with tool name
-                    elif ev == RunEvent.tool_call_started.value and event.tool:
-                        tool_name = event.tool.tool_name or "tool"
-                        label = _TOOL_LABELS.get(tool_name, f"Using {tool_name}")
-                        step_evt = StepEvent(step=f"{label}...", tool=tool_name)
-                        await sio.emit("step", step_evt.model_dump(exclude_none=True), to=sid, namespace="/chat")
+                        # Agent tool call started -> emit step with tool name
+                        elif ev == RunEvent.tool_call_started.value and event.tool:
+                            tool_name = event.tool.tool_name or "tool"
+                            label = _TOOL_LABELS.get(tool_name, f"Using {tool_name}")
+                            step_evt = StepEvent(step=f"{label}...", tool=tool_name)
+                            await sio.emit("step", step_evt.model_dump(exclude_none=True), to=sid, namespace="/chat")
 
-                    # Team run error
-                    elif ev == TeamRunEvent.run_error.value:
-                        logger.error(
-                            "Team run error for session %s: %s",
-                            session_id,
-                            event.content,
-                        )
-                        await sio.emit(
-                            "error",
-                            {"message": "An error occurred while processing your request."},
-                            to=sid,
-                            namespace="/chat",
-                        )
-                        return
+                        # Team run error
+                        elif ev == TeamRunEvent.run_error.value:
+                            logger.error(
+                                "Team run error for session %s: %s",
+                                session_id,
+                                event.content,
+                            )
+                            await sio.emit(
+                                "error",
+                                {"message": "An error occurred while processing your request."},
+                                to=sid,
+                                namespace="/chat",
+                            )
+                            return
 
                 elapsed_ms = int((time.monotonic() - start) * 1000)
                 done_evt = DoneEvent(metrics={"elapsed_time_ms": elapsed_ms})
