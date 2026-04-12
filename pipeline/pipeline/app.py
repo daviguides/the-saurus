@@ -54,7 +54,10 @@ async def _recover_orphan_jobs(jobs_dir: Path) -> None:
             )
             await write_status(job_id, failed_status, jobs_dir)
             count += 1
-            logger.info("Recovered orphan job %s (was %s at stage %s)", job_id, status.status, status.stage)
+            logger.info(
+                "Recovered orphan job %s (was %s at stage %s)",
+                job_id, status.status, status.stage,
+            )
 
     if count:
         logger.info("Recovered %d orphan job(s)", count)

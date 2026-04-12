@@ -28,7 +28,6 @@ from pipeline.core import (
     write_status,
     write_yaml,
 )
-from pipeline.core.exceptions import PipelineError, StageError
 from pipeline.core.persistence import release_lock
 from pipeline.core.qdrant import QdrantIndexer, get_indexer
 from pipeline.ws.stream import get_or_create_emitter, remove_emitter
@@ -397,8 +396,12 @@ async def _run_parallel_per_paper(
             input["themes"] per paper.
         emitter: Optional EventEmitter for agent-level event forwarding.
     """
-    agent_name = getattr(agent, "_agent", None)
-    agent_name = getattr(agent_name, "name", agent.__class__.__name__) if agent_name else agent.__class__.__name__
+    inner = getattr(agent, "_agent", None)
+    agent_name = (
+        getattr(inner, "name", agent.__class__.__name__)
+        if inner
+        else agent.__class__.__name__
+    )
 
     async def process_one(paper: PaperEntry) -> dict[str, Any] | Exception:
         content = paper_contents.get(paper.paper_id, "")

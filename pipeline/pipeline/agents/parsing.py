@@ -3,13 +3,14 @@
 import asyncio
 import logging
 import random
-import time
 from collections.abc import Awaitable, Callable
 from typing import Any
 
+from agno.agent import Agent as AgnoAgent
+from agno.agent import RunCompletedEvent, RunErrorEvent
 from pydantic import BaseModel
 
-from agno.agent import Agent as AgnoAgent, RunCompletedEvent, RunErrorEvent
+from pipeline.core.exceptions import AgentError
 
 logger = logging.getLogger(__name__)
 
@@ -21,9 +22,6 @@ def estimate_tokens(text: str) -> int:
     """Rough token estimate: ~4 chars per token for English."""
     CHARS_PER_TOKEN = 4
     return len(text) // CHARS_PER_TOKEN
-
-
-from pipeline.core.exceptions import AgentError
 
 
 class AgentResponseError(AgentError):

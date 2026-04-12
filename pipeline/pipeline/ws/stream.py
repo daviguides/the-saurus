@@ -6,11 +6,11 @@ import asyncio
 import logging
 from pathlib import Path
 
-logger = logging.getLogger(__name__)
-
 from fastapi import WebSocket, WebSocketDisconnect
 
 from pipeline.core import Event, EventEmitter
+
+logger = logging.getLogger(__name__)
 
 # B3: Heartbeat interval for WebSocket receive loop (seconds)
 WS_HEARTBEAT_TIMEOUT = 60.0
