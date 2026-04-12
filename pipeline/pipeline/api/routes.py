@@ -121,6 +121,11 @@ async def create_job(files: list[UploadFile]) -> CreateJobResponse:
             chunks.append(chunk)
         pdf_bytes = b"".join(chunks)
 
+        # S5: Validate PDF magic bytes
+        if not pdf_bytes[:5].startswith(b"%PDF-"):
+            logger.warning("Skipping %s: invalid PDF magic bytes", f.filename)
+            continue
+
         # Save raw PDF — sanitize filename to prevent path traversal
         safe_name = PurePosixPath(f.filename).name
         pdf_path = job_path / safe_name

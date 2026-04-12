@@ -13,8 +13,8 @@ class Settings(BaseSettings):
     workers: int = 1
     cors_origins: str = "http://localhost:3000,http://localhost:5173,http://localhost:5174"
 
-    # Auth — shared secret token for Socket.IO connect auth
-    ws_auth_token: str = ""
+    # Auth — shared secret token for Socket.IO connect auth (opt-in: None = open)
+    ws_auth_token: str | None = None
 
     # LLM
     llm_provider: str = "openai"  # openai | anthropic

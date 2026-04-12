@@ -30,8 +30,8 @@ def register_events(sio: socketio.AsyncServer):
 
     @sio.event(namespace="/chat")
     async def connect(sid, environ, auth=None):
-        # Auth: validate shared-secret token if configured
-        if settings.ws_auth_token:
+        # Auth: validate shared-secret token if configured (opt-in: None = open)
+        if settings.ws_auth_token is not None:
             token = None
             if auth and isinstance(auth, dict):
                 token = auth.get("token")

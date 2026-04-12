@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
-from fastapi import FastAPI, WebSocket
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
 from pipeline.api import router
@@ -17,6 +17,12 @@ from pipeline.core.qdrant import close_indexer
 from pipeline.ws import websocket_stream
 
 logger = logging.getLogger(__name__)
+
+
+async def verify_api_key(x_api_key: str | None = Header(None)) -> None:
+    """Verify API key if configured. No-op when api_key is not set."""
+    if settings.api_key and x_api_key != settings.api_key:
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
 
 async def _recover_orphan_jobs(jobs_dir: Path) -> None:
@@ -88,9 +94,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(router)
+app.include_router(router, dependencies=[Depends(verify_api_key)])
 
 
 @app.websocket("/jobs/{job_id}/stream")
-async def ws_stream(websocket: WebSocket, job_id: str) -> None:
+async def ws_stream(
+    websocket: WebSocket, job_id: str, token: str | None = Query(None)
+) -> None:
+    if settings.api_key and token != settings.api_key:
+        await websocket.close(code=4001, reason="Unauthorized")
+        return
     await websocket_stream(websocket, job_id, Path(settings.jobs_dir))

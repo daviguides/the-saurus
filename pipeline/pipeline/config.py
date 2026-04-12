@@ -8,6 +8,9 @@ class Settings(BaseSettings):
 
     model_config = {"env_prefix": "PIPELINE_", "env_file": ".env", "env_file_encoding": "utf-8"}
 
+    # Auth — opt-in API key (enables auth when set)
+    api_key: str | None = None
+
     # Server
     host: str = "127.0.0.1"
     port: int = 8002
