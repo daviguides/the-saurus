@@ -28,7 +28,7 @@ app = typer.Typer(
     no_args_is_help=True,
 )
 
-CASES_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "cases"
+CASES_DIR = Path(__file__).resolve().parent.parent.parent / "test-cases" / "cases"
 
 
 # ---------------------------------------------------------------------------

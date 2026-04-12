@@ -1,0 +1,13 @@
+name: Theme Query
+description: Ask about themes found across papers
+timeout_seconds: 60
+new_session: true
+
+steps:
+  - message: "What are the main themes found across all papers?"
+    expect_no_error: true
+    expect_steps_min: 1
+    expect_tools:
+      - get_theme_map
+    expect_content_contains:
+      - "theme"

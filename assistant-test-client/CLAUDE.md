@@ -37,7 +37,7 @@ assistant-test list-cases
 
 ## Test Cases
 
-YAML files in `data/cases/` define automated test flows. Each case has steps with messages and assertions (content contains, tools called, minimum step events).
+YAML files in `test-cases/cases/` define automated test flows. Each case has steps with messages and assertions (content contains, tools called, minimum step events).
 
 ## Structure
 

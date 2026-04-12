@@ -1,0 +1,10 @@
+name: Basic Chat Flow
+description: Connect and ask a simple question
+timeout_seconds: 60
+new_session: true
+
+steps:
+  - message: "Hello, what can you help me with?"
+    expect_no_error: true
+    expect_content_contains:
+      - "paper"

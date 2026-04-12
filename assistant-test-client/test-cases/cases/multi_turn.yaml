@@ -1,0 +1,14 @@
+name: Multi-Turn Conversation
+description: Test conversation continuity across turns
+timeout_seconds: 120
+new_session: true
+
+steps:
+  - message: "Give me a summary of the literature review"
+    expect_no_error: true
+    expect_content_contains:
+      - "review"
+  - message: "What about contradictions between papers?"
+    expect_no_error: true
+    expect_content_contains:
+      - "contradict"

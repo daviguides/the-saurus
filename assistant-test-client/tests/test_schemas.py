@@ -15,7 +15,7 @@ from assistant_test_client.schemas import (
     TokenEvent,
 )
 
-CASES_DIR = Path(__file__).resolve().parent.parent / "data" / "cases"
+CASES_DIR = Path(__file__).resolve().parent.parent / "test-cases" / "cases"
 
 
 # ---------------------------------------------------------------------------
