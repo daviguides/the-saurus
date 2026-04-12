@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     llm_max_concurrent: int = 2
     llm_retry_delay: float = 15.0  # base retry delay (matches Gemini 429 retryDelay)
     llm_max_retries: int = 5  # more retries for rate-limited APIs
+    llm_debug_mode: bool = True  # Agno agent debug logging
 
     # Persistence
     jobs_dir: str = "./jobs"

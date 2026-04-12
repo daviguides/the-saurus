@@ -58,12 +58,15 @@ class PaperAnalyzerAgent:
     """
 
     def __init__(self) -> None:
+        from pipeline.config import settings
+
         self._agent = AgnoAgent(
             name="PaperAnalyzer",
             model=create_model(),
             instructions=PAPER_ANALYZER_PROMPT,
             output_schema=PaperAnalysisResult,
             structured_outputs=True,
+            debug_mode=settings.llm_debug_mode,
         )
 
     async def run(

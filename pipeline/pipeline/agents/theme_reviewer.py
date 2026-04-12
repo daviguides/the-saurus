@@ -59,12 +59,15 @@ class ThemeReviewerAgent:
     """
 
     def __init__(self, batch_size: int = BATCH_SIZE) -> None:
+        from pipeline.config import settings
+
         self._agent = AgnoAgent(
             name="ThemeReviewer",
             model=create_model(),
             instructions=THEME_REVIEWER_PROMPT,
             output_schema=BatchThemeReviewResult,
             structured_outputs=True,
+            debug_mode=settings.llm_debug_mode,
         )
         self._batch_size = batch_size
 

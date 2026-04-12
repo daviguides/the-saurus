@@ -42,12 +42,15 @@ class ThemeDedupAgent:
     """
 
     def __init__(self) -> None:
+        from pipeline.config import settings
+
         self._agent = AgnoAgent(
             name="ThemeDedup",
             model=create_model(),
             instructions=THEME_DEDUP_PROMPT,
             output_schema=ThemeDedupResult,
             structured_outputs=True,
+            debug_mode=settings.llm_debug_mode,
         )
 
     async def run(

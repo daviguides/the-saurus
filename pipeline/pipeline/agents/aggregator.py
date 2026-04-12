@@ -56,12 +56,15 @@ class AggregatorAgent:
     """
 
     def __init__(self) -> None:
+        from pipeline.config import settings
+
         self._agent = AgnoAgent(
             name="Aggregator",
             model=create_model(),
             instructions=AGGREGATOR_PROMPT,
             output_schema=AggregatorResult,
             structured_outputs=True,
+            debug_mode=settings.llm_debug_mode,
         )
 
     async def run(
