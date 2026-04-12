@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Loader2, AlertCircle, Copy, Check } from "lucide-react";
+import { Loader2, AlertCircle, Copy, Check, Download } from "lucide-react";
 import { useReview } from "../../core/hooks/useReview";
 import { useJobId } from "../../core/hooks/useJobId";
 import StatsHeader from "../review/StatsHeader";
@@ -35,6 +35,30 @@ function CopyButton({ text }: { text: string }) {
     >
       <Icon size={14} />
       <span>{copied ? "Copied" : "Copy"}</span>
+    </button>
+  );
+}
+
+function DownloadButton({ text }: { text: string }) {
+  const handleDownload = () => {
+    const blob = new Blob([text], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "literature-review.md";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleDownload}
+      title="Download as Markdown"
+      className="flex items-center gap-1.5 text-sm text-text-secondary hover:text-primary transition-colors"
+    >
+      <Download size={14} />
+      <span>Download .md</span>
     </button>
   );
 }
@@ -121,8 +145,9 @@ export default function ReviewView() {
     <div className="flex flex-col h-full">
       <div className="flex items-center border-b border-border bg-surface">
         <StatsHeader stats={review.stats} />
-        <div className="ml-auto px-8">
+        <div className="ml-auto px-8 flex items-center gap-4">
           <CopyButton text={review.markdown} />
+          <DownloadButton text={review.markdown} />
         </div>
       </div>
       <div className="flex-1 overflow-y-auto scroll-smooth">

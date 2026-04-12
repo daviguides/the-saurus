@@ -46,6 +46,24 @@
   --saurus-chip-5: #FCE7F3;
   --saurus-chip-6: #E0E7FF;
 
+  /* Theme chip bg/text pairs — used by theme-colors.ts */
+  --saurus-theme-chip-0-bg: #E8F5E9;
+  --saurus-theme-chip-0-text: #1B5E20;
+  --saurus-theme-chip-1-bg: #E3F2FD;
+  --saurus-theme-chip-1-text: #0D47A1;
+  --saurus-theme-chip-2-bg: #FFF3E0;
+  --saurus-theme-chip-2-text: #E65100;
+  --saurus-theme-chip-3-bg: #F3E5F5;
+  --saurus-theme-chip-3-text: #4A148C;
+  --saurus-theme-chip-4-bg: #E0F7FA;
+  --saurus-theme-chip-4-text: #006064;
+  --saurus-theme-chip-5-bg: #FBE9E7;
+  --saurus-theme-chip-5-text: #BF360C;
+  --saurus-theme-chip-6-bg: #FFFDE7;
+  --saurus-theme-chip-6-text: #F57F17;
+  --saurus-theme-chip-7-bg: #ECEFF1;
+  --saurus-theme-chip-7-text: #263238;
+
   /* Shadows */
   --saurus-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
   --saurus-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
@@ -91,6 +109,24 @@
   --saurus-chip-4: #2E2A1A;
   --saurus-chip-5: #2E1A24;
   --saurus-chip-6: #1E2240;
+
+  /* Theme chip bg/text pairs — dark mode */
+  --saurus-theme-chip-0-bg: #1A2E26;
+  --saurus-theme-chip-0-text: #5BAB8A;
+  --saurus-theme-chip-1-bg: #1E2D3D;
+  --saurus-theme-chip-1-text: #64B5F6;
+  --saurus-theme-chip-2-bg: #2E2A1A;
+  --saurus-theme-chip-2-text: #FFB74D;
+  --saurus-theme-chip-3-bg: #2D2640;
+  --saurus-theme-chip-3-text: #CE93D8;
+  --saurus-theme-chip-4-bg: #1A2E2E;
+  --saurus-theme-chip-4-text: #4DD0E1;
+  --saurus-theme-chip-5-bg: #2E1A1A;
+  --saurus-theme-chip-5-text: #FF8A65;
+  --saurus-theme-chip-6-bg: #2E2A1A;
+  --saurus-theme-chip-6-text: #FFF176;
+  --saurus-theme-chip-7-bg: #263238;
+  --saurus-theme-chip-7-text: #B0BEC5;
 
   /* Shadows — stronger on dark */
   --saurus-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.20);

@@ -1,0 +1,16 @@
+@media print {
+  /* Hide non-content elements */
+  header, nav, .sidebar, .assistant-drawer, button, .pipeline-trace { display: none !important; }
+
+  /* Full width for review content */
+  main { width: 100% !important; max-width: none !important; padding: 0 !important; }
+
+  /* Ensure good print typography */
+  .prose-content { font-size: 11pt; line-height: 1.5; }
+  .prose-content h1 { font-size: 18pt; }
+  .prose-content h2 { font-size: 14pt; }
+
+  /* Page breaks */
+  .prose-content h2 { page-break-before: auto; }
+  .references { page-break-before: always; }
+}
