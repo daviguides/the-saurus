@@ -115,6 +115,25 @@ langfuse:
         cpu: 500m
         memory: 512Mi
 
+# -- Restate durable execution server
+restate:
+  enabled: true
+  image:
+    repository: docker.restate.dev/restatedev/restate
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClass: ""
+
 # -- ClickHouse analytics database
 clickhouse:
   image:

@@ -10,6 +10,9 @@ data:
   PIPELINE_LLM_MODEL: {{ .Values.pipeline.env.llmModel | quote }}
   PIPELINE_LLM_MAX_CONCURRENT: {{ .Values.pipeline.env.llmMaxConcurrent | quote }}
 
+  # Restate
+  PIPELINE_RESTATE_INGRESS_URL: "http://{{ .Release.Name }}-restate-ingress:8080"
+
   # Qdrant
   QDRANT_URL: {{ .Values.config.qdrantUrl | quote }}
 

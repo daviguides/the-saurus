@@ -1,0 +1,61 @@
+{{- if .Values.restate.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-restate
+  labels:
+    app.kubernetes.io/name: restate
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: restate
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: restate
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: restate
+          image: "{{ .Values.restate.image.repository }}:{{ .Values.restate.image.tag }}"
+          ports:
+            - name: ingress
+              containerPort: 8080
+            - name: admin
+              containerPort: 9070
+            - name: metrics
+              containerPort: 9071
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: admin
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: admin
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: {{ .Values.restate.resources.requests.cpu }}
+              memory: {{ .Values.restate.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.restate.resources.limits.cpu }}
+              memory: {{ .Values.restate.resources.limits.memory }}
+          volumeMounts:
+            - name: restate-data
+              mountPath: /restate-data
+      volumes:
+        - name: restate-data
+          {{- if .Values.restate.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-restate-data
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+{{- end }}

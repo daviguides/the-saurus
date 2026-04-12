@@ -76,6 +76,17 @@ langfuse:
         cpu: "1"
         memory: 1Gi
 
+restate:
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  persistence:
+    size: 20Gi
+
 clickhouse:
   resources:
     requests:
