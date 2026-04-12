@@ -25,7 +25,7 @@ Every claim is traceable to its source: paper, page, and paragraph.
 
 The assistant only knows what the pipeline extracted, keeping answers traceable and hallucination-resistant.
 
-Both services are covered by [unit tests](#testing), [end-to-end test clients](#end-to-end-test-clients), [LLM evaluation suites](#evaluation-ragas--deepeval) (RAGAS + DeepEval with prompt regression testing), and [production observability](#observability-langfuse) (Langfuse tracing with automated scoring).
+Both services are covered by [unit tests](#testing), [end-to-end test clients](#end-to-end-test-clients), [LLM evaluation suites](#evaluation-ragas--deepeval) (RAGAS + DeepEval with prompt regression testing), and [production observability](#observability-langfuse) (Langfuse tracing with automated scoring). Pipeline stages run as [durable workflows](#durable-execution-restate) via Restate, with [Terraform](#terraform-aws) and [Helm](#helm-kubernetes) definitions for production deployment on AWS/Kubernetes.
 
 ## Prerequisites
 
