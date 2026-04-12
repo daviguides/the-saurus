@@ -18,6 +18,11 @@ def register_emitter(job_id: str, emitter: EventEmitter) -> None:
     _emitters[job_id] = emitter
 
 
+def remove_emitter(job_id: str) -> None:
+    """Remove emitter for a finished job to prevent memory leaks."""
+    _emitters.pop(job_id, None)
+
+
 def get_or_create_emitter(job_id: str, jobs_dir: Path) -> EventEmitter:
     if job_id not in _emitters:
         _emitters[job_id] = EventEmitter(job_id, jobs_dir)

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from collections import defaultdict
 from collections.abc import Awaitable, Callable
@@ -93,9 +94,9 @@ class ThemeReviewerAgent:
             len(themes), len(batches), self._batch_size,
         )
 
-        all_reviews: list[dict[str, Any]] = []
-
-        for batch_idx, batch in enumerate(batches, 1):
+        async def _process_batch(
+            batch_idx: int, batch: list[dict[str, Any]]
+        ) -> list[dict[str, Any]]:
             # Collect relevant claims for this batch
             batch_claims: dict[str, list[dict[str, Any]]] = {}
             for theme in batch:
@@ -129,6 +130,7 @@ class ThemeReviewerAgent:
                 t.get("name", "").lower().strip(): t for t in batch
             }
 
+            batch_reviews: list[dict[str, Any]] = []
             for review in result.reviews:
                 name_key = review.theme_name.lower().strip()
                 theme_id = theme_name_to_id.get(name_key, "")
@@ -143,7 +145,7 @@ class ThemeReviewerAgent:
                     kc for kc in review.key_claims if kc.claim_id in valid_ids
                 ]
 
-                all_reviews.append({
+                batch_reviews.append({
                     "theme_id": theme_id or review.theme_name,
                     "label": theme_meta.get("name", review.theme_name),
                     "review": review.synthesis,
@@ -153,8 +155,12 @@ class ThemeReviewerAgent:
                     "claim_ids": [kc.claim_id for kc in validated_claims],
                     "key_claims": [kc.model_dump() for kc in validated_claims],
                 })
+            return batch_reviews
 
-        return all_reviews
+        nested = await asyncio.gather(
+            *[_process_batch(idx, batch) for idx, batch in enumerate(batches, 1)]
+        )
+        return [review for batch_reviews in nested for review in batch_reviews]
 
 
 def _build_batch_message(

@@ -11,7 +11,6 @@ from uuid import uuid4
 from fastapi import APIRouter, HTTPException, UploadFile
 
 from pipeline.config import settings
-from pipeline.engine import run_pipeline
 from pipeline.core import (
     EventEmitter,
     EventType,
@@ -25,6 +24,7 @@ from pipeline.core import (
     write_status,
     write_yaml,
 )
+from pipeline.engine import run_pipeline
 from pipeline.ingestion import IngestionError, ingest_pdf
 from pipeline.ws.stream import register_emitter
 
@@ -101,7 +101,7 @@ async def create_job(files: list[UploadFile]) -> CreateJobResponse:
         # Save raw PDF — sanitize filename to prevent path traversal
         safe_name = PurePosixPath(f.filename).name
         pdf_path = job_path / safe_name
-        pdf_path.write_bytes(pdf_bytes)
+        await asyncio.to_thread(pdf_path.write_bytes, pdf_bytes)
 
         try:
             result = ingest_pdf(pdf_bytes)
@@ -123,7 +123,7 @@ async def create_job(files: list[UploadFile]) -> CreateJobResponse:
 
         # Save markdown
         md_path = job_path / f"{paper_id}.md"
-        md_path.write_text(result.to_annotated_markdown())
+        await asyncio.to_thread(md_path.write_text, result.to_annotated_markdown())
 
     if not papers:
         raise HTTPException(status_code=400, detail="No papers could be ingested")
@@ -188,10 +188,16 @@ async def get_papers(job_id: str) -> PapersResponse:
     papers = [PaperEntry.model_validate(p) for p in data]
 
     # Enrich each paper with themes and claims from per-paper YAML files
+    # Read all YAML files in parallel to avoid sequential I/O
+    theme_coros = [read_yaml(job_path / "themes" / f"{p.paper_id}.yaml") for p in papers]
+    claim_coros = [read_yaml(job_path / "claims" / f"{p.paper_id}.yaml") for p in papers]
+    all_themes_data, all_claims_data = (
+        await asyncio.gather(*theme_coros),
+        await asyncio.gather(*claim_coros),
+    )
+
     enriched: list[EnrichedPaper] = []
-    for paper in papers:
-        themes_data = await read_yaml(job_path / "themes" / f"{paper.paper_id}.yaml")
-        claims_data = await read_yaml(job_path / "claims" / f"{paper.paper_id}.yaml")
+    for paper, themes_data, claims_data in zip(papers, all_themes_data, all_claims_data):
         enriched.append(
             EnrichedPaper(
                 paper_id=paper.paper_id,

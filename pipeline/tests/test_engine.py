@@ -384,7 +384,8 @@ class TestPipelineExecution:
         status = await read_status(job_id, jobs_dir)
         assert status is not None
         assert status.status == JobState.FAILED
-        assert "Agent exploded" in (status.error or "")
+        assert status.error is not None
+        assert "internal error" in status.error.lower()
 
         event_types = [e.event_type for e in events]
         assert EventType.JOB_FAILED in event_types

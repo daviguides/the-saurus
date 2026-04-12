@@ -26,7 +26,7 @@ from pipeline.core import (
     write_yaml,
 )
 from pipeline.core.qdrant import get_indexer
-from pipeline.ws.stream import get_or_create_emitter
+from pipeline.ws.stream import get_or_create_emitter, remove_emitter
 
 from .progress import ProgressTracker
 from .stages import Stage
@@ -34,12 +34,12 @@ from .stages import Stage
 logger = logging.getLogger(__name__)
 
 
-async def _safe_qdrant(coro: Coroutine) -> None:
+async def _safe_qdrant(coro: Coroutine, *, operation: str = "unknown") -> None:
     """Run a Qdrant write coroutine, swallowing any errors."""
     try:
         await coro
     except Exception:
-        logger.warning("Qdrant write failed (non-blocking)", exc_info=True)
+        logger.debug("Qdrant %s failed (non-blocking)", operation, exc_info=True)
 
 
 async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
@@ -48,9 +48,9 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
     job_path = jobs_dir / job_id
     qdrant_tasks: set[asyncio.Task] = set()
 
-    def _fire_qdrant(coro: Coroutine) -> None:
+    def _fire_qdrant(coro: Coroutine, *, operation: str = "write") -> None:
         """Schedule a Qdrant write as fire-and-forget background task."""
-        task = asyncio.create_task(_safe_qdrant(coro))
+        task = asyncio.create_task(_safe_qdrant(coro, operation=operation))
         qdrant_tasks.add(task)
         task.add_done_callback(qdrant_tasks.discard)
 
@@ -66,7 +66,7 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         for paper in papers:
             md_path = job_path / f"{paper.paper_id}.md"
             if md_path.exists():
-                paper_contents[paper.paper_id] = md_path.read_text()
+                paper_contents[paper.paper_id] = await asyncio.to_thread(md_path.read_text)
 
         tracker = ProgressTracker(job_id, jobs_dir, emitter, len(papers))
 
@@ -118,8 +118,10 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
                 job_id=job_id,
             )
             if indexer:
-                _fire_qdrant(indexer.index_themes(job_id, paper.paper_id, themes_data))
-                _fire_qdrant(indexer.index_claims(job_id, paper.paper_id, claims_data))
+                op = f"index_themes({paper.paper_id})"
+                _fire_qdrant(indexer.index_themes(job_id, paper.paper_id, themes_data), operation=op)
+                op = f"index_claims({paper.paper_id})"
+                _fire_qdrant(indexer.index_claims(job_id, paper.paper_id, claims_data), operation=op)
             await emitter.emit(
                 EventType.PAPER_ANALYZED,
                 {
@@ -146,7 +148,7 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         dedup_result = await theme_dedup.run({"themes": all_themes, "job_dir": str(job_path), "_emitter": emitter}, on_event=dedup_cb)
         await write_yaml(job_path / "theme_map.yaml", dedup_result, job_id=job_id)
         if indexer:
-            _fire_qdrant(indexer.index_theme_map(job_id, dedup_result))
+            _fire_qdrant(indexer.index_theme_map(job_id, dedup_result), operation="index_theme_map")
         await emitter.emit(
             EventType.THEME_DEDUPLICATED,
             {"theme_count": len(dedup_result.get("themes", []))},
@@ -181,7 +183,8 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
                     job_id=job_id,
                 )
                 if indexer:
-                    _fire_qdrant(indexer.index_theme_review(job_id, review_out))
+                    op = f"index_theme_review({theme_id})"
+                    _fire_qdrant(indexer.index_theme_review(job_id, review_out), operation=op)
                 await tracker.stage_item_done(Stage.THEME_REVIEW, theme_id)
         await tracker.stage_complete(Stage.THEME_REVIEW)
 
@@ -206,7 +209,7 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         }, on_event=agg_cb)
         await write_yaml(job_path / "review.yaml", review, job_id=job_id)
         if indexer:
-            _fire_qdrant(indexer.index_review(job_id, review))
+            _fire_qdrant(indexer.index_review(job_id, review), operation="index_review")
         await emitter.emit(EventType.REVIEW_GENERATED, {"title": review.get("title", "")})
         await tracker.stage_complete(Stage.AGGREGATION)
 
@@ -233,6 +236,7 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         if qdrant_tasks:
             await asyncio.gather(*qdrant_tasks, return_exceptions=True)
 
+        logger.error("Pipeline failed for job %s: %s", job_id, exc, exc_info=True)
         now = datetime.now(UTC)
         error_status = JobStatus(
             job_id=job_id,
@@ -242,10 +246,14 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
             paper_count=0,
             created_at=now,
             updated_at=now,
-            error=str(exc),
+            error="An internal error occurred. Check server logs for details.",
         )
         await write_status(job_id, error_status, jobs_dir)
-        await emitter.emit(EventType.JOB_FAILED, {"error": str(exc)})
+        await emitter.emit(EventType.JOB_FAILED, {"error": "An internal error occurred."})
+
+    finally:
+        # Clean up per-job registries to prevent memory leaks
+        remove_emitter(job_id)
 
 
 async def _run_parallel_per_paper(

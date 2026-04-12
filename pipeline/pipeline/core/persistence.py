@@ -14,9 +14,12 @@ _locks: dict[str, asyncio.Lock] = {}
 
 
 def _get_lock(job_id: str) -> asyncio.Lock:
-    if job_id not in _locks:
-        _locks[job_id] = asyncio.Lock()
-    return _locks[job_id]
+    return _locks.setdefault(job_id, asyncio.Lock())
+
+
+def release_lock(job_id: str) -> None:
+    """Remove the per-job lock to prevent memory leaks after job completion."""
+    _locks.pop(job_id, None)
 
 
 JOB_SUBDIRS = ("themes", "claims", "theme_reviews")

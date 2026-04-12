@@ -82,7 +82,12 @@ class AggregatorAgent:
 
         llm_result = await run_agent_with_retry(
             self._agent, message, AggregatorResult,
-            context={"stage": "aggregation", "theme_count": len(theme_reviews), "job_dir": data.get("job_dir", ""), "_emitter": data.get("_emitter")},
+            context={
+                "stage": "aggregation",
+                "theme_count": len(theme_reviews),
+                "job_dir": data.get("job_dir", ""),
+                "_emitter": data.get("_emitter"),
+            },
             on_event=on_event,
         )
 

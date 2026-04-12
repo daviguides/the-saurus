@@ -29,6 +29,7 @@ class ProgressTracker:
         self._stage_counter = 0
         self._stage_total = 0
         self._lock = asyncio.Lock()
+        self._created_at = datetime.now(UTC)
 
     def _overall_progress(self) -> float:
         if TOTAL_STAGES == 0:
@@ -45,7 +46,7 @@ class ProgressTracker:
             stage=stage,
             progress=self._overall_progress(),
             paper_count=self.paper_count,
-            created_at=datetime.now(UTC),
+            created_at=self._created_at,
             updated_at=datetime.now(UTC),
         )
         await write_status(self.job_id, status, self.jobs_dir)
