@@ -1,4 +1,4 @@
-LOGS_DIR := logs
+LOGS_DIR := $(CURDIR)/logs
 SHELL := /bin/bash
 
 .PHONY: dev-ws dev-mcp dev-pipeline dev-app dev-ui dev-qdrant \
@@ -39,30 +39,30 @@ dev-qdrant:
 # Usage:  make log-pipeline
 # Claude: tail -f logs/pipeline.log  (or Read tool on logs/pipeline.log)
 
-log-pipeline: $(LOGS_DIR)
-	cd pipeline && uv run python scripts/run_server.py > ../$(LOGS_DIR)/pipeline.log 2>&1 & \
-	echo "$$!" > ../$(LOGS_DIR)/pipeline.pid && \
-	echo "Pipeline running (PID $$(cat ../$(LOGS_DIR)/pipeline.pid)), logs at $(LOGS_DIR)/pipeline.log"
+log-pipeline:
+	@mkdir -p $(LOGS_DIR)
+	@cd pipeline && nohup uv run python scripts/run_server.py > $(LOGS_DIR)/pipeline.log 2>&1 & echo $$! > $(LOGS_DIR)/pipeline.pid
+	@echo "Pipeline running (PID $$(cat $(LOGS_DIR)/pipeline.pid)), logs at $(LOGS_DIR)/pipeline.log"
 
-log-ws: $(LOGS_DIR)
-	cd assistant-ws && uv run python scripts/run_server.py > ../$(LOGS_DIR)/assistant-ws.log 2>&1 & \
-	echo "$$!" > ../$(LOGS_DIR)/assistant-ws.pid && \
-	echo "Assistant WS running (PID $$(cat ../$(LOGS_DIR)/assistant-ws.pid)), logs at $(LOGS_DIR)/assistant-ws.log"
+log-ws:
+	@mkdir -p $(LOGS_DIR)
+	@cd assistant-ws && nohup uv run python scripts/run_server.py > $(LOGS_DIR)/assistant-ws.log 2>&1 & echo $$! > $(LOGS_DIR)/assistant-ws.pid
+	@echo "Assistant WS running (PID $$(cat $(LOGS_DIR)/assistant-ws.pid)), logs at $(LOGS_DIR)/assistant-ws.log"
 
-log-mcp: $(LOGS_DIR)
-	cd papers-mcp && uv run python scripts/run_server.py > ../$(LOGS_DIR)/papers-mcp.log 2>&1 & \
-	echo "$$!" > ../$(LOGS_DIR)/papers-mcp.pid && \
-	echo "Papers MCP running (PID $$(cat ../$(LOGS_DIR)/papers-mcp.pid)), logs at $(LOGS_DIR)/papers-mcp.log"
+log-mcp:
+	@mkdir -p $(LOGS_DIR)
+	@cd papers-mcp && nohup uv run python scripts/run_server.py > $(LOGS_DIR)/papers-mcp.log 2>&1 & echo $$! > $(LOGS_DIR)/papers-mcp.pid
+	@echo "Papers MCP running (PID $$(cat $(LOGS_DIR)/papers-mcp.pid)), logs at $(LOGS_DIR)/papers-mcp.log"
 
-log-app: $(LOGS_DIR)
-	cd app && pnpm dev > ../$(LOGS_DIR)/app.log 2>&1 & \
-	echo "$$!" > ../$(LOGS_DIR)/app.pid && \
-	echo "App running (PID $$(cat ../$(LOGS_DIR)/app.pid)), logs at $(LOGS_DIR)/app.log"
+log-app:
+	@mkdir -p $(LOGS_DIR)
+	@cd app && nohup pnpm dev > $(LOGS_DIR)/app.log 2>&1 & echo $$! > $(LOGS_DIR)/app.pid
+	@echo "App running (PID $$(cat $(LOGS_DIR)/app.pid)), logs at $(LOGS_DIR)/app.log"
 
-log-ui: $(LOGS_DIR)
-	cd assistant-ui && pnpm dev:federated > ../$(LOGS_DIR)/assistant-ui.log 2>&1 & \
-	echo "$$!" > ../$(LOGS_DIR)/assistant-ui.pid && \
-	echo "Assistant UI running (PID $$(cat ../$(LOGS_DIR)/assistant-ui.pid)), logs at $(LOGS_DIR)/assistant-ui.log"
+log-ui:
+	@mkdir -p $(LOGS_DIR)
+	@cd assistant-ui && nohup pnpm dev:federated > $(LOGS_DIR)/assistant-ui.log 2>&1 & echo $$! > $(LOGS_DIR)/assistant-ui.pid
+	@echo "Assistant UI running (PID $$(cat $(LOGS_DIR)/assistant-ui.pid)), logs at $(LOGS_DIR)/assistant-ui.log"
 
 # Start core services in logged mode (pipeline + app)
 log-core: log-pipeline log-app
