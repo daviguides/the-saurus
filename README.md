@@ -278,6 +278,11 @@ make eval-score-pipeline     # Score pipeline traces
 make eval-score-assistant    # Score assistant traces
 ```
 
+## Development
+
+- [Project Board](https://github.com/users/daviguides/projects/6) — task tracking across initiatives
+- [Architecture Doc](docs/architecture.md) — system diagrams and design decisions
+
 ## The Name
 
 A thesaurus connects words that mean the same thing. This pipeline does exactly that for scientific themes across papers: "chronobiology" in one paper and "circadian rhythms" in another become a single canonical theme. **The Saurus**: part thesaurus, part dinosaur.
