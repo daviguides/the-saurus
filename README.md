@@ -132,6 +132,8 @@ All agents use the Agno framework with Pydantic structured output and streaming 
 | Pipeline | Python 3.13+, FastAPI, Restate, Agno, Gemini 2.5 Flash |
 | Assistant | Agno Team, Socket.IO, GPT-4o-mini |
 | RAG | Qdrant, Gemini text-embedding-004, FastMCP |
+| Observability | Langfuse, ClickHouse, OpenLIT |
+| Infrastructure | Terraform (AWS), Helm (Kubernetes), Docker Compose |
 | Persistence | YAML (state), NDJSON (events), filesystem |
 | Design | Literata + Inter + Fira Code, light/dark themes |
 
@@ -145,6 +147,9 @@ the-saurus/
 ├── papers-mcp/             # MCP server (6 tools over Qdrant)
 ├── pipeline/               # Core pipeline engine (multi-agent orchestrator)
 ├── evals/                  # Evaluation suite (RAGAS + DeepEval + Langfuse)
+├── infra/
+│   ├── terraform/          # AWS infrastructure (EKS, Aurora, ElastiCache, S3)
+│   └── helm/the-saurus/    # Kubernetes deployment (all services + Langfuse + Restate)
 ├── pipeline-test-client/   # CLI for end-to-end pipeline testing
 ├── assistant-test-client/  # CLI for end-to-end assistant testing
 ├── shared/                 # Design tokens (CSS variables, light + dark)
@@ -280,6 +285,80 @@ Score a sample of production traces (10% by default) with RAGAS metrics, pushing
 ```bash
 make eval-score-pipeline     # Score pipeline traces
 make eval-score-assistant    # Score assistant traces
+```
+
+## Durable Execution (Restate)
+
+Pipeline stages are orchestrated through [Restate](https://restate.dev/), a Rust-based durable execution engine. Each stage (paper analysis, theme dedup, theme review, aggregation) is journaled. If the server crashes mid-pipeline, Restate replays the journal on restart, skipping completed stages and resuming from where it left off.
+
+```
+POST /jobs → Restate ingress → PipelineWorkflow/{job_id}/run
+                                  ├── paper_analysis  (journaled)
+                                  ├── theme_dedup     (journaled)
+                                  ├── theme_review    (journaled)
+                                  └── aggregation     (journaled)
+```
+
+Restate is optional for local development. If the Restate server is not running, the pipeline falls back to in-process `asyncio` execution.
+
+```bash
+make dev-restate        # Start Restate server (Docker)
+make register-restate   # Register pipeline workflow (one-time)
+make stop-restate       # Stop Restate server
+```
+
+The Restate admin dashboard is available at [http://localhost:9070](http://localhost:9070).
+
+## Infrastructure
+
+Production deployment is defined as infrastructure-as-code in the `infra/` directory.
+
+### Terraform (AWS)
+
+Provisions the cloud infrastructure across three environments (dev, staging, prod):
+
+| Module | Resource | Purpose |
+|--------|----------|---------|
+| `vpc` | VPC + subnets | Network isolation (public/private, 2 AZs) |
+| `eks` | EKS cluster | Kubernetes with managed node groups, KMS-encrypted secrets |
+| `aurora` | Aurora Serverless v2 | PostgreSQL for Langfuse (environment-aware scaling) |
+| `elasticache` | Redis 7.x | Langfuse queue + Socket.IO horizontal scaling |
+| `s3` | S3 buckets | Langfuse storage + pipeline artifacts |
+
+```bash
+cd infra/terraform
+
+# Deploy to an environment
+terraform init -backend-config=environments/dev.tfvars
+terraform plan -var-file=environments/dev.tfvars
+terraform apply -var-file=environments/dev.tfvars
+```
+
+### Helm (Kubernetes)
+
+Deploys all services to an EKS cluster with autoscaling, health probes, and secrets management:
+
+| Component | Type | Scaling |
+|-----------|------|---------|
+| Pipeline | Deployment | HPA 2-10 replicas (CPU 60%) |
+| Assistant WS | Deployment | HPA 2-10 replicas (CPU 60%) |
+| App | Deployment | 2 replicas |
+| Papers MCP | Deployment | 2 replicas |
+| Qdrant | StatefulSet | PVC (10Gi dev, 50Gi prod) |
+| Restate | Deployment + PVC | Persistent journal (5Gi dev, 20Gi prod) |
+| Langfuse | Web + Worker | 2 replicas each |
+| ClickHouse | StatefulSet | PVC (20Gi dev, 100Gi prod) |
+
+```bash
+cd infra/helm/the-saurus
+
+# Dev deployment
+helm install the-saurus . -f values.yaml
+
+# Production deployment
+helm install the-saurus . -f values.yaml -f values-prod.yaml \
+  --set secrets.pipelineLlmApiKey=$PIPELINE_LLM_API_KEY \
+  --set secrets.langfuseDatabaseUrl=$LANGFUSE_DB_URL
 ```
 
 ## Development
