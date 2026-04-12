@@ -1,8 +1,8 @@
 """Parse LLM responses into Pydantic models with retry logic and observability.
 
-Calls the Gemini API directly (bypassing Agno's broken streaming/parsing).
-Agno Agent objects are still used to carry name + instructions, but the
-actual LLM call goes through google.genai.Client.
+Calls the Gemini API directly for finer control over response handling,
+retries, and structured output parsing. Agno Agent objects carry name +
+instructions while the LLM call goes through google.genai.Client.
 """
 
 from __future__ import annotations
@@ -108,9 +108,8 @@ async def run_agent_with_retry(
 ) -> T:
     """Call Gemini API directly with retry logic, timeout, and Pydantic parsing.
 
-    Uses the agent's name and instructions but bypasses Agno's arun() entirely.
-    This avoids Agno's per-chunk JSON parsing bug that silently fails on large
-    responses (>100K chars).
+    Uses the agent's name and instructions for prompt composition while calling
+    the Gemini API directly for full control over response handling and parsing.
     """
     from pipeline.agents.models import llm_semaphore
     from pipeline.config import settings

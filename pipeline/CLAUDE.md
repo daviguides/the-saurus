@@ -50,16 +50,12 @@ pipeline/
 │   ├── theme_dedup.py                # ThemeDedupAgent (cross-paper dedup)
 │   ├── theme_reviewer.py             # ThemeReviewerAgent (batched, BATCH_SIZE=5)
 │   ├── aggregator.py                 # AggregatorAgent (final review)
-│   ├── theme_extractor.py            # Legacy (replaced by PaperAnalyzerAgent)
-│   ├── claim_extractor.py            # Legacy (replaced by PaperAnalyzerAgent)
 │   ├── stubs.py                      # Stub agents for testing
 │   └── prompts/
 │       ├── paper_analyzer.py
 │       ├── theme_dedup.py
 │       ├── theme_reviewer.py
-│       ├── aggregator.py
-│       ├── theme_extractor.py        # Legacy
-│       └── claim_extractor.py        # Legacy
+│       └── aggregator.py
 ├── core/
 │   ├── models.py                     # JobStatus, JobState, PaperEntry, EventType
 │   ├── persistence.py                # read_yaml, write_yaml, read_status, write_status, read_events

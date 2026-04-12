@@ -6,51 +6,44 @@ from typing import Any
 from uuid import uuid4
 
 
-class StubThemeExtractor:
-    """Returns placeholder themes for a single paper."""
+class StubPaperAnalyzer:
+    """Returns placeholder themes and claims for a single paper."""
 
-    async def run(self, input: dict[str, Any]) -> dict[str, Any]:
+    async def run(self, input: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
         paper_id = input["paper_id"]
         title = input.get("title", "Untitled")
         theme_id = str(uuid4())
+        claim_id = str(uuid4())
         return {
             "themes": [
                 {
                     "id": theme_id,
-                    "label": f"Theme from {title}",
+                    "name": f"Theme from {title}",
                     "description": f"Stub theme extracted from paper {paper_id}",
                     "paper_id": paper_id,
+                    "positions": [{"page": 1, "paragraph": 1}],
                 }
-            ]
-        }
-
-
-class StubClaimExtractor:
-    """Returns placeholder claims for a single paper."""
-
-    async def run(self, input: dict[str, Any]) -> dict[str, Any]:
-        paper_id = input["paper_id"]
-        title = input.get("title", "Untitled")
-        claim_id = str(uuid4())
-        return {
+            ],
             "claims": [
                 {
                     "id": claim_id,
+                    "theme_id": theme_id,
+                    "theme_name": f"Theme from {title}",
                     "text": f"Stub claim from {title}",
-                    "source": {
-                        "paper_id": paper_id,
-                        "page": 1,
-                        "paragraph": 1,
-                    },
+                    "page": 1,
+                    "paragraph": 1,
+                    "deep": "Stub deep analysis",
+                    "summary": f"Stub claim from {title}",
+                    "paper_id": paper_id,
                 }
-            ]
+            ],
         }
 
 
 class StubThemeDedup:
     """Passes all themes through as canonical (no actual dedup)."""
 
-    async def run(self, input: dict[str, Any]) -> dict[str, Any]:
+    async def run(self, input: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
         all_themes = input["themes"]
         theme_map = {t["id"]: [t["id"]] for t in all_themes}
         return {
@@ -62,21 +55,33 @@ class StubThemeDedup:
 class StubThemeReviewer:
     """Returns a placeholder review for a single theme."""
 
-    async def run(self, input: dict[str, Any]) -> dict[str, Any]:
+    async def run(self, input: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
         theme = input["theme"]
         claims = input.get("claims", [])
         return {
             "theme_id": theme["id"],
-            "label": theme["label"],
-            "review": f"Stub review of theme: {theme['label']}",
+            "label": theme.get("label", theme.get("name", "")),
+            "review": f"Stub review of theme: {theme.get('label', theme.get('name', ''))}",
             "claim_ids": [c["id"] for c in claims],
         }
+
+    async def run_batch(
+        self,
+        themes: list[dict[str, Any]],
+        all_claims: list[dict[str, Any]],
+        **kwargs: Any,
+    ) -> list[dict[str, Any]]:
+        results = []
+        for theme in themes:
+            result = await self.run({"theme": theme, "claims": all_claims})
+            results.append(result)
+        return results
 
 
 class StubAggregator:
     """Returns a placeholder literature review from theme reviews."""
 
-    async def run(self, input: dict[str, Any]) -> dict[str, Any]:
+    async def run(self, input: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
         theme_reviews = input["theme_reviews"]
         sections = [
             {

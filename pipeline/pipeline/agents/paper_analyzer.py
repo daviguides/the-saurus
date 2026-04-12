@@ -53,7 +53,6 @@ class PaperAnalysisResult(BaseModel):
 class PaperAnalyzerAgent:
     """Extracts themes and claims from a single paper in one LLM pass.
 
-    Replaces the separate ThemeExtractorAgent + ClaimExtractorAgent.
     The LLM reads the paper once and produces themes with their claims
     co-located, avoiding redundant re-reading of the paper.
     """
