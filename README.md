@@ -6,6 +6,8 @@ A literature review pipeline that devours scientific papers and produces compreh
 
 ## What It Does
 
+### Pipeline
+
 1. **Upload** — Drop your scientific PDFs
 2. **Analyze** — AI agents extract themes and claims from each paper (parallel, stateless)
 3. **Deduplicate** — Semantically equivalent themes are merged across papers
@@ -13,6 +15,10 @@ A literature review pipeline that devours scientific papers and produces compreh
 5. **Generate** — Cohesive literature review with inline citations `[N](p.X,§Y)`
 
 Every claim is traceable to its source: paper, page, and paragraph.
+
+### Conversational Assistant
+
+An embedded chat that queries the pipeline outputs through MCP tools over Qdrant. After the pipeline runs, the assistant can answer questions grounded in the actual data: themes, claims, reviews, and source citations. It runs as a separate federated UI (Module Federation 2.0) with its own WebSocket backend (Agno Team + GPT-4o-mini).
 
 ## Prerequisites
 
