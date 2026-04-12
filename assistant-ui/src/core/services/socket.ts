@@ -21,7 +21,7 @@ export function createSocket(): Socket {
     socketInstance.disconnect();
   }
 
-  socketInstance = io(SOCKET_URL, {
+  socketInstance = io(`${SOCKET_URL}/chat`, {
     auth: {
       session_id: getStoredSessionId(),
     },
