@@ -1,0 +1,6 @@
+apiVersion: v2
+name: the-saurus
+description: Literature review pipeline — multi-agent orchestrator with RAG and tracing
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

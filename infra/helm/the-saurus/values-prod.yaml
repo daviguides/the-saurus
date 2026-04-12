@@ -1,0 +1,124 @@
+# =============================================================================
+# The Saurus — Production Overrides
+# =============================================================================
+# Usage: helm install the-saurus . -f values.yaml -f values-prod.yaml
+
+pipeline:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+  env:
+    llmMaxConcurrent: "10"
+
+assistantWs:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+app:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+papersMcp:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+qdrant:
+  resources:
+    requests:
+      cpu: "1"
+      memory: 2Gi
+    limits:
+      cpu: "2"
+      memory: 4Gi
+  storage:
+    size: 50Gi
+
+langfuse:
+  web:
+    replicaCount: 2
+    resources:
+      requests:
+        cpu: 500m
+        memory: 512Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
+  worker:
+    replicaCount: 2
+    resources:
+      requests:
+        cpu: 500m
+        memory: 512Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
+
+clickhouse:
+  resources:
+    requests:
+      cpu: "1"
+      memory: 2Gi
+    limits:
+      cpu: "2"
+      memory: 4Gi
+  storage:
+    size: 100Gi
+
+ingress:
+  enabled: true
+  className: alb
+  host: the-saurus.example.com
+  tls:
+    enabled: true
+    secretName: the-saurus-tls
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:REGION:ACCOUNT_ID:certificate/CERTIFICATE_ID"
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+
+autoscaling:
+  enabled: true
+  pipeline:
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 60
+  assistantWs:
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 60
+
+# -- Production: use external managed services
+config:
+  qdrantUrl: "http://qdrant:6333"
+  clickhouseUrl: "http://clickhouse:8123"
+  langfuseWebUrl: "http://langfuse-web:3000"
+  langfuseWorkerUrl: "http://langfuse-worker:3030"
+  s3Endpoint: "https://s3.REGION.amazonaws.com"
+  s3Bucket: "the-saurus-langfuse-prod"
+  s3Region: "us-east-1"
+  redisUrl: "rediss://elasticache-endpoint.example.com:6379"

@@ -1,0 +1,73 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-ingress
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  annotations:
+    {{- if eq .Values.ingress.className "nginx" }}
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "3600"
+    nginx.ingress.kubernetes.io/websocket-services: "{{ .Release.Name }}-pipeline,{{ .Release.Name }}-assistant-ws"
+    {{- end }}
+    {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host }}
+      secretName: {{ .Values.ingress.tls.secretName }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-app
+                port:
+                  number: 80
+          - path: /api/pipeline
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-pipeline
+                port:
+                  number: 8002
+          - path: /api/assistant
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-assistant-ws
+                port:
+                  number: 8001
+          - path: /socket.io
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-assistant-ws
+                port:
+                  number: 8001
+          - path: /api/mcp
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-papers-mcp
+                port:
+                  number: 8012
+          - path: /langfuse
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-langfuse-web
+                port:
+                  number: 3000
+{{- end }}

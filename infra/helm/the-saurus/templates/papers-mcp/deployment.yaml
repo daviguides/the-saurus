@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-papers-mcp
+  labels:
+    app.kubernetes.io/name: papers-mcp
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.papersMcp.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: papers-mcp
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: papers-mcp
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: papers-mcp
+          image: "{{ .Values.papersMcp.image.repository }}:{{ .Values.papersMcp.image.tag }}"
+          imagePullPolicy: {{ .Values.papersMcp.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8012
+              protocol: TCP
+          env:
+            - name: QDRANT_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Release.Name }}-config
+                  key: QDRANT_URL
+            - name: PIPELINE_LLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secrets
+                  key: PIPELINE_LLM_API_KEY
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            {{- toYaml .Values.papersMcp.resources | nindent 12 }}

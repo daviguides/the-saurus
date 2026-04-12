@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-assistant-ws
+  labels:
+    app.kubernetes.io/name: assistant-ws
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  annotations:
+    # Enable sticky sessions for Socket.IO
+    service.beta.kubernetes.io/aws-load-balancer-stickiness-enabled: "true"
+    service.beta.kubernetes.io/aws-load-balancer-stickiness-type: "lb_cookie"
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "ws-affinity"
+    nginx.ingress.kubernetes.io/session-cookie-expires: "172800"
+    nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8001
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: assistant-ws
+    app.kubernetes.io/instance: {{ .Release.Name }}

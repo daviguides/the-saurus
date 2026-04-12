@@ -1,0 +1,187 @@
+# =============================================================================
+# The Saurus — Development Values
+# =============================================================================
+
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+
+# -- Pipeline API (FastAPI + multi-agent orchestrator)
+pipeline:
+  replicaCount: 1
+  image:
+    repository: the-saurus/pipeline
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  env:
+    llmModel: gemini-2.5-flash
+    llmMaxConcurrent: "2"
+
+# -- Assistant WebSocket backend (FastAPI + Socket.IO + Agno Team)
+assistantWs:
+  replicaCount: 1
+  image:
+    repository: the-saurus/assistant-ws
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# -- React frontend (served via nginx)
+app:
+  replicaCount: 1
+  image:
+    repository: the-saurus/app
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+# -- MCP server for RAG over pipeline outputs (Qdrant)
+papersMcp:
+  replicaCount: 1
+  image:
+    repository: the-saurus/papers-mcp
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# -- Qdrant vector database
+qdrant:
+  image:
+    repository: qdrant/qdrant
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  storage:
+    size: 10Gi
+    storageClass: ""
+
+# -- Langfuse observability platform
+langfuse:
+  web:
+    replicaCount: 1
+    image:
+      repository: langfuse/langfuse
+      tag: latest
+      pullPolicy: IfNotPresent
+    resources:
+      requests:
+        cpu: 200m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+  worker:
+    replicaCount: 1
+    image:
+      repository: langfuse/langfuse-worker
+      tag: latest
+      pullPolicy: IfNotPresent
+    resources:
+      requests:
+        cpu: 200m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+# -- ClickHouse analytics database
+clickhouse:
+  image:
+    repository: clickhouse/clickhouse-server
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+  storage:
+    size: 20Gi
+    storageClass: ""
+
+# -- Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  host: the-saurus.example.com
+  tls:
+    enabled: false
+    secretName: ""
+  annotations: {}
+
+# -- Horizontal Pod Autoscaler
+autoscaling:
+  enabled: false
+  pipeline:
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+  assistantWs:
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+
+# -- ConfigMap values (non-sensitive)
+config:
+  qdrantUrl: "http://qdrant:6333"
+  clickhouseUrl: "http://clickhouse:8123"
+  langfuseWebUrl: "http://langfuse-web:3000"
+  langfuseWorkerUrl: "http://langfuse-worker:3030"
+  s3Endpoint: ""
+  s3Bucket: "the-saurus-langfuse"
+  s3Region: "us-east-1"
+  redisUrl: "redis://redis:6379"
+
+# -- Secret values (all must be provided at deploy time)
+secrets:
+  # Pipeline
+  pipelineLlmApiKey: ""          # Google AI Studio API key (Gemini)
+
+  # Langfuse
+  langfuseDatabaseUrl: ""        # PostgreSQL connection string
+  langfuseEncryptionKey: ""      # 256-bit hex encryption key
+  langfuseSalt: ""               # Random salt for hashing
+  langfuseNextAuthSecret: ""     # NextAuth.js session secret
+
+  # ClickHouse
+  clickhousePassword: ""         # ClickHouse default user password
+
+  # Redis
+  redisPassword: ""              # Redis AUTH password
+
+  # S3
+  s3AccessKeyId: ""              # S3-compatible access key
+  s3SecretAccessKey: ""          # S3-compatible secret key

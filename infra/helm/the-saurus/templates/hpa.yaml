@@ -1,0 +1,46 @@
+{{- if .Values.autoscaling.enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Release.Name }}-pipeline
+  labels:
+    app.kubernetes.io/name: pipeline
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Release.Name }}-pipeline
+  minReplicas: {{ .Values.autoscaling.pipeline.minReplicas }}
+  maxReplicas: {{ .Values.autoscaling.pipeline.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.autoscaling.pipeline.targetCPUUtilizationPercentage }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Release.Name }}-assistant-ws
+  labels:
+    app.kubernetes.io/name: assistant-ws
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Release.Name }}-assistant-ws
+  minReplicas: {{ .Values.autoscaling.assistantWs.minReplicas }}
+  maxReplicas: {{ .Values.autoscaling.assistantWs.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.autoscaling.assistantWs.targetCPUUtilizationPercentage }}
+{{- end }}
