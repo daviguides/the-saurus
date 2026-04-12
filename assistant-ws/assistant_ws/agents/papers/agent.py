@@ -7,6 +7,8 @@ from assistant_ws.agents.shared.models import create_model
 
 
 async def build_papers_agent(model: Model | None = None) -> Agent:
+    from assistant_ws.config import settings
+
     mcp_tools = await get_papers_mcp()
 
     tools = [mcp_tools] if mcp_tools else []
@@ -18,4 +20,5 @@ async def build_papers_agent(model: Model | None = None) -> Agent:
         tools=tools,
         store_events=True,
         tool_call_limit=5,
+        debug_mode=settings.debug_mode,
     )

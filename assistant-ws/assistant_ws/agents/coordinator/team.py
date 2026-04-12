@@ -7,6 +7,8 @@ from assistant_ws.agents.shared.models import create_model
 
 
 async def build_coordinator_team() -> Team:
+    from assistant_ws.config import settings
+
     model = create_model()
     papers_agent = await build_papers_agent(model=model)
 
@@ -19,4 +21,5 @@ async def build_coordinator_team() -> Team:
         add_history_to_context=True,
         num_history_runs=10,
         stream_member_events=True,
+        debug_mode=settings.debug_mode,
     )

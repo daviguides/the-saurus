@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     # Team run timeout (seconds)
     team_run_timeout_seconds: int = 120
 
+    # Agno debug mode
+    debug_mode: bool = True
+
     # Max message length (chars)
     max_message_length: int = 10000
 
