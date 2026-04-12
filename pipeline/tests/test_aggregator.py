@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 from unittest.mock import AsyncMock, patch
-
-from tests.conftest import mock_streaming_arun
 
 import pytest
 
@@ -335,11 +332,6 @@ class TestCollectClaimIds:
 # --- Agent run tests ---
 
 
-@dataclass
-class FakeRunOutput:
-    content: Any
-
-
 def _make_aggregator_result() -> AggregatorResult:
     return AggregatorResult(
         title="Literature Review on Chronobiology and Gene Therapy",
@@ -382,15 +374,12 @@ class TestAggregatorAgentRun:
     async def test_run_returns_title_and_abstract(
         self, input_data: dict[str, Any], mock_result: AggregatorResult
     ) -> None:
-        fake_output = FakeRunOutput(content=mock_result)
-
         with patch("pipeline.agents.aggregator.AgnoAgent"):
             agent = AggregatorAgent()
 
-        agent._agent = AsyncMock()
-        agent._agent.arun = mock_streaming_arun(fake_output)
-
-        result = await agent.run(input_data)
+        with patch("pipeline.agents.aggregator.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+            mock_retry.return_value = mock_result
+            result = await agent.run(input_data)
 
         assert result["title"] == mock_result.title
         assert result["abstract"] == mock_result.abstract
@@ -398,15 +387,12 @@ class TestAggregatorAgentRun:
     async def test_run_returns_sections_with_resolved_citations(
         self, input_data: dict[str, Any], mock_result: AggregatorResult
     ) -> None:
-        fake_output = FakeRunOutput(content=mock_result)
-
         with patch("pipeline.agents.aggregator.AgnoAgent"):
             agent = AggregatorAgent()
 
-        agent._agent = AsyncMock()
-        agent._agent.arun = mock_streaming_arun(fake_output)
-
-        result = await agent.run(input_data)
+        with patch("pipeline.agents.aggregator.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+            mock_retry.return_value = mock_result
+            result = await agent.run(input_data)
 
         sections = result["sections"]
         assert len(sections) == 2
@@ -418,15 +404,12 @@ class TestAggregatorAgentRun:
     async def test_run_returns_claim_ids_backward_compat(
         self, input_data: dict[str, Any], mock_result: AggregatorResult
     ) -> None:
-        fake_output = FakeRunOutput(content=mock_result)
-
         with patch("pipeline.agents.aggregator.AgnoAgent"):
             agent = AggregatorAgent()
 
-        agent._agent = AsyncMock()
-        agent._agent.arun = mock_streaming_arun(fake_output)
-
-        result = await agent.run(input_data)
+        with patch("pipeline.agents.aggregator.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+            mock_retry.return_value = mock_result
+            result = await agent.run(input_data)
 
         assert result["sections"][0]["claim_ids"] == ["c1", "c2"]
         assert result["sections"][1]["claim_ids"] == ["c3"]
@@ -434,15 +417,12 @@ class TestAggregatorAgentRun:
     async def test_run_returns_citations_with_positions(
         self, input_data: dict[str, Any], mock_result: AggregatorResult
     ) -> None:
-        fake_output = FakeRunOutput(content=mock_result)
-
         with patch("pipeline.agents.aggregator.AgnoAgent"):
             agent = AggregatorAgent()
 
-        agent._agent = AsyncMock()
-        agent._agent.arun = mock_streaming_arun(fake_output)
-
-        result = await agent.run(input_data)
+        with patch("pipeline.agents.aggregator.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+            mock_retry.return_value = mock_result
+            result = await agent.run(input_data)
 
         citations = result["citations"]
         assert len(citations) == 3
@@ -455,15 +435,12 @@ class TestAggregatorAgentRun:
     async def test_run_returns_references_grouped_by_paper(
         self, input_data: dict[str, Any], mock_result: AggregatorResult
     ) -> None:
-        fake_output = FakeRunOutput(content=mock_result)
-
         with patch("pipeline.agents.aggregator.AgnoAgent"):
             agent = AggregatorAgent()
 
-        agent._agent = AsyncMock()
-        agent._agent.arun = mock_streaming_arun(fake_output)
-
-        result = await agent.run(input_data)
+        with patch("pipeline.agents.aggregator.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+            mock_retry.return_value = mock_result
+            result = await agent.run(input_data)
 
         refs = result["references"]
         assert len(refs) == 2  # p1 and p2
@@ -472,21 +449,18 @@ class TestAggregatorAgentRun:
         assert len(p1_ref["cited_in"]) == 2  # c1 and c3 both from p1
         assert p1_ref["authors"] == ["Smith J", "Doe A"]
 
-    async def test_run_passes_output_schema_to_agno(
+    async def test_run_passes_aggregator_result_schema(
         self, input_data: dict[str, Any], mock_result: AggregatorResult
     ) -> None:
-        fake_output = FakeRunOutput(content=mock_result)
-
         with patch("pipeline.agents.aggregator.AgnoAgent"):
             agent = AggregatorAgent()
 
-        agent._agent = AsyncMock()
-        agent._agent.arun = mock_streaming_arun(fake_output)
+        with patch("pipeline.agents.aggregator.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+            mock_retry.return_value = mock_result
+            await agent.run(input_data)
 
-        await agent.run(input_data)
-
-        call_args = agent._agent.arun.call_args
-        assert call_args[1]["output_schema"] is AggregatorResult
+        call_args = mock_retry.call_args
+        assert call_args[0][2] is AggregatorResult  # third positional arg is model class
 
     async def test_run_handles_empty_claims(self) -> None:
         """Agent works with theme_reviews only (no claims/papers)."""
@@ -500,15 +474,13 @@ class TestAggregatorAgentRun:
             ],
             citations=[],
         )
-        fake_output = FakeRunOutput(content=minimal_result)
 
         with patch("pipeline.agents.aggregator.AgnoAgent"):
             agent = AggregatorAgent()
 
-        agent._agent = AsyncMock()
-        agent._agent.arun = mock_streaming_arun(fake_output)
-
-        result = await agent.run({"theme_reviews": [{"theme_id": "t1", "label": "Theme", "review": "Text."}]})
+        with patch("pipeline.agents.aggregator.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+            mock_retry.return_value = minimal_result
+            result = await agent.run({"theme_reviews": [{"theme_id": "t1", "label": "Theme", "review": "Text."}]})
 
         assert result["title"] == "Review"
         assert result["sections"][0]["claim_ids"] == []
