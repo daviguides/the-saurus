@@ -1,0 +1,36 @@
+direction: down
+
+pdfs: "PDFs" {shape: document}
+ingestion: "PDF Ingestion\npdfplumber → Markdown + position tags"
+
+analyzer: "PaperAnalyzerAgent (per paper, stateless)" {
+  style.fill: "#2D6A4F"
+  style.font-color: "#fff"
+}
+
+dedup: "ThemeDedupAgent (all themes)" {
+  style.fill: "#2D6A4F"
+  style.font-color: "#fff"
+}
+
+reviewer: "ThemeReviewerAgent (5 per batch)" {
+  style.fill: "#2D6A4F"
+  style.font-color: "#fff"
+}
+
+aggregator: "AggregatorAgent (single pass)" {
+  style.fill: "#2D6A4F"
+  style.font-color: "#fff"
+}
+
+postproc: "Post-processing — resolve [N] refs + build references"
+
+review: "Literature Review" {shape: document}
+
+pdfs -> ingestion
+ingestion -> analyzer
+analyzer -> dedup: "ThemeWithClaims[]"
+dedup -> reviewer: "ThemeGroup[]"
+reviewer -> aggregator: "SingleThemeReview[]"
+aggregator -> postproc: "AggregatorResult"
+postproc -> review

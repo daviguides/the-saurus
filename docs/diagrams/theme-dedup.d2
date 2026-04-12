@@ -1,0 +1,43 @@
+direction: down
+
+paper-a: "Paper A" {
+  t1: chronobiology
+  t2: gene editing
+}
+
+paper-b: "Paper B" {
+  t3: circadian rhythms
+  t4: CRISPR-Cas9
+}
+
+paper-c: "Paper C" {
+  t5: biological clocks
+  t6: genome engineering
+}
+
+dedup: "ThemeDedupAgent\nsemantic matching" {
+  style.fill: "#2D6A4F"
+  style.font-color: "#fff"
+}
+
+canonical1: "Canonical: Circadian Biology" {
+  style.fill: "#f0f4f0"
+  aliases: "aliases: chronobiology,\ncircadian rhythms, biological clocks"
+  papers: "papers: A, B, C"
+}
+
+canonical2: "Canonical: Gene Editing" {
+  style.fill: "#f0f4f0"
+  aliases: "aliases: CRISPR-Cas9,\ngenome engineering"
+  papers: "papers: A, B, C"
+}
+
+paper-a.t1 -> dedup
+paper-a.t2 -> dedup
+paper-b.t3 -> dedup
+paper-b.t4 -> dedup
+paper-c.t5 -> dedup
+paper-c.t6 -> dedup
+
+dedup -> canonical1
+dedup -> canonical2

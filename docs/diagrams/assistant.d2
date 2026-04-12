@@ -1,0 +1,42 @@
+direction: right
+
+user: "User question" {shape: person}
+
+coordinator: "CoordinatorTeam\nGPT-4o-mini\n10-turn history" {
+  style.fill: "#1B4332"
+  style.font-color: "#fff"
+}
+
+papers-agent: "PapersAgent\nMCP tool access" {
+  style.fill: "#2D6A4F"
+  style.font-color: "#fff"
+}
+
+mcp: "Papers MCP\n:8012" {
+  style.fill: "#1B4332"
+  style.font-color: "#fff"
+}
+
+tools: "6 MCP Tools" {
+  t1: get_paper_themes
+  t2: get_claims_by_theme
+  t3: get_theme_map
+  t4: get_theme_review
+  t5: get_literature_review
+  t6: search_claims (vector)
+}
+
+qdrant: Qdrant {
+  shape: cylinder
+  style.fill: "#D4AF37"
+  style.font-color: "#000"
+}
+
+response: "Structured answer\nwith evidence from\nthe user's papers" {shape: document}
+
+user -> coordinator
+coordinator -> papers-agent
+papers-agent -> mcp
+mcp -> tools
+tools -> qdrant
+qdrant -> response

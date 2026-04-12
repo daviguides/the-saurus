@@ -1,0 +1,33 @@
+direction: down
+
+stage1: "Stage 1 — Paper Analysis (parallel per paper)" {
+  style.fill: "#f0f4f0"
+  p1: "P1" {style.fill: "#2D6A4F"; style.font-color: "#fff"}
+  p2: "P2" {style.fill: "#2D6A4F"; style.font-color: "#fff"}
+  p3: "P3" {style.fill: "#2D6A4F"; style.font-color: "#fff"}
+  pn: "Pn" {style.fill: "#2D6A4F"; style.font-color: "#fff"}
+}
+
+b1: "sync" {shape: parallelogram; style.fill: "#D4AF37"; style.font-color: "#000"}
+
+stage2: "Stage 2 — Theme Dedup (single pass)" {style.fill: "#f0f4f0"}
+
+b2: "sync" {shape: parallelogram; style.fill: "#D4AF37"; style.font-color: "#000"}
+
+stage3: "Stage 3 — Theme Review (5 per batch)" {
+  style.fill: "#f0f4f0"
+  b1: "B1" {style.fill: "#1B4332"; style.font-color: "#fff"}
+  b2: "B2" {style.fill: "#1B4332"; style.font-color: "#fff"}
+  bn: "Bn" {style.fill: "#1B4332"; style.font-color: "#fff"}
+}
+
+b3: "sync" {shape: parallelogram; style.fill: "#D4AF37"; style.font-color: "#000"}
+
+stage4: "Stage 4 — Aggregation (single pass)" {style.fill: "#f0f4f0"}
+
+stage1 -> b1
+b1 -> stage2
+stage2 -> b2
+b2 -> stage3
+stage3 -> b3
+b3 -> stage4

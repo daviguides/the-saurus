@@ -1,0 +1,41 @@
+direction: right
+
+ui: "React App" {
+  style.fill: "#2D6A4F"
+  style.font-color: "#fff"
+}
+
+ws: "WebSocket\nServer" {
+  style.fill: "#1B4332"
+  style.font-color: "#fff"
+}
+
+orch: "Orchestrator" {
+  style.fill: "#1B4332"
+  style.font-color: "#fff"
+}
+
+agent: "Agent" {
+  style.fill: "#2D6A4F"
+  style.font-color: "#fff"
+}
+
+disk: "events.ndjson" {
+  shape: page
+  style.fill: "#D4AF37"
+  style.font-color: "#000"
+}
+
+ui -> ws: "1. Connect\n/jobs/{id}/stream"
+ws -> ui: "2. Replay past events"
+
+orch -> agent: "3. run(input)"
+agent -> orch: "4. emit(agent_started)"
+orch -> disk: "5. append event"
+orch -> ws: "6. broadcast"
+ws -> ui: "7. event JSON"
+
+agent -> orch: "8. emit(agent_completed)"
+orch -> disk: "9. append event"
+orch -> ws: "10. broadcast"
+ws -> ui: "11. event JSON\n→ UI updates trace"

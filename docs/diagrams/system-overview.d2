@@ -1,0 +1,40 @@
+direction: down
+
+frontend: Frontend {
+  app: "App :5173\nReact 19 + Rsbuild" {
+    style.fill: "#2D6A4F"
+    style.font-color: "#fff"
+  }
+  assistant-ui: "Assistant UI :5174\nModule Federation 2.0" {
+    style.fill: "#2D6A4F"
+    style.font-color: "#fff"
+  }
+  app -> assistant-ui: "Module Federation\nlazy load" {style.stroke-dash: 3}
+}
+
+pipeline: "Pipeline :8002\nFastAPI + Gemini 2.5 Flash" {
+  style.fill: "#1B4332"
+  style.font-color: "#fff"
+}
+
+assistant-ws: "Assistant WS :8001\nSocket.IO + GPT-4o-mini" {
+  style.fill: "#1B4332"
+  style.font-color: "#fff"
+}
+
+papers-mcp: "Papers MCP :8012\nFastMCP" {
+  style.fill: "#1B4332"
+  style.font-color: "#fff"
+}
+
+qdrant: "Qdrant :6333" {
+  shape: cylinder
+  style.fill: "#D4AF37"
+  style.font-color: "#000"
+}
+
+frontend.app -> pipeline: "HTTP + WS\n(upload, status, stream)"
+frontend.assistant-ui -> assistant-ws: "Socket.IO (chat)"
+assistant-ws -> papers-mcp: "MCP streamable-http\n(tool calls)"
+papers-mcp -> qdrant: "RAG queries"
+pipeline -> qdrant: "fire-and-forget\n(embeddings)" {style.stroke-dash: 3}

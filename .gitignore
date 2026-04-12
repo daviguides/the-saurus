@@ -20,7 +20,7 @@ assistant-ui/dist/
 data/
 jobs/
 
-docs/
+docs/papers/
 logs/
 
 .DS_Store

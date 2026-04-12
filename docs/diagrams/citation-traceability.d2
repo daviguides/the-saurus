@@ -1,0 +1,32 @@
+direction: right
+
+review: "Literature Review" {
+  shape: document
+  quote: |md
+    "Studies suggest circadian
+    disruption affects metabolism **[1]**"
+  |
+}
+
+citation: "Citation [1]" {
+  claim_id: abc-123
+  paper_id: paper-A
+  ref_number: 1
+}
+
+claim: "Claim" {
+  text: "Circadian disruption..."
+  page: 12
+  paragraph: 3
+  deep: extended analysis
+  summary: one-line
+}
+
+paper: "Paper A\nSmith et al., 2024" {
+  shape: document
+  location: "[p.12, section-3]"
+}
+
+review -> citation: "ref [1]"
+citation -> claim: "resolves to"
+claim -> paper: "sourced from"
