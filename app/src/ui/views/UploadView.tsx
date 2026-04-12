@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router";
 import { AlertCircle } from "lucide-react";
 import { useUpload } from "../../core/hooks/useUpload";
 import { useJobId, clearJobId } from "../../core/hooks/useJobId";
@@ -40,6 +41,7 @@ export default function UploadView() {
     usePipelineTrace(effectiveJobId);
 
   const { fetchAndLoad: fetchAndLoadReview } = useReview();
+  const navigate = useNavigate();
 
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -62,6 +64,14 @@ export default function UploadView() {
       return () => clearTimeout(timer);
     }
   }, [isCompleted, effectiveJobId, fetchAndLoadReview]);
+
+  // Auto-navigate to review page after pipeline completes
+  useEffect(() => {
+    if (isCompleted && effectiveJobId) {
+      const timer = setTimeout(() => navigate("/review"), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isCompleted, effectiveJobId, navigate]);
 
   const handleFilesAdded = useCallback(
     (files: File[]) => {

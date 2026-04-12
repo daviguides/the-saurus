@@ -2,6 +2,7 @@ import { NavLink } from "react-router";
 import { Upload, FileText, BookOpen } from "lucide-react";
 import clsx from "clsx";
 import { useReview } from "../../core/hooks/useReview";
+import Tooltip from "../shared/Tooltip";
 
 const navItems = [
   { to: "/upload", label: "Upload", icon: Upload },
@@ -19,25 +20,25 @@ export default function Sidebar() {
     >
       <nav className="flex flex-col items-center gap-1">
         {navItems.map(({ to, label, icon: Icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            title={label}
-            aria-label={label}
-            className={({ isActive }) =>
-              clsx(
-                "relative flex items-center justify-center w-10 h-10 rounded-lg transition-colors duration-200",
-                isActive
-                  ? "bg-primary text-white"
-                  : "text-text-secondary hover:text-primary hover:bg-primary/10",
-              )
-            }
-          >
-            <Icon size={20} />
-            {to === "/review" && hasReview && (
-              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-accent animate-[scaleIn_300ms_ease-out]" />
-            )}
-          </NavLink>
+          <Tooltip key={to} content={label} placement="right">
+            <NavLink
+              to={to}
+              aria-label={label}
+              className={({ isActive }) =>
+                clsx(
+                  "relative flex items-center justify-center w-10 h-10 rounded-lg transition-colors duration-200",
+                  isActive
+                    ? "bg-primary text-white"
+                    : "text-text-secondary hover:text-primary hover:bg-primary/10",
+                )
+              }
+            >
+              <Icon size={20} />
+              {to === "/review" && hasReview && (
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-accent animate-[scaleIn_300ms_ease-out]" />
+              )}
+            </NavLink>
+          </Tooltip>
         ))}
       </nav>
     </aside>
