@@ -31,6 +31,11 @@ class ProgressTracker:
         self._lock = asyncio.Lock()
         self._created_at = datetime.now(UTC)
 
+    @property
+    def created_at(self) -> datetime:
+        """Public accessor for the job creation timestamp."""
+        return self._created_at
+
     def _overall_progress(self) -> float:
         if TOTAL_STAGES == 0:
             return 1.0

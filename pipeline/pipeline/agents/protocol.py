@@ -18,5 +18,5 @@ class Agent(Protocol):
         self,
         data: dict[str, Any],
         *,
-        on_event: Callable[..., Awaitable[None]] | None = None,
+        on_event: Callable[[Any], Awaitable[None]] | None = None,
     ) -> dict[str, Any]: ...

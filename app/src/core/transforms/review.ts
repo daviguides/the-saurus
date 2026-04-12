@@ -21,20 +21,19 @@ export function transformReview(
   const citations = raw.citations ?? [];
 
   // Also build claim lookup from enriched papers
-  const claimById = new Map<string, Record<string, unknown>>();
+  const claimById = new Map<string, import("../services/api").PaperClaimResponse>();
   for (const ep of enrichedPapers) {
     for (const c of ep.claims ?? []) {
-      const id = c.id as string;
-      if (id) claimById.set(id, c);
+      if (c.id) claimById.set(c.id, c);
     }
   }
 
   for (const cit of citations) {
     const ep = paperById.get(cit.paper_id);
     const claim = claimById.get(cit.claim_id);
-    const claimText = (claim?.summary as string) ?? (claim?.text as string) ?? "";
-    const page = cit.page ?? (claim?.source as Record<string, unknown>)?.page as number ?? 0;
-    const paragraph = cit.paragraph ?? (claim?.source as Record<string, unknown>)?.paragraph as number ?? 0;
+    const claimText = claim?.summary ?? claim?.text ?? "";
+    const page = cit.page ?? claim?.page ?? 0;
+    const paragraph = cit.paragraph ?? claim?.paragraph ?? 0;
 
     // Find which sections reference this citation
     const citedIn = raw.sections
@@ -96,7 +95,7 @@ export function transformReview(
   let claimCount = 0;
   for (const ep of enrichedPapers) {
     for (const t of ep.themes ?? []) {
-      allThemes.add((t as Record<string, unknown>).id as string);
+      allThemes.add(t.id);
     }
     claimCount += (ep.claims ?? []).length;
   }

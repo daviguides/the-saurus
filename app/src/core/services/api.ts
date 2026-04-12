@@ -15,14 +15,33 @@ export interface PaperInfo {
   filename: string;
 }
 
+export interface PaperThemeResponse {
+  id: string;
+  name: string;
+  description: string;
+  paper_id: string;
+  positions: { page: number; paragraph: number }[];
+}
+
+export interface PaperClaimResponse {
+  id: string;
+  theme_id: string;
+  theme_name: string;
+  text: string;
+  page: number;
+  paragraph: number;
+  deep: string;
+  summary: string;
+}
+
 export interface EnrichedPaperResponse {
   paper_id: string;
   filename: string;
   title: string;
   authors: string[];
   page_count: number;
-  themes: Record<string, unknown>[];
-  claims: Record<string, unknown>[];
+  themes: PaperThemeResponse[];
+  claims: PaperClaimResponse[];
 }
 
 export interface RawCitation {

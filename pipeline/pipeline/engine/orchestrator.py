@@ -17,6 +17,7 @@ from pipeline.agents import (
     ThemeReviewerAgent,
 )
 from pipeline.agents.event_bridge import create_agent_event_callback
+from pipeline.agents.protocol import Agent
 from pipeline.core import (
     EventEmitter,
     EventType,
@@ -29,7 +30,7 @@ from pipeline.core import (
 )
 from pipeline.core.exceptions import PipelineError, StageError
 from pipeline.core.persistence import release_lock
-from pipeline.core.qdrant import get_indexer
+from pipeline.core.qdrant import QdrantIndexer, get_indexer
 from pipeline.ws.stream import get_or_create_emitter, remove_emitter
 
 from .progress import ProgressTracker
@@ -63,7 +64,7 @@ class PipelineContext:
     paper_contents: dict[str, str]
     emitter: EventEmitter
     tracker: ProgressTracker
-    indexer: Any | None
+    indexer: QdrantIndexer | None
     qdrant_tasks: set[asyncio.Task] = field(default_factory=set)
 
     def fire_qdrant(self, coro: Coroutine, *, operation: str = "write") -> None:
@@ -170,7 +171,7 @@ async def _finalize_pipeline(ctx: PipelineContext) -> None:
         stage=Stage.AGGREGATION,
         progress=1.0,
         paper_count=len(ctx.papers),
-        created_at=ctx.tracker._created_at,
+        created_at=ctx.tracker.created_at,
         updated_at=now,
     )
     await write_status(ctx.job_id, final_status, ctx.jobs_dir)
@@ -381,12 +382,12 @@ async def _safe_qdrant(coro: Coroutine, *, operation: str = "unknown") -> None:
 async def _run_parallel_per_paper(
     papers: list[PaperEntry],
     paper_contents: dict[str, str],
-    agent: Any,
+    agent: Agent,
     tracker: ProgressTracker,
     stage: str,
     job_path: Path,
     extra_inputs: dict[str, dict[str, Any]] | None = None,
-    emitter: Any | None = None,
+    emitter: EventEmitter | None = None,
 ) -> list[tuple[PaperEntry, dict[str, Any]]]:
     """Run an agent in parallel across all papers.
 
