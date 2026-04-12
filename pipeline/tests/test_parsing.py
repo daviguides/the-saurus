@@ -114,7 +114,7 @@ class TestRunAgentWithRetry:
         model = SampleModel(name=VALID_NAME, value=VALID_VALUE)
         agent = MagicMock()
         agent.name = "TestAgent"
-        agent.arun = AsyncMock(
+        agent.arun = MagicMock(
             return_value=_mock_arun_success(model),
         )
 
@@ -143,7 +143,7 @@ class TestRunAgentWithRetry:
         # Arrange
         agent = MagicMock()
         agent.name = "DictAgent"
-        agent.arun = AsyncMock(
+        agent.arun = MagicMock(
             return_value=_mock_arun_success(
                 {"name": VALID_NAME, "value": VALID_VALUE},
             ),
@@ -173,7 +173,7 @@ class TestRunAgentWithRetry:
         model = SampleModel(name=VALID_NAME, value=VALID_VALUE)
         agent = MagicMock()
         agent.name = "RetryAgent"
-        agent.arun = AsyncMock(
+        agent.arun = MagicMock(
             side_effect=[
                 _mock_arun_error("LLM failed"),
                 _mock_arun_success(model),
@@ -203,7 +203,7 @@ class TestRunAgentWithRetry:
         model = SampleModel(name=VALID_NAME, value=VALID_VALUE)
         agent = MagicMock()
         agent.name = "EmptyAgent"
-        agent.arun = AsyncMock(
+        agent.arun = MagicMock(
             side_effect=[
                 _mock_arun_empty(),
                 _mock_arun_success(model),
@@ -231,7 +231,7 @@ class TestRunAgentWithRetry:
         """Raises AgentResponseError after all retries fail."""
         agent = MagicMock()
         agent.name = "FailAgent"
-        agent.arun = AsyncMock(
+        agent.arun = MagicMock(
             side_effect=RuntimeError("API down"),
         )
 
@@ -259,7 +259,7 @@ class TestRunAgentWithRetry:
         model = SampleModel(name=VALID_NAME, value=VALID_VALUE)
         agent = MagicMock()
         agent.name = "EventAgent"
-        agent.arun = AsyncMock(
+        agent.arun = MagicMock(
             return_value=_mock_arun_success(model),
         )
 
