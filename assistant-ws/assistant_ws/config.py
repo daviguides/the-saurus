@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     # Server
     host: str = "0.0.0.0"
     port: int = 8001
-    reload: bool = True
+    reload: bool = False
     workers: int = 1
     cors_origins: str = "http://localhost:3000,http://localhost:5173,http://localhost:5174"
 

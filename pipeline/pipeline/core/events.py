@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from enum import StrEnum
@@ -11,6 +12,8 @@ from typing import Any
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class EventType(StrEnum):
@@ -76,10 +79,16 @@ class EventEmitter:
         await asyncio.to_thread(self._append_line, line)
 
         if self._listeners:
-            await asyncio.gather(
+            results = await asyncio.gather(
                 *[cb(event) for cb in self._listeners],
                 return_exceptions=True,
             )
+            for i, result in enumerate(results):
+                if isinstance(result, Exception):
+                    logger.error(
+                        "Listener %d raised %s for event %s: %s",
+                        i, type(result).__name__, event.event_type, result,
+                    )
 
         return event
 

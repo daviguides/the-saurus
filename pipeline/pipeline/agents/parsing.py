@@ -29,6 +29,7 @@ def _get_gemini_client() -> object:
     global _gemini_client
     if _gemini_client is None:
         import google.genai as genai
+
         from pipeline.config import settings
         _gemini_client = genai.Client(api_key=settings.llm_api_key)
     return _gemini_client
@@ -232,7 +233,7 @@ async def run_agent_with_retry[T: BaseModel](
 
             return parsed
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             elapsed = time.monotonic() - t0
             last_error = TimeoutError(f"LLM call timed out after {timeout}s")
             logger.error(

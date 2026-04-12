@@ -15,5 +15,4 @@ async def config():
     return {
         "llm_provider": settings.llm_provider,
         "llm_model_id": settings.llm_model_id,
-        "mcp_papers_url": settings.mcp_papers_url,
     }

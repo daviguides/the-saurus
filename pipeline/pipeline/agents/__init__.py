@@ -1,5 +1,7 @@
 """Pipeline agents: protocol, real implementations, and stubs."""
 
+from .aggregator import AggregatorAgent
+from .paper_analyzer import PaperAnalyzerAgent
 from .protocol import Agent
 from .stubs import (
     StubAggregator,
@@ -7,8 +9,6 @@ from .stubs import (
     StubThemeDedup,
     StubThemeReviewer,
 )
-from .aggregator import AggregatorAgent
-from .paper_analyzer import PaperAnalyzerAgent
 from .theme_dedup import ThemeDedupAgent
 from .theme_reviewer import ThemeReviewerAgent
 
