@@ -16,6 +16,7 @@ function PaperCard({ paper }: { paper: Paper }) {
     <div className="rounded-lg border border-border bg-surface overflow-hidden">
       <button
         type="button"
+        aria-expanded={expanded}
         onClick={() => setExpanded(!expanded)}
         className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-bg transition-colors"
       >

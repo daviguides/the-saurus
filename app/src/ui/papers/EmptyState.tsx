@@ -62,7 +62,15 @@ export default function EmptyState({ onUpload, onFilesAdded, disabled, progress 
               ? "border-primary bg-primary/5 scale-[1.02]"
               : "border-border hover:border-primary/50"
           }`}
+          role="button"
+          tabIndex={0}
           onClick={onUpload}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onUpload();
+            }
+          }}
         >
           <p className="text-sm text-text-muted">
             Drop PDFs here or{" "}

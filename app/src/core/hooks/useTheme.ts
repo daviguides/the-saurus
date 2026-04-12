@@ -4,18 +4,16 @@ type Theme = "light" | "dark";
 
 const STORAGE_KEY = "thesaurus:theme";
 
-let listeners: Array<() => void> = [];
+const listeners = new Set<() => void>();
 
 function emitChange() {
-  for (const listener of listeners) {
-    listener();
-  }
+  listeners.forEach((l) => l());
 }
 
 function subscribe(listener: () => void) {
-  listeners = [...listeners, listener];
+  listeners.add(listener);
   return () => {
-    listeners = listeners.filter((l) => l !== listener);
+    listeners.delete(listener);
   };
 }
 

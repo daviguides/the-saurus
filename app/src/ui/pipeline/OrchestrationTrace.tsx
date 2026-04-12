@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BookOpen,
   Check,
@@ -75,18 +75,6 @@ function isTerminalEvent(event: PipelineEvent): boolean {
   );
 }
 
-function isActiveEvent(event: PipelineEvent, allEvents: PipelineEvent[]): boolean {
-  const et = event.eventType;
-  if (et !== "stage_started" && et !== "agent_started" && et !== "job_started")
-    return false;
-  // Check if there's a completing event after this
-  const stage = event.stage;
-  for (let i = allEvents.indexOf(event) + 1; i < allEvents.length; i++) {
-    const e = allEvents[i];
-    if (e.stage === stage && isTerminalEvent(e)) return false;
-  }
-  return true;
-}
 
 function formatRelativeTime(timestamp: number, firstTimestamp: number): string {
   const elapsed = (timestamp - firstTimestamp) / 1000;
@@ -104,11 +92,10 @@ interface StepItemProps {
   event: PipelineEvent;
   isLast: boolean;
   firstTimestamp: number;
-  allEvents: PipelineEvent[];
+  isActive: boolean;
 }
 
-function TraceStepItem({ event, isLast, firstTimestamp, allEvents }: StepItemProps) {
-  const active = isActiveEvent(event, allEvents);
+function TraceStepItem({ event, isLast, firstTimestamp, isActive: active }: StepItemProps) {
   const isError = event.eventType === "job_failed" || event.eventType === "agent_error";
   const isCompleted = isTerminalEvent(event) && !isError;
   const Icon = getEventIcon(event);
@@ -178,6 +165,26 @@ export default function OrchestrationTrace({
     }
   }, [events.length, expanded]);
 
+  // Pre-compute active event set (O(N)) instead of O(N^2) per-item scan
+  const activeEventIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (let i = 0; i < events.length; i++) {
+      const event = events[i];
+      const et = event.eventType;
+      if (et !== "stage_started" && et !== "agent_started" && et !== "job_started") continue;
+      const stage = event.stage;
+      let hasTerminal = false;
+      for (let j = i + 1; j < events.length; j++) {
+        if (events[j].stage === stage && isTerminalEvent(events[j])) {
+          hasTerminal = true;
+          break;
+        }
+      }
+      if (!hasTerminal) ids.add(event.id);
+    }
+    return ids;
+  }, [events]);
+
   if (events.length === 0) return null;
 
   const firstTimestamp = events[0].timestamp;
@@ -188,6 +195,7 @@ export default function OrchestrationTrace({
       {/* Header */}
       <button
         type="button"
+        aria-expanded={expanded}
         onClick={() => setExpanded(!expanded)}
         className="w-full flex items-center gap-2 px-4 py-2.5 text-left hover:bg-bg/50 transition-colors"
       >
@@ -232,7 +240,7 @@ export default function OrchestrationTrace({
                 event={event}
                 isLast={index === events.length - 1}
                 firstTimestamp={firstTimestamp}
-                allEvents={events}
+                isActive={activeEventIds.has(event.id)}
               />
             ))}
           </div>

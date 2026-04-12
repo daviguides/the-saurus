@@ -8,6 +8,9 @@ function notifyAll() {
   listeners.forEach((l) => l());
 }
 
+/** Notify useJobId subscribers after same-tab localStorage writes. */
+export const notifyJobIdListeners = notifyAll;
+
 // Listen for cross-tab changes
 if (typeof window !== "undefined") {
   window.addEventListener("storage", (e: StorageEvent) => {

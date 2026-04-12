@@ -22,7 +22,8 @@ export default function PapersView() {
       }
       const enriched = await fetchEnrichedPapers(id);
       setPapers(transformPapers(enriched));
-    } catch {
+    } catch (e) {
+      console.error("Failed to fetch papers:", e);
       setPapers([]);
     } finally {
       setLoading(false);

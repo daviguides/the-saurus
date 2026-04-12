@@ -4,9 +4,6 @@ import { useUpload } from "../../core/hooks/useUpload";
 import { useJobId, clearJobId } from "../../core/hooks/useJobId";
 import { usePipelineTrace } from "../../core/hooks/usePipelineTrace";
 import { useReview } from "../../core/hooks/useReview";
-import { fetchEnrichedPapers } from "../../core/services/api";
-import { transformPapers } from "../../core/transforms/papers";
-import { usePapers } from "../../core/hooks/usePapers";
 import UploadModal from "../papers/UploadModal";
 import EmptyState from "../papers/EmptyState";
 import PipelineTrace from "../pipeline/PipelineTrace";
@@ -27,8 +24,6 @@ function CrossfadeSlot({ active, children }: { active: boolean; children: React.
 }
 
 export default function UploadView() {
-  const { loadPapers } = usePapers();
-
   const {
     status: uploadStatus,
     progress: uploadProgress,
@@ -54,21 +49,19 @@ export default function UploadView() {
     return () => window.removeEventListener("open-upload-modal", handler);
   }, []);
 
-  // Fetch real data when pipeline completes
+  // Fetch review data when pipeline completes
   useEffect(() => {
     if (isCompleted && effectiveJobId) {
       const timer = setTimeout(async () => {
         try {
-          const enriched = await fetchEnrichedPapers(effectiveJobId);
-          loadPapers(transformPapers(enriched));
           fetchAndLoadReview(effectiveJobId);
         } catch (err) {
-          console.error("Failed to load results:", err);
+          console.error("Failed to load review:", err);
         }
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [isCompleted, effectiveJobId, loadPapers, fetchAndLoadReview]);
+  }, [isCompleted, effectiveJobId, fetchAndLoadReview]);
 
   const handleFilesAdded = useCallback(
     (files: File[]) => {

@@ -103,7 +103,16 @@ export default function FederatedAssistant() {
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-30 lg:hidden"
+          role="button"
+          tabIndex={0}
+          aria-label="Close assistant"
           onClick={close}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              close();
+            }
+          }}
         />
       )}
 

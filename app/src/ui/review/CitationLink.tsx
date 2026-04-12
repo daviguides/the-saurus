@@ -12,11 +12,15 @@ interface Props {
 
 export default function CitationLink({ href, title, children, papers, refToPaperIndex }: Props) {
   if (!href?.startsWith("cite:")) {
-    return (
-      <a href={href} title={title} target="_blank" rel="noopener noreferrer" className="text-primary underline">
-        {children}
-      </a>
-    );
+    // Only render as link if href is a safe URL scheme
+    if (href && (href.startsWith("http://") || href.startsWith("https://"))) {
+      return (
+        <a href={href} title={title} target="_blank" rel="noopener noreferrer" className="text-primary underline">
+          {children}
+        </a>
+      );
+    }
+    return <span title={title}>{children}</span>;
   }
 
   const refNumber = parseInt(href.slice(5), 10);

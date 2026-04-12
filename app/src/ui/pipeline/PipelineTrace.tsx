@@ -65,6 +65,7 @@ export default function PipelineTrace({ state, connectionLost }: Props) {
           stages={state.stages}
           startedAt={state.startedAt}
           totalPapers={state.progress.total}
+          completed={state.status === "completed" || state.status === "failed"}
         />
 
         <div className="flex-1 overflow-y-auto -mx-2 px-2">

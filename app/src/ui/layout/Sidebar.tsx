@@ -23,6 +23,7 @@ export default function Sidebar() {
             key={to}
             to={to}
             title={label}
+            aria-label={label}
             className={({ isActive }) =>
               clsx(
                 "relative flex items-center justify-center w-10 h-10 rounded-lg transition-colors duration-200",

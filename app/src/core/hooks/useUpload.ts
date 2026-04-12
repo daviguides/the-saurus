@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { createJob } from "../services/api";
+import { notifyJobIdListeners } from "./useJobId";
 
 export type UploadStatus = "idle" | "uploading" | "processing" | "error";
 
@@ -24,6 +25,7 @@ export function useUpload() {
     createJob(files, (pct) => setProgress(pct))
       .then((response) => {
         localStorage.setItem(STORAGE_KEY, response.job_id);
+        notifyJobIdListeners();
         setJobId(response.job_id);
         setPaperCount(response.paper_count);
         setStatus("processing");

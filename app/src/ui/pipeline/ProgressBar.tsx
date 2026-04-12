@@ -5,6 +5,7 @@ interface Props {
   stages: PipelineStageState[];
   startedAt: number | null;
   totalPapers: number;
+  completed?: boolean;
 }
 
 function formatElapsed(startedAt: number): string {
@@ -14,19 +15,19 @@ function formatElapsed(startedAt: number): string {
   return min > 0 ? `${min}m ${sec}s` : `${sec}s`;
 }
 
-function useElapsed(startedAt: number | null): string {
+function useElapsed(startedAt: number | null, completed: boolean): string {
   const [, tick] = useState(0);
   useEffect(() => {
-    if (!startedAt) return;
+    if (!startedAt || completed) return;
     const id = setInterval(() => tick((t) => t + 1), 1000);
     return () => clearInterval(id);
-  }, [startedAt]);
+  }, [startedAt, completed]);
   if (!startedAt) return "";
   return formatElapsed(startedAt);
 }
 
-export default function ProgressBar({ stages, startedAt, totalPapers }: Props) {
-  const elapsed = useElapsed(startedAt);
+export default function ProgressBar({ stages, startedAt, totalPapers, completed = false }: Props) {
+  const elapsed = useElapsed(startedAt, completed);
   const completedStages = stages.filter((s) => s.status === "completed").length;
   const activeStage = stages.find((s) => s.status === "running");
 

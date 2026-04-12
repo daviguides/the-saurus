@@ -114,6 +114,11 @@ export function createJob(
 
     const xhr = new XMLHttpRequest();
     xhr.open("POST", `${PIPELINE_API_URL}/jobs`);
+    xhr.timeout = 60_000; // 60s timeout
+
+    xhr.ontimeout = () => {
+      reject(new Error("Upload timed out after 60 seconds"));
+    };
 
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable && onProgress) {
