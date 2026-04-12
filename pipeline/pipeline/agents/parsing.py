@@ -13,11 +13,9 @@ import re
 import time
 from collections.abc import Awaitable, Callable
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any
 
 from pydantic import BaseModel
-
-T = TypeVar("T", bound=BaseModel)
 
 logger = logging.getLogger(__name__)
 
@@ -219,7 +217,7 @@ async def run_agent_with_retry(
                     filename = f"{paper_id}_{stage}_attempt{attempt}.txt"
                     (job_dir / filename).write_text(raw[:500_000])
                 except Exception:
-                    pass
+                    logger.debug("Failed to save raw response", exc_info=True)
 
             parsed = parse_agent_response(raw, output_schema)
             logger.info(

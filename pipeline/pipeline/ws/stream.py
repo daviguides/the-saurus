@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from fastapi import WebSocket, WebSocketDisconnect
 
@@ -36,7 +39,7 @@ async def websocket_stream(websocket: WebSocket, job_id: str, jobs_dir: Path) ->
         try:
             await websocket.send_json(event.model_dump(mode="json"))
         except Exception:
-            pass
+            logger.debug("WS send failed for job %s", job_id, exc_info=True)
 
     emitter.add_listener(on_event)
     try:

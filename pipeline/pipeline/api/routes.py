@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
 from uuid import uuid4
@@ -36,6 +37,8 @@ from .schemas import (
     ReviewResponse,
     StatusResponse,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -102,7 +105,8 @@ async def create_job(files: list[UploadFile]) -> CreateJobResponse:
 
         try:
             result = ingest_pdf(pdf_bytes)
-        except IngestionError:
+        except IngestionError as exc:
+            logger.warning("Ingestion failed for %s: %s", f.filename, exc)
             continue
 
         paper_id = str(uuid4())
