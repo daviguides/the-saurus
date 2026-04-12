@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import UTC, datetime
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, UploadFile
@@ -39,6 +39,8 @@ from .schemas import (
 
 router = APIRouter()
 
+MAX_PDF_BYTES = 50 * 1024 * 1024  # 50 MB
+
 _running_tasks: dict[str, asyncio.Task] = {}
 
 
@@ -48,6 +50,8 @@ def _jobs_dir() -> Path:
 
 def _get_job_dir(job_id: str) -> Path:
     path = _jobs_dir() / job_id
+    if not path.resolve().is_relative_to(_jobs_dir().resolve()):
+        raise HTTPException(status_code=400, detail="Invalid job ID")
     if not path.is_dir():
         raise HTTPException(status_code=404, detail="Job not found")
     return path
@@ -85,9 +89,15 @@ async def create_job(files: list[UploadFile]) -> CreateJobResponse:
 
     for f in files:
         pdf_bytes = await f.read()
+        if len(pdf_bytes) > MAX_PDF_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File {f.filename} exceeds 50 MB limit",
+            )
 
-        # Save raw PDF
-        pdf_path = job_path / f.filename
+        # Save raw PDF — sanitize filename to prevent path traversal
+        safe_name = PurePosixPath(f.filename).name
+        pdf_path = job_path / safe_name
         pdf_path.write_bytes(pdf_bytes)
 
         try:
