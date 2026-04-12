@@ -24,8 +24,8 @@ LITERATURE_REVIEW = "literature_review"
 
 ALL_COLLECTIONS = [PAPER_THEMES, PAPER_CLAIMS, THEME_MAP, THEME_REVIEWS, LITERATURE_REVIEW]
 
-# gemini-embedding-001 outputs 768 dimensions
-EMBEDDING_DIMENSION = 768
+# gemini-embedding-001 default output: 1536 dimensions
+EMBEDDING_DIMENSION = 1536
 
 
 class QdrantIndexer:
