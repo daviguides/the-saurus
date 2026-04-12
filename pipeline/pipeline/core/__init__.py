@@ -1,6 +1,13 @@
-"""Pipeline core: persistence, events, models, and vector indexing."""
+"""Pipeline core: persistence, events, models, vector indexing, and exceptions."""
 
 from .events import Event, EventEmitter, EventType
+from .exceptions import (
+    AgentError,
+    IngestionError,
+    PersistenceError,
+    PipelineError,
+    StageError,
+)
 from .models import JobState, JobStatus, PaperEntry
 from .persistence import (
     create_job_dir,
@@ -13,13 +20,18 @@ from .persistence import (
 from .qdrant import QdrantIndexer, get_indexer
 
 __all__ = [
+    "AgentError",
     "Event",
     "EventEmitter",
     "EventType",
+    "IngestionError",
     "JobState",
     "JobStatus",
     "PaperEntry",
+    "PersistenceError",
+    "PipelineError",
     "QdrantIndexer",
+    "StageError",
     "create_job_dir",
     "get_indexer",
     "read_events",

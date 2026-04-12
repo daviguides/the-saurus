@@ -25,6 +25,7 @@ from pipeline.core import (
     write_status,
     write_yaml,
 )
+from pipeline.core.exceptions import PipelineError, StageError
 from pipeline.core.persistence import release_lock
 from pipeline.core.qdrant import get_indexer
 from pipeline.ws.stream import get_or_create_emitter, remove_emitter
@@ -55,6 +56,7 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         qdrant_tasks.add(task)
         task.add_done_callback(qdrant_tasks.discard)
 
+    current_stage: str | None = None
     try:
         # Load papers
         papers_data = await read_yaml(job_path / "papers.yaml")
@@ -98,6 +100,7 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         await emitter.emit(EventType.JOB_STARTED, {"paper_count": len(papers)})
 
         # --- Stage 1: Paper Analysis (themes + claims in one pass, per-paper, parallel) ---
+        current_stage = Stage.PAPER_ANALYSIS
         analyzer = PaperAnalyzerAgent()
         await tracker.stage_start(Stage.PAPER_ANALYSIS, len(papers))
         analysis_results = await _run_parallel_per_paper(
@@ -136,6 +139,7 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         # === SYNC BARRIER: all per-paper analysis complete ===
 
         # --- Stage 2: Theme Dedup (single pass) ---
+        current_stage = Stage.THEME_DEDUP
         all_themes = []
         for _paper, result in analysis_results:
             all_themes.extend(result.get("themes", []))
@@ -159,6 +163,7 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         # === SYNC BARRIER: dedup complete ===
 
         # --- Stage 3: Theme Review (batched — 5 themes per LLM call) ---
+        current_stage = Stage.THEME_REVIEW
         canonical_themes = dedup_result.get("themes", [])
         all_claims = []
         for _paper, result in analysis_results:
@@ -191,6 +196,7 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         # === SYNC BARRIER: all theme reviews complete ===
 
         # --- Stage 4: Aggregation (single pass) ---
+        current_stage = Stage.AGGREGATION
         aggregator = AggregatorAgent()
         await tracker.stage_start(Stage.AGGREGATION, 1)
         agg_cb = create_agent_event_callback(
@@ -241,18 +247,23 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         original_created = (
             existing_status.get("created_at", now) if existing_status else now
         )
+        error_msg = (
+            f"Pipeline failed at stage {current_stage}"
+            if current_stage
+            else "Pipeline failed during initialization"
+        )
         error_status = JobStatus(
             job_id=job_id,
             status=JobState.FAILED,
-            stage="",
+            stage=current_stage or "",
             progress=0.0,
             paper_count=0,
             created_at=original_created,
             updated_at=now,
-            error="An internal error occurred. Check server logs for details.",
+            error=error_msg,
         )
         await write_status(job_id, error_status, jobs_dir)
-        await emitter.emit(EventType.JOB_FAILED, {"error": "An internal error occurred."})
+        await emitter.emit(EventType.JOB_FAILED, {"error": error_msg})
 
     finally:
         # Clean up per-job registries to prevent memory leaks

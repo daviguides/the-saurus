@@ -294,10 +294,14 @@ class TestAgentResponseError:
     """Validate AgentResponseError is a proper Exception."""
 
     def test_is_exception(self) -> None:
-        """AgentResponseError inherits from Exception."""
+        """AgentResponseError inherits from Exception and AgentError."""
+        from pipeline.core.exceptions import AgentError
+
         err = AgentResponseError("something broke")
         assert isinstance(err, Exception)
+        assert isinstance(err, AgentError)
         assert str(err) == "something broke"
+        assert err.agent_name == "unknown"
 
     def test_raised_and_caught(self) -> None:
         """Can be raised and caught specifically."""

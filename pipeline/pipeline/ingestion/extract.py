@@ -44,8 +44,10 @@ def _normalize_text(text: str) -> str:
     return _LIGATURE_PATTERN.sub(lambda m: _LIGATURE_MAP[m.group()], text)
 
 
-class IngestionError(Exception):
-    """Raised when both extractors fail to produce usable output."""
+from pipeline.core.exceptions import IngestionError  # noqa: E402
+
+# Re-export for backward compatibility
+__all__ = ["IngestionError", "ingest_pdf", "extract_pymupdf", "extract_pdfplumber"]
 
 
 def _parse_authors(text: str) -> list[str]:

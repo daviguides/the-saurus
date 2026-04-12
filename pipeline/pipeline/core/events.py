@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from enum import StrEnum
@@ -100,3 +101,5 @@ class EventEmitter:
         # Keeps NDJSON durable even if the process crashes mid-pipeline.
         with open(self._ndjson_path, "a") as f:
             f.write(line)
+            f.flush()
+            os.fsync(f.fileno())

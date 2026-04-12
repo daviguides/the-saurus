@@ -385,7 +385,7 @@ class TestPipelineExecution:
         assert status is not None
         assert status.status == JobState.FAILED
         assert status.error is not None
-        assert "internal error" in status.error.lower()
+        assert "pipeline failed" in status.error.lower()
 
         event_types = [e.event_type for e in events]
         assert EventType.JOB_FAILED in event_types

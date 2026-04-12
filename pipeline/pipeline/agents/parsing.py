@@ -23,8 +23,14 @@ def estimate_tokens(text: str) -> int:
     return len(text) // CHARS_PER_TOKEN
 
 
-class AgentResponseError(Exception):
+from pipeline.core.exceptions import AgentError
+
+
+class AgentResponseError(AgentError):
     """Raised when agent produces invalid or empty response."""
+
+    def __init__(self, message: str, agent_name: str = "unknown") -> None:
+        super().__init__(message, agent_name=agent_name)
 
 
 async def run_agent_with_retry[T: BaseModel](
@@ -99,12 +105,14 @@ async def run_agent_with_retry[T: BaseModel](
 
                     if run_error:
                         raise AgentResponseError(
-                            f"{agent_name} returned error: {run_error}"
+                            f"{agent_name} returned error: {run_error}",
+                            agent_name=agent_name,
                         )
 
                     if result_content is None:
                         raise AgentResponseError(
-                            f"{agent_name} returned empty response"
+                            f"{agent_name} returned empty response",
+                            agent_name=agent_name,
                         )
 
                     # Validate against output schema if needed
@@ -147,5 +155,6 @@ async def run_agent_with_retry[T: BaseModel](
             await asyncio.sleep(delay)
 
     raise AgentResponseError(
-        f"{agent_name} failed after {max_retries} attempts: {last_error}"
+        f"{agent_name} failed after {max_retries} attempts: {last_error}",
+        agent_name=agent_name,
     )
