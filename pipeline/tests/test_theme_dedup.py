@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 from unittest.mock import AsyncMock, patch
-
-from tests.conftest import mock_streaming_arun
 
 import pytest
 
@@ -66,11 +63,6 @@ class TestAgentProtocol:
 
 
 # --- Agent run tests ---
-
-
-@dataclass
-class FakeRunOutput:
-    content: Any
 
 
 def _make_input_themes() -> list[dict[str, Any]]:
@@ -138,6 +130,8 @@ def _make_dedup_result() -> ThemeDedupResult:
 
 
 class TestThemeDedupAgentRun:
+    """Test ThemeDedupAgent.run() by mocking run_agent_with_retry."""
+
     @pytest.fixture
     def input_themes(self) -> list[dict[str, Any]]:
         return _make_input_themes()
@@ -149,15 +143,12 @@ class TestThemeDedupAgentRun:
     async def test_run_merges_duplicate_themes(
         self, input_themes: list[dict[str, Any]], mock_dedup: ThemeDedupResult
     ) -> None:
-        fake_output = FakeRunOutput(content=mock_dedup)
-
         with patch("pipeline.agents.theme_dedup.AgnoAgent"):
             agent = ThemeDedupAgent()
 
-        agent._agent = AsyncMock()
-        agent._agent.arun = mock_streaming_arun(fake_output)
-
-        result = await agent.run({"themes": input_themes})
+        with patch("pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+            mock_retry.return_value = mock_dedup
+            result = await agent.run({"themes": input_themes})
 
         canonical = result["themes"]
         assert len(canonical) == 3
@@ -171,15 +162,12 @@ class TestThemeDedupAgentRun:
     async def test_run_singleton_themes_preserved(
         self, input_themes: list[dict[str, Any]], mock_dedup: ThemeDedupResult
     ) -> None:
-        fake_output = FakeRunOutput(content=mock_dedup)
-
         with patch("pipeline.agents.theme_dedup.AgnoAgent"):
             agent = ThemeDedupAgent()
 
-        agent._agent = AsyncMock()
-        agent._agent.arun = mock_streaming_arun(fake_output)
-
-        result = await agent.run({"themes": input_themes})
+        with patch("pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+            mock_retry.return_value = mock_dedup
+            result = await agent.run({"themes": input_themes})
 
         canonical = result["themes"]
         immuno = next(t for t in canonical if t["name"] == "Immunogenicity")
@@ -190,15 +178,12 @@ class TestThemeDedupAgentRun:
     async def test_run_theme_map_correct(
         self, input_themes: list[dict[str, Any]], mock_dedup: ThemeDedupResult
     ) -> None:
-        fake_output = FakeRunOutput(content=mock_dedup)
-
         with patch("pipeline.agents.theme_dedup.AgnoAgent"):
             agent = ThemeDedupAgent()
 
-        agent._agent = AsyncMock()
-        agent._agent.arun = mock_streaming_arun(fake_output)
-
-        result = await agent.run({"themes": input_themes})
+        with patch("pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+            mock_retry.return_value = mock_dedup
+            result = await agent.run({"themes": input_themes})
 
         theme_map = result["theme_map"]
         assert len(theme_map) == 3
@@ -212,15 +197,12 @@ class TestThemeDedupAgentRun:
     async def test_run_generates_unique_ids(
         self, input_themes: list[dict[str, Any]], mock_dedup: ThemeDedupResult
     ) -> None:
-        fake_output = FakeRunOutput(content=mock_dedup)
-
         with patch("pipeline.agents.theme_dedup.AgnoAgent"):
             agent = ThemeDedupAgent()
 
-        agent._agent = AsyncMock()
-        agent._agent.arun = mock_streaming_arun(fake_output)
-
-        result = await agent.run({"themes": input_themes})
+        with patch("pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+            mock_retry.return_value = mock_dedup
+            result = await agent.run({"themes": input_themes})
 
         ids = [t["id"] for t in result["themes"]]
         assert len(set(ids)) == len(ids)
@@ -228,15 +210,12 @@ class TestThemeDedupAgentRun:
     async def test_run_all_source_themes_covered(
         self, input_themes: list[dict[str, Any]], mock_dedup: ThemeDedupResult
     ) -> None:
-        fake_output = FakeRunOutput(content=mock_dedup)
-
         with patch("pipeline.agents.theme_dedup.AgnoAgent"):
             agent = ThemeDedupAgent()
 
-        agent._agent = AsyncMock()
-        agent._agent.arun = mock_streaming_arun(fake_output)
-
-        result = await agent.run({"themes": input_themes})
+        with patch("pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+            mock_retry.return_value = mock_dedup
+            result = await agent.run({"themes": input_themes})
 
         # Every input theme ID must appear in exactly one group
         all_source_ids: list[str] = []
@@ -250,18 +229,15 @@ class TestThemeDedupAgentRun:
     async def test_run_passes_numbered_list_to_agno(
         self, input_themes: list[dict[str, Any]], mock_dedup: ThemeDedupResult
     ) -> None:
-        fake_output = FakeRunOutput(content=mock_dedup)
-
         with patch("pipeline.agents.theme_dedup.AgnoAgent"):
             agent = ThemeDedupAgent()
 
-        agent._agent = AsyncMock()
-        agent._agent.arun = mock_streaming_arun(fake_output)
+        with patch("pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+            mock_retry.return_value = mock_dedup
+            await agent.run({"themes": input_themes})
 
-        await agent.run({"themes": input_themes})
-
-        call_args = agent._agent.arun.call_args
-        message = call_args[0][0]
+        call_args = mock_retry.call_args
+        message = call_args[0][1]  # second positional arg is the message string
 
         # Verify numbered format
         assert "[0] Chronobiology" in message
@@ -273,15 +249,12 @@ class TestThemeDedupAgentRun:
     async def test_run_canonical_has_label_field(
         self, input_themes: list[dict[str, Any]], mock_dedup: ThemeDedupResult
     ) -> None:
-        fake_output = FakeRunOutput(content=mock_dedup)
-
         with patch("pipeline.agents.theme_dedup.AgnoAgent"):
             agent = ThemeDedupAgent()
 
-        agent._agent = AsyncMock()
-        agent._agent.arun = mock_streaming_arun(fake_output)
-
-        result = await agent.run({"themes": input_themes})
+        with patch("pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+            mock_retry.return_value = mock_dedup
+            result = await agent.run({"themes": input_themes})
 
         for t in result["themes"]:
             assert t["label"] == t["name"]
