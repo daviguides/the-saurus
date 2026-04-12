@@ -18,7 +18,12 @@ Every claim is traceable to its source: paper, page, and paragraph.
 
 ### Conversational Assistant
 
-An embedded chat that queries the pipeline outputs through MCP tools over Qdrant. After the pipeline runs, the assistant can answer questions grounded in the actual data: themes, claims, reviews, and source citations. It runs as a separate federated UI (Module Federation 2.0) with its own WebSocket backend (Agno Team + GPT-4o-mini).
+1. **Connect** — Embedded chat panel served as a federated UI (Module Federation 2.0)
+2. **Query** — Ask questions about your papers grounded in the actual pipeline outputs
+3. **Retrieve** — MCP tools fetch themes, claims, reviews, and citations from Qdrant
+4. **Answer** — Agno Team (GPT-4o-mini) synthesizes a response with evidence from your corpus
+
+The assistant only knows what the pipeline extracted, keeping answers traceable and hallucination-resistant.
 
 ## Prerequisites
 
