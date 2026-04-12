@@ -76,7 +76,7 @@ async def run_agent_with_retry[T: BaseModel](
                     result_content: T | None = None
                     run_error: str | None = None
 
-                    response_stream = await agent.arun(
+                    response_stream = agent.arun(
                         message,
                         stream=True,
                         stream_events=True,

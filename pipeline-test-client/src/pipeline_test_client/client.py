@@ -107,6 +107,9 @@ class PipelineClient:
             try:
                 async for raw in ws:
                     data = json.loads(raw)
+                    # Skip WebSocket control messages (ping/pong)
+                    if "event_id" not in data:
+                        continue
                     event = Event.model_validate(data)
 
                     if callback:
