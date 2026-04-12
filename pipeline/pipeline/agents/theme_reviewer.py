@@ -63,7 +63,8 @@ class ThemeReviewerAgent:
             name="ThemeReviewer",
             model=create_model(),
             instructions=THEME_REVIEWER_PROMPT,
-            response_model=BatchThemeReviewResult,
+            output_schema=BatchThemeReviewResult,
+            structured_outputs=True,
         )
         self._batch_size = batch_size
 

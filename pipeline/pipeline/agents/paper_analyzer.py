@@ -62,7 +62,8 @@ class PaperAnalyzerAgent:
             name="PaperAnalyzer",
             model=create_model(),
             instructions=PAPER_ANALYZER_PROMPT,
-            response_model=PaperAnalysisResult,
+            output_schema=PaperAnalysisResult,
+            structured_outputs=True,
         )
 
     async def run(

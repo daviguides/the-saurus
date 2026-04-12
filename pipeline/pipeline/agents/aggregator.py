@@ -60,7 +60,8 @@ class AggregatorAgent:
             name="Aggregator",
             model=create_model(),
             instructions=AGGREGATOR_PROMPT,
-            response_model=AggregatorResult,
+            output_schema=AggregatorResult,
+            structured_outputs=True,
         )
 
     async def run(

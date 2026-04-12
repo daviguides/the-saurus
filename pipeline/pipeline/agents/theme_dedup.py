@@ -46,7 +46,8 @@ class ThemeDedupAgent:
             name="ThemeDedup",
             model=create_model(),
             instructions=THEME_DEDUP_PROMPT,
-            response_model=ThemeDedupResult,
+            output_schema=ThemeDedupResult,
+            structured_outputs=True,
         )
 
     async def run(
