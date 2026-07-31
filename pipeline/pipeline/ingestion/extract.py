@@ -278,6 +278,60 @@ def _check_quality(result: IngestedPaper) -> bool:
     return (total_chars / result.page_count) >= QUALITY_THRESHOLD
 
 
+# PII entity scope: emails/phones/addresses only, deliberately excludes PERSON
+# so author names survive for citations (§3.2's output-side pass handles PERSON).
+_PII_ENTITIES = ["EMAIL_ADDRESS", "PHONE_NUMBER", "LOCATION"]
+
+_analyzer = None
+_anonymizer = None
+
+
+def _get_engines():
+    """Lazily build and cache the Presidio engines (loads the spaCy model)."""
+    global _analyzer, _anonymizer
+    if _analyzer is None:
+        from presidio_analyzer import AnalyzerEngine
+        from presidio_analyzer.nlp_engine import NlpEngineProvider
+        from presidio_anonymizer import AnonymizerEngine
+
+        nlp_engine = NlpEngineProvider(
+            nlp_configuration={
+                "nlp_engine_name": "spacy",
+                "models": [{"lang_code": "en", "model_name": "en_core_web_sm"}],
+            }
+        ).create_engine()
+        _analyzer = AnalyzerEngine(nlp_engine=nlp_engine, supported_languages=["en"])
+        _anonymizer = AnonymizerEngine()
+    return _analyzer, _anonymizer
+
+
+def _scrub_pii(paragraphs: list[Paragraph]) -> list[Paragraph]:
+    """Redact emails/phones/addresses from paragraph text. Redact + log, never block."""
+    from presidio_anonymizer.entities import OperatorConfig
+
+    analyzer, anonymizer = _get_engines()
+    operators = {
+        "EMAIL_ADDRESS": OperatorConfig("replace", {"new_value": "[EMAIL]"}),
+        "PHONE_NUMBER": OperatorConfig("replace", {"new_value": "[PHONE]"}),
+        "LOCATION": OperatorConfig("replace", {"new_value": "[LOCATION]"}),
+    }
+    scrubbed: list[Paragraph] = []
+    for p in paragraphs:
+        results = analyzer.analyze(text=p.text, language="en", entities=_PII_ENTITIES)
+        if not results:
+            scrubbed.append(p)
+            continue
+        anonymized = anonymizer.anonymize(
+            text=p.text, analyzer_results=results, operators=operators
+        )
+        for item in anonymized.items:
+            logger.info(
+                "PII redacted: type=%s page=%d paragraph=%d", item.entity_type, p.page, p.index
+            )
+        scrubbed.append(p.model_copy(update={"text": anonymized.text}))
+    return scrubbed
+
+
 def ingest_pdf(pdf_bytes: bytes) -> IngestedPaper:
     """Extract structured content from a PDF. pymupdf primary, pdfplumber fallback.
 
@@ -287,6 +341,7 @@ def ingest_pdf(pdf_bytes: bytes) -> IngestedPaper:
     try:
         result = extract_pymupdf(pdf_bytes)
         if _check_quality(result):
+            result.paragraphs = _scrub_pii(result.paragraphs)
             return result
         logger.info("pymupdf extraction below quality threshold, trying pdfplumber")
     except (ValueError, RuntimeError, OSError) as exc:
@@ -296,6 +351,7 @@ def ingest_pdf(pdf_bytes: bytes) -> IngestedPaper:
     try:
         result = extract_pdfplumber(pdf_bytes)
         if _check_quality(result):
+            result.paragraphs = _scrub_pii(result.paragraphs)
             return result
         logger.info("pdfplumber extraction below quality threshold")
     except (ValueError, RuntimeError, OSError) as exc:
