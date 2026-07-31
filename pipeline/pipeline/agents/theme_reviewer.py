@@ -122,6 +122,45 @@ class ThemeReviewerAgent:
                 on_event=on_event,
             )
 
+            valid_ids = set()
+            for claims_list in batch_claims.values():
+                for c in claims_list:
+                    valid_ids.add(c.get("id", ""))
+
+            invalid_by_theme: dict[str, list[str]] = {}
+            for review in result.reviews:
+                bad_ids = [
+                    kc.claim_id for kc in review.key_claims if kc.claim_id not in valid_ids
+                ]
+                if bad_ids:
+                    invalid_by_theme[review.theme_name] = bad_ids
+
+            if invalid_by_theme:
+                logger.warning(
+                    "ThemeReviewer batch %d: %d theme(s) with invalid claim_ids, reasking",
+                    batch_idx, len(invalid_by_theme),
+                )
+                failure_description = "\n".join(
+                    f'For theme "{name}": claim_id {", ".join(ids)} '
+                    f"{'is' if len(ids) == 1 else 'are'} not in the valid set for this batch — "
+                    f"provide valid claim_ids or omit these entries."
+                    for name, ids in invalid_by_theme.items()
+                )
+                original_result = result
+                result = await reask(
+                    self._agent, message, failure_description, BatchThemeReviewResult,
+                    fallback=lambda: original_result,
+                    max_attempts=2,
+                    context={
+                        "stage": "theme_review",
+                        "batch": f"{batch_idx}/{len(batches)}",
+                        "themes_in_batch": len(batch),
+                        "total_claims": sum(len(v) for v in batch_claims.values()),
+                        "reask": "valid_ids",
+                    },
+                    on_event=on_event,
+                )
+
             # Map results back to theme IDs
             # B4: Normalize theme names more aggressively for matching
             def _normalize_name(name: str) -> str:
@@ -182,11 +221,7 @@ class ThemeReviewerAgent:
             for review in result.reviews:
                 theme_id, theme_meta = _find_theme(review.theme_name)
 
-                # Validate claim IDs
-                valid_ids = set()
-                for claims_list in batch_claims.values():
-                    for c in claims_list:
-                        valid_ids.add(c.get("id", ""))
+                # Validate claim IDs (worst case: same silent filter as before reask)
                 validated_claims = [
                     kc for kc in review.key_claims if kc.claim_id in valid_ids
                 ]
