@@ -73,7 +73,7 @@ class GroundingClassifier:
         synthesis: str,
         claims: list[dict[str, Any]],
     ) -> list[SentenceGroundingResult]:
-        """Score each sentence in `synthesis` against every claim (premise=claim, hypothesis=sentence).
+        """Score each sentence vs every claim (premise=claim, hypothesis=sentence).
 
         A sentence is grounded if ANY claim entails it (design doc §5.4).
         One batched predict() call for the whole synthesis, not one per pair.
