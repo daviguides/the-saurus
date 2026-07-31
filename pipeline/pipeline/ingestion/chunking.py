@@ -70,9 +70,7 @@ async def chunk_by_similarity(
     if len(paragraphs) <= 1:
         return [paragraphs] if paragraphs else []
 
-    resolved_threshold = (
-        threshold if threshold is not None else settings.chunk_similarity_threshold
-    )
+    resolved_threshold = threshold if threshold is not None else settings.chunk_similarity_threshold
     vectors = await embed_batch([p.text for p in paragraphs])
 
     chunks: list[list[Paragraph]] = [[paragraphs[0]]]
