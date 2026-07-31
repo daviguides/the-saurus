@@ -20,6 +20,7 @@ from pipeline.agents import (
 from pipeline.agents.event_bridge import create_agent_event_callback
 from pipeline.agents.judge_gate import score_review
 from pipeline.agents.protocol import Agent
+from pipeline.agents.toxic_gate import check_toxicity
 from pipeline.core import (
     EventEmitter,
     EventType,
@@ -380,6 +381,23 @@ async def _run_aggregation(
         ctx.fire_qdrant(
             ctx.indexer.index_review(ctx.job_id, review), operation="index_review",
         )
+
+    # Toxic gate (§7.4) runs before the judge gate (§8.2) — cheaper, narrower
+    # check first; a job already being quarantined for toxic content doesn't
+    # need the more expensive judge-model call too.
+    toxic_result = await check_toxicity(review)
+    if toxic_result.verdict == "quarantine":
+        logger.warning(
+            "Job %s quarantined by toxic gate: %s", ctx.job_id, toxic_result.reason,
+        )
+        await quarantine_job(
+            ctx.job_id, ctx.jobs_dir, ctx.emitter,
+            created_at=ctx.tracker.created_at,
+            paper_count=len(ctx.papers),
+            stage=Stage.AGGREGATION,
+            reason=toxic_result.reason or "toxic gate failed",
+        )
+        return True
 
     gate_result = await score_review(review, all_claims)
     if gate_result.verdict == "quarantine":
