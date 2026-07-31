@@ -12,14 +12,17 @@ from pipeline.agents.aggregator import (
     AggregatorResult,
     ReviewCitation,
     ReviewSection,
+    SectionBatchResult,
+    TitleAbstractResult,
+    _assign_ref_numbers,
+    _build_batch_message,
     _build_claim_lookup,
-    _build_message,
     _build_references,
     _collect_claim_ids,
+    _merge_citations,
     _resolve_citations,
 )
 from pipeline.agents.protocol import Agent
-
 
 # --- Fixtures ---
 
@@ -178,27 +181,14 @@ class TestBuildClaimLookup:
         assert len(lookup) == 0
 
 
-class TestBuildMessage:
-    def test_includes_all_theme_labels(self) -> None:
-        reviews = _make_theme_reviews()
-        claim_lookup = _build_claim_lookup(_make_claims())
-        _registry, msg = _build_message(reviews, claim_lookup)
-        assert "Chronobiology" in msg
-        assert "Gene Therapy" in msg
-
-    def test_includes_claim_registry(self) -> None:
-        reviews = _make_theme_reviews()
-        claim_lookup = _build_claim_lookup(_make_claims())
-        registry, msg = _build_message(reviews, claim_lookup)
-        assert "CLAIM REGISTRY" in msg
-        assert len(registry) == 3  # c1, c2, c3
-
+class TestAssignRefNumbers:
     def test_assigns_unique_ref_numbers(self) -> None:
         reviews = _make_theme_reviews()
-        claim_lookup = _build_claim_lookup(_make_claims())
-        registry, _msg = _build_message(reviews, claim_lookup)
-        ref_numbers = list(registry.keys())
+        ref_to_claim, claim_to_ref = _assign_ref_numbers(reviews)
+        assert len(ref_to_claim) == 3  # c1, c2, c3
+        ref_numbers = list(ref_to_claim.keys())
         assert len(ref_numbers) == len(set(ref_numbers))
+        assert set(claim_to_ref) == {"c1", "c2", "c3"}
 
     def test_reuses_ref_for_same_claim(self) -> None:
         # Duplicate c1 in two different theme reviews
@@ -220,16 +210,83 @@ class TestBuildMessage:
                 ],
             },
         ]
+        ref_to_claim, claim_to_ref = _assign_ref_numbers(reviews)
+        assert len(ref_to_claim) == 1  # c1 only once
+        assert len(claim_to_ref) == 1
+
+
+class TestBuildBatchMessage:
+    def test_includes_all_theme_labels(self) -> None:
+        reviews = _make_theme_reviews()
         claim_lookup = _build_claim_lookup(_make_claims())
-        registry, _msg = _build_message(reviews, claim_lookup)
-        assert len(registry) == 1  # c1 only once
+        _ref_to_claim, claim_to_ref = _assign_ref_numbers(reviews)
+        msg = _build_batch_message(reviews, claim_lookup, claim_to_ref)
+        assert "Chronobiology" in msg
+        assert "Gene Therapy" in msg
+
+    def test_includes_claim_registry(self) -> None:
+        reviews = _make_theme_reviews()
+        claim_lookup = _build_claim_lookup(_make_claims())
+        _ref_to_claim, claim_to_ref = _assign_ref_numbers(reviews)
+        msg = _build_batch_message(reviews, claim_lookup, claim_to_ref)
+        assert "CLAIM REGISTRY" in msg
+
+    def test_scoped_to_given_batch_only(self) -> None:
+        reviews = _make_theme_reviews()
+        claim_lookup = _build_claim_lookup(_make_claims())
+        _ref_to_claim, claim_to_ref = _assign_ref_numbers(reviews)
+        # Only pass the first theme as the "batch"
+        msg = _build_batch_message(reviews[:1], claim_lookup, claim_to_ref)
+        assert "Chronobiology" in msg
+        assert "Gene Therapy" not in msg
 
     def test_includes_position_info(self) -> None:
         reviews = _make_theme_reviews()
         claim_lookup = _build_claim_lookup(_make_claims())
-        _registry, msg = _build_message(reviews, claim_lookup)
+        _ref_to_claim, claim_to_ref = _assign_ref_numbers(reviews)
+        msg = _build_batch_message(reviews, claim_lookup, claim_to_ref)
         assert "p.2,§3" in msg  # c1's position
         assert "p.4,§1" in msg  # c2's position
+
+
+class TestMergeCitations:
+    def test_concats_citations_across_batches(self) -> None:
+        batches = [
+            SectionBatchResult(
+                sections=[
+                    ReviewSection(theme_id="t1", label="A", content="X [1].", citation_refs=[1])
+                ],
+                citations=[ReviewCitation(ref_number=1, claim_id="c1", paper_id="p1")],
+            ),
+            SectionBatchResult(
+                sections=[
+                    ReviewSection(theme_id="t2", label="B", content="Y [2].", citation_refs=[2])
+                ],
+                citations=[ReviewCitation(ref_number=2, claim_id="c2", paper_id="p2")],
+            ),
+        ]
+        merged = _merge_citations(batches)
+        assert {c.ref_number for c in merged} == {1, 2}
+
+    def test_dedupes_shared_ref_number_keeps_first(self) -> None:
+        shared = ReviewCitation(ref_number=1, claim_id="c1", paper_id="p1")
+        batches = [
+            SectionBatchResult(
+                sections=[
+                    ReviewSection(theme_id="t1", label="A", content="X [1].", citation_refs=[1])
+                ],
+                citations=[shared],
+            ),
+            SectionBatchResult(
+                sections=[
+                    ReviewSection(theme_id="t2", label="B", content="Y [1].", citation_refs=[1])
+                ],
+                citations=[ReviewCitation(ref_number=1, claim_id="c1", paper_id="p1")],
+            ),
+        ]
+        merged = _merge_citations(batches)
+        assert len(merged) == 1
+        assert merged[0].ref_number == 1
 
 
 class TestResolveCitations:
@@ -332,10 +389,9 @@ class TestCollectClaimIds:
 # --- Agent run tests ---
 
 
-def _make_aggregator_result() -> AggregatorResult:
-    return AggregatorResult(
-        title="Literature Review on Chronobiology and Gene Therapy",
-        abstract="This review synthesizes findings from multiple studies.",
+def _make_section_batch_result() -> SectionBatchResult:
+    """Single-batch section result covering both fixture themes (default batch_size=5 → 1 batch)."""
+    return SectionBatchResult(
         sections=[
             ReviewSection(
                 theme_id="t1",
@@ -358,6 +414,29 @@ def _make_aggregator_result() -> AggregatorResult:
     )
 
 
+def _make_title_abstract_result() -> TitleAbstractResult:
+    return TitleAbstractResult(
+        title="Literature Review on Chronobiology and Gene Therapy",
+        abstract="This review synthesizes findings from multiple studies.",
+    )
+
+
+def _run_agent_side_effect(section_result: SectionBatchResult, title_result: TitleAbstractResult):
+    """Route mocked run_agent_with_retry calls to the right canned result by output_schema.
+
+    Batch calls and the reduce call share one mocked entry point but request
+    different schemas — dispatching on output_schema (rather than call order)
+    keeps the test independent of asyncio.gather's scheduling order.
+    """
+
+    async def _side_effect(agent: Any, message: str, output_schema: type, **kwargs: Any) -> Any:
+        if output_schema is SectionBatchResult:
+            return section_result
+        return title_result
+
+    return _side_effect
+
+
 class TestAggregatorAgentRun:
     @pytest.fixture
     def input_data(self) -> dict[str, Any]:
@@ -368,30 +447,44 @@ class TestAggregatorAgentRun:
         }
 
     @pytest.fixture
-    def mock_result(self) -> AggregatorResult:
-        return _make_aggregator_result()
+    def section_result(self) -> SectionBatchResult:
+        return _make_section_batch_result()
+
+    @pytest.fixture
+    def title_result(self) -> TitleAbstractResult:
+        return _make_title_abstract_result()
 
     async def test_run_returns_title_and_abstract(
-        self, input_data: dict[str, Any], mock_result: AggregatorResult
+        self,
+        input_data: dict[str, Any],
+        section_result: SectionBatchResult,
+        title_result: TitleAbstractResult,
     ) -> None:
         with patch("pipeline.agents.aggregator.AgnoAgent"):
             agent = AggregatorAgent()
 
-        with patch("pipeline.agents.aggregator.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
-            mock_retry.return_value = mock_result
+        with patch(
+            "pipeline.agents.aggregator.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
+            mock_retry.side_effect = _run_agent_side_effect(section_result, title_result)
             result = await agent.run(input_data)
 
-        assert result["title"] == mock_result.title
-        assert result["abstract"] == mock_result.abstract
+        assert result["title"] == title_result.title
+        assert result["abstract"] == title_result.abstract
 
     async def test_run_returns_sections_with_resolved_citations(
-        self, input_data: dict[str, Any], mock_result: AggregatorResult
+        self,
+        input_data: dict[str, Any],
+        section_result: SectionBatchResult,
+        title_result: TitleAbstractResult,
     ) -> None:
         with patch("pipeline.agents.aggregator.AgnoAgent"):
             agent = AggregatorAgent()
 
-        with patch("pipeline.agents.aggregator.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
-            mock_retry.return_value = mock_result
+        with patch(
+            "pipeline.agents.aggregator.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
+            mock_retry.side_effect = _run_agent_side_effect(section_result, title_result)
             result = await agent.run(input_data)
 
         sections = result["sections"]
@@ -402,26 +495,36 @@ class TestAggregatorAgentRun:
         assert '[3](cite:3 "p.5,§2")' in sections[1]["content"]
 
     async def test_run_returns_claim_ids_backward_compat(
-        self, input_data: dict[str, Any], mock_result: AggregatorResult
+        self,
+        input_data: dict[str, Any],
+        section_result: SectionBatchResult,
+        title_result: TitleAbstractResult,
     ) -> None:
         with patch("pipeline.agents.aggregator.AgnoAgent"):
             agent = AggregatorAgent()
 
-        with patch("pipeline.agents.aggregator.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
-            mock_retry.return_value = mock_result
+        with patch(
+            "pipeline.agents.aggregator.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
+            mock_retry.side_effect = _run_agent_side_effect(section_result, title_result)
             result = await agent.run(input_data)
 
         assert result["sections"][0]["claim_ids"] == ["c1", "c2"]
         assert result["sections"][1]["claim_ids"] == ["c3"]
 
     async def test_run_returns_citations_with_positions(
-        self, input_data: dict[str, Any], mock_result: AggregatorResult
+        self,
+        input_data: dict[str, Any],
+        section_result: SectionBatchResult,
+        title_result: TitleAbstractResult,
     ) -> None:
         with patch("pipeline.agents.aggregator.AgnoAgent"):
             agent = AggregatorAgent()
 
-        with patch("pipeline.agents.aggregator.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
-            mock_retry.return_value = mock_result
+        with patch(
+            "pipeline.agents.aggregator.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
+            mock_retry.side_effect = _run_agent_side_effect(section_result, title_result)
             result = await agent.run(input_data)
 
         citations = result["citations"]
@@ -433,13 +536,18 @@ class TestAggregatorAgentRun:
         assert c1["paper_title"] == "Circadian Metabolism Study"
 
     async def test_run_returns_references_grouped_by_paper(
-        self, input_data: dict[str, Any], mock_result: AggregatorResult
+        self,
+        input_data: dict[str, Any],
+        section_result: SectionBatchResult,
+        title_result: TitleAbstractResult,
     ) -> None:
         with patch("pipeline.agents.aggregator.AgnoAgent"):
             agent = AggregatorAgent()
 
-        with patch("pipeline.agents.aggregator.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
-            mock_retry.return_value = mock_result
+        with patch(
+            "pipeline.agents.aggregator.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
+            mock_retry.side_effect = _run_agent_side_effect(section_result, title_result)
             result = await agent.run(input_data)
 
         refs = result["references"]
@@ -449,24 +557,27 @@ class TestAggregatorAgentRun:
         assert len(p1_ref["cited_in"]) == 2  # c1 and c3 both from p1
         assert p1_ref["authors"] == ["Smith J", "Doe A"]
 
-    async def test_run_passes_aggregator_result_schema(
-        self, input_data: dict[str, Any], mock_result: AggregatorResult
+    async def test_run_passes_section_batch_result_schema(
+        self,
+        input_data: dict[str, Any],
+        section_result: SectionBatchResult,
+        title_result: TitleAbstractResult,
     ) -> None:
         with patch("pipeline.agents.aggregator.AgnoAgent"):
             agent = AggregatorAgent()
 
-        with patch("pipeline.agents.aggregator.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
-            mock_retry.return_value = mock_result
+        with patch(
+            "pipeline.agents.aggregator.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
+            mock_retry.side_effect = _run_agent_side_effect(section_result, title_result)
             await agent.run(input_data)
 
-        call_args = mock_retry.call_args
-        assert call_args[0][2] is AggregatorResult  # third positional arg is model class
+        schemas_used = {call.args[2] for call in mock_retry.call_args_list}
+        assert schemas_used == {SectionBatchResult, TitleAbstractResult}
 
     async def test_run_handles_empty_claims(self) -> None:
         """Agent works with theme_reviews only (no claims/papers)."""
-        minimal_result = AggregatorResult(
-            title="Review",
-            abstract="Summary.",
+        minimal_section_result = SectionBatchResult(
             sections=[
                 ReviewSection(
                     theme_id="t1", label="Theme", content="No citations here.", citation_refs=[]
@@ -474,14 +585,95 @@ class TestAggregatorAgentRun:
             ],
             citations=[],
         )
+        minimal_title_result = TitleAbstractResult(title="Review", abstract="Summary.")
 
         with patch("pipeline.agents.aggregator.AgnoAgent"):
             agent = AggregatorAgent()
 
-        with patch("pipeline.agents.aggregator.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
-            mock_retry.return_value = minimal_result
-            result = await agent.run({"theme_reviews": [{"theme_id": "t1", "label": "Theme", "review": "Text."}]})
+        with patch(
+            "pipeline.agents.aggregator.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
+            mock_retry.side_effect = _run_agent_side_effect(
+                minimal_section_result, minimal_title_result
+            )
+            result = await agent.run(
+                {"theme_reviews": [{"theme_id": "t1", "label": "Theme", "review": "Text."}]}
+            )
 
         assert result["title"] == "Review"
         assert result["sections"][0]["claim_ids"] == []
         assert result["references"] == []
+
+    async def test_run_dispatches_one_batch_call_per_5_themes(
+        self,
+        section_result: SectionBatchResult,
+        title_result: TitleAbstractResult,
+    ) -> None:
+        """6 themes with default batch_size=5 → 2 parallel batch calls + 1 reduce call."""
+        reviews = [
+            {"theme_id": f"t{i}", "label": f"Theme {i}", "review": f"Review {i}.", "key_claims": []}
+            for i in range(1, 7)
+        ]
+
+        with patch("pipeline.agents.aggregator.AgnoAgent"):
+            agent = AggregatorAgent()
+
+        with patch(
+            "pipeline.agents.aggregator.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
+            mock_retry.side_effect = _run_agent_side_effect(section_result, title_result)
+            await agent.run({"theme_reviews": reviews})
+
+        batch_calls = [
+            call for call in mock_retry.call_args_list if call.args[2] is SectionBatchResult
+        ]
+        reduce_calls = [
+            call for call in mock_retry.call_args_list if call.args[2] is TitleAbstractResult
+        ]
+        assert len(batch_calls) == 2
+        assert len(reduce_calls) == 1
+
+    async def test_run_merges_sections_across_batches(self) -> None:
+        """Merged output includes every theme's section, regardless of which batch produced it."""
+        reviews = [
+            {"theme_id": f"t{i}", "label": f"Theme {i}", "review": f"Review {i}.", "key_claims": []}
+            for i in range(1, 7)
+        ]
+
+        with patch("pipeline.agents.aggregator.AgnoAgent"):
+            agent = AggregatorAgent()
+
+        async def fake_process_batch(
+            batch_idx: int,
+            batch: list[dict[str, Any]],
+            n_batches: int,
+            claim_lookup: dict[str, Any],
+            claim_to_ref: dict[str, int],
+            on_event: Any,
+        ) -> SectionBatchResult:
+            return SectionBatchResult(
+                sections=[
+                    ReviewSection(
+                        theme_id=t["theme_id"], label=t["label"], content="Text.", citation_refs=[]
+                    )
+                    for t in batch
+                ],
+                citations=[],
+            )
+
+        with (
+            patch.object(
+                AggregatorAgent,
+                "_process_section_batch",
+                new=AsyncMock(side_effect=fake_process_batch),
+            ),
+            patch.object(
+                AggregatorAgent,
+                "_run_title_abstract",
+                new=AsyncMock(return_value=TitleAbstractResult(title="T", abstract="A.")),
+            ),
+        ):
+            result = await agent.run({"theme_reviews": reviews})
+
+        assert {s["theme_id"] for s in result["sections"]} == {f"t{i}" for i in range(1, 7)}
+        assert len(result["sections"]) == 6
