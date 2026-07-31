@@ -8,14 +8,39 @@ Usage:
 """
 
 import asyncio
+import json
 import logging
 import random
+from pathlib import Path
 
 from judge import create_ragas_judge
 
 logger = logging.getLogger(__name__)
 
 SAMPLE_RATE = 0.10  # eval 10% of traces
+
+# Deliberately independent from evals/pipeline/golden/baseline.json: that
+# baseline is DeepEval GEval Faithfulness scored with retrieval_context
+# (source-paper claims). Production traces only carry input/output, so
+# this is RAGAS single-turn Faithfulness — a different metric family, not
+# a looser version of the same one. Don't try to unify the two numbers.
+PRODUCTION_FAITHFULNESS_THRESHOLD = 0.70
+
+MISSES_PATH = Path(__file__).parents[1] / "pipeline" / "golden" / "misses.jsonl"
+
+
+def _flag_miss(trace_id: str, input_text: str, output_text: str, score: float, metric: str) -> None:
+    """Append a low-scoring production trace to the triage inbox."""
+    MISSES_PATH.parent.mkdir(parents=True, exist_ok=True)
+    record = {
+        "trace_id": trace_id,
+        "input": input_text,
+        "output": output_text,
+        "score": score,
+        "metric": metric,
+    }
+    with MISSES_PATH.open("a") as f:
+        f.write(json.dumps(record) + "\n")
 
 
 async def score_pipeline_traces():
@@ -61,17 +86,24 @@ async def score_pipeline_traces():
                     response=output_text,
                 )
                 result = await metric.single_turn_ascore(sample)
+                score = result.value if hasattr(result, "value") else float(result)
 
                 langfuse.create_score(
                     name=metric.name,
-                    value=result.value if hasattr(result, "value") else float(result),
+                    value=score,
                     trace_id=trace.id,
                 )
                 logger.info(
                     "Scored trace %s: %s=%.3f",
-                    trace.id[:8], metric.name,
-                    result.value if hasattr(result, "value") else float(result),
+                    trace.id[:8], metric.name, score,
                 )
+
+                if metric.name == "faithfulness" and score < PRODUCTION_FAITHFULNESS_THRESHOLD:
+                    _flag_miss(trace.id, input_text, output_text, score, metric.name)
+                    logger.warning(
+                        "Flagged miss: trace %s faithfulness=%.3f < %.2f",
+                        trace.id[:8], score, PRODUCTION_FAITHFULNESS_THRESHOLD,
+                    )
 
         except Exception:
             logger.warning(
