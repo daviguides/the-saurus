@@ -8,7 +8,7 @@ from typing import Any
 
 from agno.agent import Agent as AgnoAgent
 from agno.agent import RunCompletedEvent, RunErrorEvent
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from pipeline.core.exceptions import AgentError
 
@@ -68,6 +68,7 @@ async def run_agent_with_retry[T: BaseModel](
     )
 
     last_error: Exception | None = None
+    current_message = message
 
     for attempt in range(1, max_retries + 1):
         try:
@@ -82,7 +83,7 @@ async def run_agent_with_retry[T: BaseModel](
                     run_error: str | None = None
 
                     response_stream = agent.arun(
-                        message,
+                        current_message,
                         stream=True,
                         stream_events=True,
                     )
@@ -137,6 +138,17 @@ async def run_agent_with_retry[T: BaseModel](
             logger.warning(
                 "%s response error (attempt %d/%d): %s",
                 agent_name, attempt, max_retries, e,
+            )
+        except ValidationError as e:
+            last_error = e
+            logger.warning(
+                "%s schema validation failed (attempt %d/%d): %s",
+                agent_name, attempt, max_retries, e,
+            )
+            current_message = (
+                f"{message}\n\n"
+                f"Your previous response had an issue: schema validation failed: {e}\n"
+                f"Please correct this and provide a valid response."
             )
         except Exception as e:
             last_error = e

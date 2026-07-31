@@ -4,16 +4,14 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pydantic import BaseModel
-
 from agno.agent import RunCompletedEvent, RunErrorEvent
+from pydantic import BaseModel
 
 from pipeline.agents.parsing import (
     AgentResponseError,
     estimate_tokens,
     run_agent_with_retry,
 )
-
 
 # --- Constants ---
 
@@ -253,6 +251,75 @@ class TestRunAgentWithRetry:
                     agent, "msg", SampleModel,
                     max_retries=2, retry_delay=0.0, timeout=5.0,
                 )
+
+    async def test_reasks_on_validation_error(self) -> None:
+        """Schema-parse failure feeds the validation detail into the next attempt
+        instead of blind-resending the identical message."""
+        agent = MagicMock()
+        agent.name = "SchemaAgent"
+        agent.arun = MagicMock(
+            side_effect=[
+                _mock_arun_success({"name": VALID_NAME}),  # missing 'value' -> ValidationError
+                _mock_arun_success({"name": VALID_NAME, "value": VALID_VALUE}),
+            ],
+        )
+
+        with patch(
+            "pipeline.agents.models.llm_semaphore",
+            asyncio.Semaphore(1),
+        ), patch(
+            "pipeline.config.settings",
+            MagicMock(
+                llm_max_retries=3,
+                llm_retry_delay=0.0,
+            ),
+        ):
+            result = await run_agent_with_retry(
+                agent, "original message", SampleModel,
+                max_retries=3, retry_delay=0.0, timeout=5.0,
+            )
+
+        assert result.name == VALID_NAME
+        assert result.value == VALID_VALUE
+        assert agent.arun.call_count == 2
+
+        first_message = agent.arun.call_args_list[0].args[0]
+        second_message = agent.arun.call_args_list[1].args[0]
+        assert first_message == "original message"
+        assert second_message != first_message
+        assert "original message" in second_message
+        assert "issue" in second_message
+
+    async def test_raises_after_all_retries_exhausted_on_validation_error(self) -> None:
+        """Persistent schema failure still raises AgentResponseError after max_retries."""
+        agent = MagicMock()
+        agent.name = "AlwaysInvalidAgent"
+        agent.arun = MagicMock(
+            side_effect=lambda *args, **kwargs: _mock_arun_success(
+                {"name": VALID_NAME},  # always missing 'value'
+            ),
+        )
+
+        with patch(
+            "pipeline.agents.models.llm_semaphore",
+            asyncio.Semaphore(1),
+        ), patch(
+            "pipeline.config.settings",
+            MagicMock(
+                llm_max_retries=2,
+                llm_retry_delay=0.0,
+            ),
+        ):
+            with pytest.raises(
+                AgentResponseError,
+                match="failed after 2 attempts",
+            ):
+                await run_agent_with_retry(
+                    agent, "msg", SampleModel,
+                    max_retries=2, retry_delay=0.0, timeout=5.0,
+                )
+
+        assert agent.arun.call_count == 2
 
     async def test_calls_count_tokens_with_message(self) -> None:
         """input_tokens is sourced from count_tokens, not the char/4 heuristic."""
