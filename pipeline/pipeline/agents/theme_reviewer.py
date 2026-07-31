@@ -12,7 +12,7 @@ from agno.agent import Agent as AgnoAgent
 from pydantic import BaseModel, Field
 
 from pipeline.agents.models import create_model
-from pipeline.agents.parsing import run_agent_with_retry
+from pipeline.agents.parsing import reask, run_agent_with_retry
 from pipeline.agents.prompts.theme_reviewer import THEME_REVIEWER_PROMPT
 
 logger = logging.getLogger(__name__)
@@ -147,6 +147,36 @@ class ThemeReviewerAgent:
                     if key in canon_name or canon_name in key:
                         return tid, theme_name_to_meta[canon_name]
                 return "", {}
+
+            miss_names = [
+                review.theme_name
+                for review in result.reviews
+                if not _find_theme(review.theme_name)[0]
+            ]
+
+            if miss_names:
+                valid_names = ", ".join(t.get("name", "") for t in batch)
+                failure_description = (
+                    f"The following theme_name value(s) did not match any theme "
+                    f"in this batch: {', '.join(miss_names)}. "
+                    f"Valid theme names for this batch are: {valid_names}. "
+                    f"Use one of these exact names for theme_name in your response."
+                )
+                original_result = result
+                result = await reask(
+                    self._agent,
+                    message,
+                    failure_description,
+                    BatchThemeReviewResult,
+                    fallback=lambda: original_result,
+                    context={
+                        "stage": "theme_review",
+                        "batch": f"{batch_idx}/{len(batches)}",
+                        "themes_in_batch": len(batch),
+                        "reask": "theme_name_mismatch",
+                    },
+                    on_event=on_event,
+                )
 
             batch_reviews: list[dict[str, Any]] = []
             for review in result.reviews:
