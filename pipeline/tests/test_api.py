@@ -105,6 +105,40 @@ class TestCreateJob:
         assert "PDF" in resp.json()["detail"]
 
 
+class TestChunkTrigger:
+    """Validate the size-triggered chunking gate in the upload route."""
+
+    async def test_default_threshold_writes_single_markdown(
+        self, client: AsyncClient, pdf_bytes: bytes, jobs_dir: Path,
+    ):
+        create_resp = await client.post(
+            "/jobs",
+            files=[("files", ("test.pdf", pdf_bytes, "application/pdf"))],
+        )
+        job_id = create_resp.json()["job_id"]
+        job_path = jobs_dir / job_id
+
+        md_files = sorted(job_path.glob("*.md"))
+        assert len(md_files) == 1
+        assert not list(job_path.glob("*__chunk*.md"))
+
+    async def test_low_threshold_writes_chunk_files(
+        self, client: AsyncClient, pdf_bytes: bytes, jobs_dir: Path,
+    ):
+        with patch.object(settings, "chunk_token_threshold", 1):
+            create_resp = await client.post(
+                "/jobs",
+                files=[("files", ("test.pdf", pdf_bytes, "application/pdf"))],
+            )
+        job_id = create_resp.json()["job_id"]
+        job_path = jobs_dir / job_id
+
+        md_files = set(job_path.glob("*.md"))
+        chunk_files = set(job_path.glob("*__chunk*.md"))
+        assert len(chunk_files) >= 1
+        assert md_files == chunk_files  # every .md file is a chunk, no bare single file
+
+
 class TestGetStatus:
     async def test_get_status(self, client: AsyncClient, pdf_bytes: bytes):
         create_resp = await client.post(

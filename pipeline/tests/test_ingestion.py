@@ -209,6 +209,29 @@ class TestToMarkdown:
             assert non_empty_indices[i + 1] - non_empty_indices[i] >= 2
 
 
+class TestToAnnotatedMarkdown:
+    """Regression coverage for render_annotated_markdown extraction (models.py)."""
+
+    def test_renders_headings(self, sample_pdf: bytes) -> None:
+        result = extract_pymupdf(sample_pdf)
+        md = result.to_annotated_markdown()
+
+        assert md.startswith("# ")
+        assert "## " in md
+
+    def test_contains_position_tags(self, sample_pdf: bytes) -> None:
+        result = extract_pymupdf(sample_pdf)
+        md = result.to_annotated_markdown()
+
+        assert "[p.1,§" in md
+
+    def test_contains_body_text(self, sample_pdf: bytes) -> None:
+        result = extract_pymupdf(sample_pdf)
+        md = result.to_annotated_markdown()
+
+        assert "promising approach" in md
+
+
 class TestIngestPdf:
     def test_uses_pymupdf_when_quality_good(self, sample_pdf: bytes) -> None:
         result = ingest_pdf(sample_pdf)

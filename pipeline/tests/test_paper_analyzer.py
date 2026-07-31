@@ -12,6 +12,7 @@ from pipeline.agents.paper_analyzer import (
     PaperAnalysisResult,
     PaperAnalyzerAgent,
     ThemeWithClaims,
+    merge_chunk_results,
 )
 from pipeline.agents.protocol import Agent
 
@@ -336,6 +337,122 @@ class TestPaperAnalyzerRun:
         assert isinstance(positions[0], dict)
         assert "page" in positions[0]
         assert "paragraph" in positions[0]
+
+
+# --- merge_chunk_results ---
+
+
+def _make_chunk_result(
+    theme_id: str,
+    theme_name: str,
+    *,
+    positions: list[dict[str, int]] | None = None,
+    claim_ids: list[str] | None = None,
+) -> dict[str, Any]:
+    """Build a single-theme chunk result in PaperAnalyzerAgent.run()'s output shape."""
+    positions = positions or [{"page": 1, "paragraph": 1}]
+    claim_ids = claim_ids or [f"{theme_id}-claim-0"]
+    return {
+        "themes": [
+            {
+                "id": theme_id,
+                "name": theme_name,
+                "description": THEME_DESCRIPTION,
+                "paper_id": PAPER_ID,
+                "positions": positions,
+            }
+        ],
+        "claims": [
+            {
+                "id": cid,
+                "theme_id": theme_id,
+                "theme_name": theme_name,
+                "text": CLAIM_TEXT,
+                "page": VALID_PAGE,
+                "paragraph": VALID_PARAGRAPH,
+                "deep": CLAIM_DEEP,
+                "summary": CLAIM_SUMMARY,
+                "source": {"paper_id": PAPER_ID, "page": VALID_PAGE, "paragraph": VALID_PARAGRAPH},
+            }
+            for cid in claim_ids
+        ],
+    }
+
+
+class TestMergeChunkResults:
+    """Validate cross-chunk theme reconciliation."""
+
+    def test_single_chunk_returns_data_unchanged(self) -> None:
+        """A single chunk result passes through with the same theme/claim ids."""
+        chunk = _make_chunk_result("t1", "Gene Therapy")
+
+        merged = merge_chunk_results([chunk])
+
+        assert merged["themes"] == chunk["themes"]
+        assert merged["claims"] == chunk["claims"]
+
+    def test_same_normalized_name_merges_into_one_theme(self) -> None:
+        """Two chunks with the same (normalized) theme name merge into one."""
+        chunk1 = _make_chunk_result("t1", "Gene Therapy Vectors", claim_ids=["c1"])
+        chunk2 = _make_chunk_result("t2", "gene-therapy_vectors", claim_ids=["c2"])
+
+        merged = merge_chunk_results([chunk1, chunk2])
+
+        assert len(merged["themes"]) == 1
+        assert merged["themes"][0]["id"] == "t1"  # first occurrence is canonical
+        assert len(merged["claims"]) == 2
+
+    def test_merged_positions_are_unioned(self) -> None:
+        """Positions from both chunks are combined, duplicates removed."""
+        chunk1 = _make_chunk_result(
+            "t1", "Gene Therapy", positions=[{"page": 1, "paragraph": 1}],
+        )
+        chunk2 = _make_chunk_result(
+            "t2", "gene therapy", positions=[{"page": 1, "paragraph": 1}, {"page": 5, "paragraph": 2}],
+        )
+
+        merged = merge_chunk_results([chunk1, chunk2])
+
+        positions = merged["themes"][0]["positions"]
+        assert {"page": 1, "paragraph": 1} in positions
+        assert {"page": 5, "paragraph": 2} in positions
+        assert len(positions) == 2  # the duplicate position was not re-added
+
+    def test_claims_remapped_to_canonical_theme_id(self) -> None:
+        """Claims from the non-canonical chunk get the canonical theme_id."""
+        chunk1 = _make_chunk_result("t1", "Gene Therapy", claim_ids=["c1"])
+        chunk2 = _make_chunk_result("t2", "Gene Therapy", claim_ids=["c2"])
+
+        merged = merge_chunk_results([chunk1, chunk2])
+
+        assert all(c["theme_id"] == "t1" for c in merged["claims"])
+
+    def test_distinct_theme_names_stay_separate(self) -> None:
+        """Chunks with genuinely different theme names produce separate themes."""
+        chunk1 = _make_chunk_result("t1", "Gene Therapy")
+        chunk2 = _make_chunk_result("t2", "Neural Plasticity")
+
+        merged = merge_chunk_results([chunk1, chunk2])
+
+        assert len(merged["themes"]) == 2
+        theme_ids = {t["id"] for t in merged["themes"]}
+        assert theme_ids == {"t1", "t2"}
+
+    def test_empty_chunk_contributes_nothing(self) -> None:
+        """A chunk with no themes/claims (e.g. references-only) doesn't error."""
+        chunk1 = _make_chunk_result("t1", "Gene Therapy")
+        empty_chunk: dict[str, Any] = {"themes": [], "claims": []}
+
+        merged = merge_chunk_results([chunk1, empty_chunk])
+
+        assert len(merged["themes"]) == 1
+        assert len(merged["claims"]) == 1
+
+    def test_all_chunks_empty_returns_empty_result(self) -> None:
+        """No themes across any chunk yields an empty (not erroring) result."""
+        merged = merge_chunk_results([{"themes": [], "claims": []}])
+
+        assert merged == {"themes": [], "claims": []}
 
 
 # --- Protocol compliance ---

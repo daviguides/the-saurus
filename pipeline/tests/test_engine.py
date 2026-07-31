@@ -86,6 +86,51 @@ def _create_test_job(jobs_dir: Path, paper_count: int = 2) -> tuple[str, list[st
     return job_id, paper_ids
 
 
+def _create_chunked_test_job(jobs_dir: Path) -> tuple[str, str]:
+    """Create a job with one paper split into two chunk files instead of a
+    single markdown file, exercising the orchestrator's glob-and-merge path."""
+    import yaml
+
+    job_id = str(uuid4())
+    job_path = jobs_dir / job_id
+    job_path.mkdir()
+    for subdir in ("themes", "claims", "theme_reviews"):
+        (job_path / subdir).mkdir()
+
+    (job_path / "events.ndjson").touch()
+
+    now = datetime.now(UTC).isoformat()
+    pid = str(uuid4())
+    papers = [{
+        "paper_id": pid,
+        "filename": "paper1.pdf",
+        "title": "Test Paper 1",
+        "authors": ["Author 1"],
+        "page_count": 6,
+        "ingested_at": now,
+    }]
+    (job_path / f"{pid}__chunk000.md").write_text("# Test Paper 1\n\nChunk 0 content.\n")
+    (job_path / f"{pid}__chunk001.md").write_text("## Section 2\n\nChunk 1 content.\n")
+
+    with open(job_path / "papers.yaml", "w") as f:
+        yaml.safe_dump(papers, f)
+
+    status = {
+        "job_id": job_id,
+        "status": "pending",
+        "stage": "",
+        "progress": 0.0,
+        "paper_count": 1,
+        "created_at": now,
+        "updated_at": now,
+        "error": None,
+    }
+    with open(job_path / "status.yaml", "w") as f:
+        yaml.safe_dump(status, f)
+
+    return job_id, pid
+
+
 def _collect_events(emitter: EventEmitter) -> list[Event]:
     """Add a listener that collects all events."""
     events: list[Event] = []
@@ -361,6 +406,36 @@ class TestPipelineExecution:
 
         assert JobState.RUNNING in statuses
         assert statuses[-1] == JobState.COMPLETED
+
+    async def test_multi_chunk_paper_themes_merge(self, jobs_dir: Path):
+        """A paper split into multiple chunk files gets one analyzer call per
+        chunk; StubPaperAnalyzer returns the same theme name per call (keyed
+        on title, not content), so the merge step must collapse them into
+        one theme with both chunks' claims attached."""
+        job_id, pid = _create_chunked_test_job(jobs_dir)
+        emitter = EventEmitter(job_id, jobs_dir)
+
+        with (
+            patch("pipeline.engine.orchestrator.get_or_create_emitter", return_value=emitter),
+            _patch_qdrant(),
+            _patch_paper_analyzer(),
+            _patch_theme_dedup(),
+            _patch_theme_reviewer(),
+            _patch_aggregator(),
+        ):
+            await run_pipeline(job_id, jobs_dir)
+
+        status = await read_status(job_id, jobs_dir)
+        assert status is not None
+        assert status.status == JobState.COMPLETED
+
+        themes_data = await read_yaml(jobs_dir / job_id / "themes" / f"{pid}.yaml")
+        claims_data = await read_yaml(jobs_dir / job_id / "claims" / f"{pid}.yaml")
+
+        assert len(themes_data["themes"]) == 1
+        assert len(claims_data["claims"]) == 2
+        theme_id = themes_data["themes"][0]["id"]
+        assert all(c["theme_id"] == theme_id for c in claims_data["claims"])
 
     async def test_failure_sets_failed_status(self, jobs_dir: Path):
         """If an agent raises, the job status is set to FAILED."""

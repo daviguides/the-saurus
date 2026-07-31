@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Coroutine
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -15,6 +15,7 @@ from pipeline.agents import (
     PaperAnalyzerAgent,
     ThemeDedupAgent,
     ThemeReviewerAgent,
+    merge_chunk_results,
 )
 from pipeline.agents.event_bridge import create_agent_event_callback
 from pipeline.agents.judge_gate import score_review
@@ -62,7 +63,7 @@ class PipelineContext:
     job_path: Path
     jobs_dir: Path
     papers: list[PaperEntry]
-    paper_contents: dict[str, str]
+    paper_contents: dict[str, list[str]]
     emitter: EventEmitter
     tracker: ProgressTracker
     indexer: QdrantIndexer | None
@@ -112,12 +113,19 @@ async def _setup_pipeline(job_id: str, jobs_dir: Path) -> PipelineContext:
         raise ValueError("No papers found in papers.yaml")
     papers = [PaperEntry.model_validate(p) for p in papers_data]
 
-    # Load paper markdown content
-    paper_contents: dict[str, str] = {}
+    # Load paper markdown content — chunked papers have {paper_id}__chunk{NNN}.md
+    # files instead of a single {paper_id}.md; fall back to the single file.
+    paper_contents: dict[str, list[str]] = {}
     for paper in papers:
+        chunk_paths = sorted(job_path.glob(f"{paper.paper_id}__chunk*.md"))
+        if chunk_paths:
+            paper_contents[paper.paper_id] = [
+                await asyncio.to_thread(p.read_text) for p in chunk_paths
+            ]
+            continue
         md_path = job_path / f"{paper.paper_id}.md"
         if md_path.exists():
-            paper_contents[paper.paper_id] = await asyncio.to_thread(md_path.read_text)
+            paper_contents[paper.paper_id] = [await asyncio.to_thread(md_path.read_text)]
 
     tracker = ProgressTracker(job_id, jobs_dir, emitter, len(papers))
 
@@ -227,7 +235,7 @@ async def _run_paper_analysis(ctx: PipelineContext) -> AnalysisResults:
     await ctx.tracker.stage_start(Stage.PAPER_ANALYSIS, len(ctx.papers))
     analysis_results = await _run_parallel_per_paper(
         ctx.papers, ctx.paper_contents, analyzer, ctx.tracker, Stage.PAPER_ANALYSIS,
-        ctx.job_path, emitter=ctx.emitter,
+        ctx.job_path, emitter=ctx.emitter, merge_fn=merge_chunk_results,
     )
     # Persist per-paper themes and claims (split from unified result)
     for paper, result in analysis_results:
@@ -406,13 +414,14 @@ async def _safe_qdrant(coro: Coroutine, *, operation: str = "unknown") -> None:
 
 async def _run_parallel_per_paper(
     papers: list[PaperEntry],
-    paper_contents: dict[str, str],
+    paper_contents: dict[str, list[str]],
     agent: Agent,
     tracker: ProgressTracker,
     stage: str,
     job_path: Path,
     extra_inputs: dict[str, dict[str, Any]] | None = None,
     emitter: EventEmitter | None = None,
+    merge_fn: Callable[[list[dict[str, Any]]], dict[str, Any]] | None = None,
 ) -> list[tuple[PaperEntry, dict[str, Any]]]:
     """Run an agent in parallel across all papers.
 
@@ -421,6 +430,10 @@ async def _run_parallel_per_paper(
             into each agent call. For example, {"themes": {pid: [...]}} adds
             input["themes"] per paper.
         emitter: Optional EventEmitter for agent-level event forwarding.
+        merge_fn: Required when a paper has more than one content chunk —
+            reconciles the per-chunk results into one paper-level result.
+            A chunk whose call fails is logged and dropped; the paper only
+            fails if every one of its chunks fails.
     """
     inner = getattr(agent, "_agent", None)
     agent_name = (
@@ -429,8 +442,7 @@ async def _run_parallel_per_paper(
         else agent.__class__.__name__
     )
 
-    async def process_one(paper: PaperEntry) -> dict[str, Any] | Exception:
-        content = paper_contents.get(paper.paper_id, "")
+    async def call_agent(paper: PaperEntry, content: str) -> dict[str, Any]:
         input_dict: dict[str, Any] = {
             "paper_id": paper.paper_id,
             "title": paper.title,
@@ -439,14 +451,38 @@ async def _run_parallel_per_paper(
         if extra_inputs:
             for key, mapping in extra_inputs.items():
                 input_dict[key] = mapping.get(paper.paper_id, [])
+        kwargs: dict[str, Any] = {}
+        if emitter is not None:
+            kwargs["on_event"] = create_agent_event_callback(
+                emitter, agent_name, stage, paper_id=paper.paper_id,
+                context={"paper_title": paper.title},
+            )
+        return await agent.run(input_dict, **kwargs)
+
+    async def process_one(paper: PaperEntry) -> dict[str, Any] | Exception:
+        contents = paper_contents.get(paper.paper_id) or [""]
         try:
-            kwargs: dict[str, Any] = {}
-            if emitter is not None:
-                kwargs["on_event"] = create_agent_event_callback(
-                    emitter, agent_name, stage, paper_id=paper.paper_id,
-                    context={"paper_title": paper.title},
+            if len(contents) == 1:
+                result = await call_agent(paper, contents[0])
+            else:
+                chunk_results = await asyncio.gather(
+                    *[call_agent(paper, c) for c in contents], return_exceptions=True,
                 )
-            result = await agent.run(input_dict, **kwargs)
+                successful = [r for r in chunk_results if not isinstance(r, Exception)]
+                if not successful:
+                    raise chunk_results[0]  # all chunks failed
+                failed = len(chunk_results) - len(successful)
+                if failed:
+                    logger.warning(
+                        "%d/%d chunks failed for paper %s in %s — merging %d successful",
+                        failed, len(chunk_results), paper.paper_id, stage, len(successful),
+                    )
+                if merge_fn is None:
+                    raise RuntimeError(
+                        f"paper {paper.paper_id} has {len(contents)} chunks but no "
+                        f"merge_fn was provided to _run_parallel_per_paper"
+                    )
+                result = merge_fn(successful)
             await tracker.stage_item_done(stage, paper.paper_id)
             return result
         except Exception as exc:

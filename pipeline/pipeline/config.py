@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     llm_max_retries: int = 5  # more retries for rate-limited APIs
     llm_debug_mode: bool = True  # Agno agent debug logging
 
+    # Ingestion — chunking
+    chunk_token_threshold: int = 8000  # papers below this take the unchunked single-call path
+
     # Persistence
     jobs_dir: str = "./jobs"
 

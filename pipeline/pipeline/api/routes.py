@@ -26,8 +26,14 @@ from pipeline.core import (
     write_status,
     write_yaml,
 )
+from pipeline.core.tokens import count_tokens
 from pipeline.engine import run_pipeline
-from pipeline.ingestion import IngestionError, ingest_pdf
+from pipeline.ingestion import (
+    IngestionError,
+    chunk_by_heading,
+    ingest_pdf,
+    render_annotated_markdown,
+)
 from pipeline.ws.stream import register_emitter
 
 from .schemas import (
@@ -157,9 +163,25 @@ async def create_job(files: list[UploadFile]) -> CreateJobResponse:
             )
         )
 
-        # Save markdown
-        md_path = job_path / f"{paper_id}.md"
-        await asyncio.to_thread(md_path.write_text, result.to_annotated_markdown())
+        # Save markdown — size-triggered chunking: small papers pay nothing
+        full_markdown = result.to_annotated_markdown()
+        token_count = await count_tokens(full_markdown)
+        if token_count <= settings.chunk_token_threshold:
+            md_path = job_path / f"{paper_id}.md"
+            await asyncio.to_thread(md_path.write_text, full_markdown)
+        else:
+            paragraph_chunks = chunk_by_heading(result.paragraphs)
+            logger.info(
+                "Paper %s (%d tokens) exceeds chunk_token_threshold=%d, "
+                "split into %d chunk(s)",
+                paper_id, token_count, settings.chunk_token_threshold,
+                len(paragraph_chunks),
+            )
+            for i, chunk_paragraphs in enumerate(paragraph_chunks):
+                chunk_path = job_path / f"{paper_id}__chunk{i:03d}.md"
+                await asyncio.to_thread(
+                    chunk_path.write_text, render_annotated_markdown(chunk_paragraphs)
+                )
 
     if not papers:
         # E1: Clean up orphan PDF files when ingestion fails for all files
