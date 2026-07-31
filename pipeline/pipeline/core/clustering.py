@@ -27,7 +27,12 @@ RECONCILE_COSINE_THRESHOLD = 0.85
 
 def _cosine(a: list[float], b: list[float]) -> float:
     va, vb = np.asarray(a), np.asarray(b)
-    return float(np.dot(va, vb) / (np.linalg.norm(va) * np.linalg.norm(vb)))
+    denom = np.linalg.norm(va) * np.linalg.norm(vb)
+    if denom == 0:
+        # A degraded (e.g. failed) embedding call yields a zero/empty vector —
+        # treat as "no similarity" rather than propagating NaN through unions.
+        return 0.0
+    return float(np.dot(va, vb) / denom)
 
 
 class _UnionFind:
@@ -80,7 +85,8 @@ async def cluster_themes(themes: list[dict[str, Any]]) -> list[list[int]]:
 
 
 def _cap_bucket_sizes(
-    buckets: list[list[int]], vectors: list[list[float]],
+    buckets: list[list[int]],
+    vectors: list[list[float]],
 ) -> list[list[int]]:
     """Split any bucket over MAX_BUCKET_SIZE by descending distance from centroid."""
     result: list[list[int]] = []
@@ -133,18 +139,18 @@ async def reconcile_canonical_themes(
                 if alias not in aliases:
                     aliases.append(alias)
             source_ids.extend(t.get("source_theme_ids", []))
-            merged_map.setdefault(canonical_id, []).extend(
-                theme_map.get(t["id"], [])
-            )
+            merged_map.setdefault(canonical_id, []).extend(theme_map.get(t["id"], []))
 
-        merged_themes.append({
-            "id": canonical_id,
-            "name": primary["name"],
-            "label": primary["name"],
-            "description": primary["description"],
-            "paper_ids": paper_ids,
-            "aliases": aliases,
-            "source_theme_ids": source_ids,
-        })
+        merged_themes.append(
+            {
+                "id": canonical_id,
+                "name": primary["name"],
+                "label": primary["name"],
+                "description": primary["description"],
+                "paper_ids": paper_ids,
+                "aliases": aliases,
+                "source_theme_ids": source_ids,
+            }
+        )
 
     return merged_themes, merged_map

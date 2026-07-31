@@ -23,6 +23,13 @@ def test_cosine_orthogonal_vectors_is_zero() -> None:
     assert _cosine([1.0, 0.0], [0.0, 1.0]) == 0.0
 
 
+def test_cosine_zero_vector_is_zero_not_nan() -> None:
+    # A degraded (e.g. failed) embedding call yields a zero/empty vector;
+    # must not propagate NaN through the union-find similarity threshold.
+    assert _cosine([0.0, 0.0], [1.0, 0.0]) == 0.0
+    assert _cosine([], []) == 0.0
+
+
 # --- cluster_themes ---
 
 
