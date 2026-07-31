@@ -88,7 +88,7 @@ def _build_claim_id_failure_description(guard: Guard, result: BatchThemeReviewRe
 
     return "\n".join(
         f'For theme "{result.reviews[idx].theme_name}": claim_id '
-        f'{", ".join(ids)} {"is" if len(ids) == 1 else "are"} not in the valid set '
+        f"{', '.join(ids)} {'is' if len(ids) == 1 else 'are'} not in the valid set "
         f"for this batch — provide valid claim_ids or omit these entries."
         for idx, ids in bad_ids_by_theme_idx.items()
     )

@@ -6,7 +6,6 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
-
 from guardrails.validator_base import FailResult, PassResult
 
 from pipeline.agents.theme_reviewer import (
@@ -601,7 +600,10 @@ class TestThemeReviewerAgentRunBatch:
         """Two invalid claim_ids across two different themes in one batch produce
         a single reask() call naming both themes and both bad ids."""
         second_theme = {
-            **_make_theme(), "id": "canonical-2", "name": "Gene Therapy", "label": "Gene Therapy",
+            **_make_theme(),
+            "id": "canonical-2",
+            "name": "Gene Therapy",
+            "label": "Gene Therapy",
         }
         themes = [_make_theme(), second_theme]
         review_with_invalid = BatchThemeReviewResult(
