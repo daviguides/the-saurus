@@ -87,13 +87,14 @@ class ThemeReviewerAgent:
 
         # Chunk themes into batches
         batches = [
-            themes[i:i + self._batch_size]
-            for i in range(0, len(themes), self._batch_size)
+            themes[i : i + self._batch_size] for i in range(0, len(themes), self._batch_size)
         ]
 
         logger.info(
             "ThemeReviewer: %d themes in %d batches (size %d)",
-            len(themes), len(batches), self._batch_size,
+            len(themes),
+            len(batches),
+            self._batch_size,
         )
 
         async def _process_batch(
@@ -112,7 +113,9 @@ class ThemeReviewerAgent:
             message = _build_batch_message(batch, batch_claims)
 
             result = await run_agent_with_retry(
-                self._agent, message, BatchThemeReviewResult,
+                self._agent,
+                message,
+                BatchThemeReviewResult,
                 context={
                     "stage": "theme_review",
                     "batch": f"{batch_idx}/{len(batches)}",
@@ -122,19 +125,57 @@ class ThemeReviewerAgent:
                 on_event=on_event,
             )
 
+            valid_ids = set()
+            for claims_list in batch_claims.values():
+                for c in claims_list:
+                    valid_ids.add(c.get("id", ""))
+
+            invalid_by_theme: dict[str, list[str]] = {}
+            for review in result.reviews:
+                bad_ids = [kc.claim_id for kc in review.key_claims if kc.claim_id not in valid_ids]
+                if bad_ids:
+                    invalid_by_theme[review.theme_name] = bad_ids
+
+            if invalid_by_theme:
+                logger.warning(
+                    "ThemeReviewer batch %d: %d theme(s) with invalid claim_ids, reasking",
+                    batch_idx,
+                    len(invalid_by_theme),
+                )
+                failure_description = "\n".join(
+                    f'For theme "{name}": claim_id {", ".join(ids)} '
+                    f"{'is' if len(ids) == 1 else 'are'} not in the valid set for this batch — "
+                    f"provide valid claim_ids or omit these entries."
+                    for name, ids in invalid_by_theme.items()
+                )
+                original_result = result
+                result = await reask(
+                    self._agent,
+                    message,
+                    failure_description,
+                    BatchThemeReviewResult,
+                    fallback=lambda: original_result,
+                    max_attempts=2,
+                    context={
+                        "stage": "theme_review",
+                        "batch": f"{batch_idx}/{len(batches)}",
+                        "themes_in_batch": len(batch),
+                        "total_claims": sum(len(v) for v in batch_claims.values()),
+                        "reask": "valid_ids",
+                    },
+                    on_event=on_event,
+                )
+
             # Map results back to theme IDs
             # B4: Normalize theme names more aggressively for matching
             def _normalize_name(name: str) -> str:
                 """Normalize theme name: lowercase, strip, collapse whitespace and punctuation."""
                 import re as _re
+
                 return _re.sub(r"[\s_\-]+", " ", name.lower().strip())
 
-            theme_name_to_id = {
-                _normalize_name(t.get("name", "")): t["id"] for t in batch
-            }
-            theme_name_to_meta = {
-                _normalize_name(t.get("name", "")): t for t in batch
-            }
+            theme_name_to_id = {_normalize_name(t.get("name", "")): t["id"] for t in batch}
+            theme_name_to_meta = {_normalize_name(t.get("name", "")): t for t in batch}
 
             def _find_theme(review_name: str) -> tuple[str, dict[str, Any]]:
                 """Find matching theme by exact or substring match."""
@@ -182,25 +223,21 @@ class ThemeReviewerAgent:
             for review in result.reviews:
                 theme_id, theme_meta = _find_theme(review.theme_name)
 
-                # Validate claim IDs
-                valid_ids = set()
-                for claims_list in batch_claims.values():
-                    for c in claims_list:
-                        valid_ids.add(c.get("id", ""))
-                validated_claims = [
-                    kc for kc in review.key_claims if kc.claim_id in valid_ids
-                ]
+                # Validate claim IDs (worst case: same silent filter as before reask)
+                validated_claims = [kc for kc in review.key_claims if kc.claim_id in valid_ids]
 
-                batch_reviews.append({
-                    "theme_id": theme_id or review.theme_name,
-                    "label": theme_meta.get("name", review.theme_name),
-                    "review": review.synthesis,
-                    "consensus": review.consensus,
-                    "disagreements": review.disagreements,
-                    "gaps": review.gaps,
-                    "claim_ids": [kc.claim_id for kc in validated_claims],
-                    "key_claims": [kc.model_dump() for kc in validated_claims],
-                })
+                batch_reviews.append(
+                    {
+                        "theme_id": theme_id or review.theme_name,
+                        "label": theme_meta.get("name", review.theme_name),
+                        "review": review.synthesis,
+                        "consensus": review.consensus,
+                        "disagreements": review.disagreements,
+                        "gaps": review.gaps,
+                        "claim_ids": [kc.claim_id for kc in validated_claims],
+                        "key_claims": [kc.model_dump() for kc in validated_claims],
+                    }
+                )
             return batch_reviews
 
         nested = await asyncio.gather(

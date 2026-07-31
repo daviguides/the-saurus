@@ -270,10 +270,14 @@ def _make_batch_review_result() -> BatchThemeReviewResult:
                 theme_name="Chronobiology",
                 synthesis="Two papers demonstrate circadian regulation of metabolism and SCN resetting by light.",
                 consensus=["Both papers confirm circadian rhythms influence physiology."],
-                disagreements=["Paper 1 emphasizes metabolism, paper 2 focuses on neural mechanisms."],
+                disagreements=[
+                    "Paper 1 emphasizes metabolism, paper 2 focuses on neural mechanisms."
+                ],
                 gaps=["No study examines circadian effects on immune function."],
                 key_claims=[
-                    ReviewedClaim(claim_id="c1", paper_id="p1", summary="Clock regulates metabolism."),
+                    ReviewedClaim(
+                        claim_id="c1", paper_id="p1", summary="Clock regulates metabolism."
+                    ),
                     ReviewedClaim(claim_id="c2", paper_id="p2", summary="Light resets SCN."),
                 ],
             ),
@@ -297,13 +301,18 @@ class TestThemeReviewerAgentRunBatch:
         return _make_batch_review_result()
 
     async def test_run_batch_returns_correct_theme_id_and_label(
-        self, theme: dict[str, Any], claims: list[dict[str, Any]], mock_batch_result: BatchThemeReviewResult
+        self,
+        theme: dict[str, Any],
+        claims: list[dict[str, Any]],
+        mock_batch_result: BatchThemeReviewResult,
     ) -> None:
         """run_batch maps theme_name back to correct theme_id and label."""
         with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
             agent = ThemeReviewerAgent()
 
-        with patch("pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+        with patch(
+            "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
             mock_retry.return_value = mock_batch_result
             results = await agent.run_batch([theme], claims)
 
@@ -312,13 +321,18 @@ class TestThemeReviewerAgentRunBatch:
         assert results[0]["label"] == "Chronobiology"
 
     async def test_run_batch_returns_review_field(
-        self, theme: dict[str, Any], claims: list[dict[str, Any]], mock_batch_result: BatchThemeReviewResult
+        self,
+        theme: dict[str, Any],
+        claims: list[dict[str, Any]],
+        mock_batch_result: BatchThemeReviewResult,
     ) -> None:
         """run_batch populates review field from synthesis."""
         with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
             agent = ThemeReviewerAgent()
 
-        with patch("pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+        with patch(
+            "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
             mock_retry.return_value = mock_batch_result
             results = await agent.run_batch([theme], claims)
 
@@ -326,13 +340,18 @@ class TestThemeReviewerAgentRunBatch:
         assert isinstance(results[0]["review"], str)
 
     async def test_run_batch_returns_enriched_fields(
-        self, theme: dict[str, Any], claims: list[dict[str, Any]], mock_batch_result: BatchThemeReviewResult
+        self,
+        theme: dict[str, Any],
+        claims: list[dict[str, Any]],
+        mock_batch_result: BatchThemeReviewResult,
     ) -> None:
         """run_batch includes consensus, disagreements, and gaps."""
         with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
             agent = ThemeReviewerAgent()
 
-        with patch("pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+        with patch(
+            "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
             mock_retry.return_value = mock_batch_result
             results = await agent.run_batch([theme], claims)
 
@@ -342,26 +361,36 @@ class TestThemeReviewerAgentRunBatch:
         assert results[0]["gaps"] == expected_review.gaps
 
     async def test_run_batch_returns_valid_claim_ids(
-        self, theme: dict[str, Any], claims: list[dict[str, Any]], mock_batch_result: BatchThemeReviewResult
+        self,
+        theme: dict[str, Any],
+        claims: list[dict[str, Any]],
+        mock_batch_result: BatchThemeReviewResult,
     ) -> None:
         """run_batch only includes claim IDs that exist in input claims."""
         with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
             agent = ThemeReviewerAgent()
 
-        with patch("pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+        with patch(
+            "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
             mock_retry.return_value = mock_batch_result
             results = await agent.run_batch([theme], claims)
 
         assert results[0]["claim_ids"] == ["c1", "c2"]
 
     async def test_run_batch_filters_claims_by_source_theme_ids(
-        self, theme: dict[str, Any], claims: list[dict[str, Any]], mock_batch_result: BatchThemeReviewResult
+        self,
+        theme: dict[str, Any],
+        claims: list[dict[str, Any]],
+        mock_batch_result: BatchThemeReviewResult,
     ) -> None:
         """run_batch only passes claims matching source_theme_ids to the LLM."""
         with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
             agent = ThemeReviewerAgent()
 
-        with patch("pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+        with patch(
+            "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
             mock_retry.return_value = mock_batch_result
             await agent.run_batch([theme], claims)
 
@@ -375,7 +404,8 @@ class TestThemeReviewerAgentRunBatch:
     async def test_run_batch_filters_invalid_claim_ids_from_output(
         self, theme: dict[str, Any], claims: list[dict[str, Any]]
     ) -> None:
-        """run_batch removes claim IDs from output that don't exist in input."""
+        """run_batch removes claim IDs from output that don't exist in input,
+        even when reask is exhausted and falls back to the original result."""
         review_with_invalid = BatchThemeReviewResult(
             reviews=[
                 SingleThemeReview(
@@ -393,16 +423,126 @@ class TestThemeReviewerAgentRunBatch:
         with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
             agent = ThemeReviewerAgent()
 
-        with patch("pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+        with (
+            patch(
+                "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+            ) as mock_retry,
+            patch("pipeline.agents.theme_reviewer.reask", new_callable=AsyncMock) as mock_reask,
+        ):
             mock_retry.return_value = review_with_invalid
+            mock_reask.return_value = review_with_invalid  # simulates exhaustion -> fallback
             results = await agent.run_batch([theme], claims)
 
         assert results[0]["claim_ids"] == ["c1"]
         assert len(results[0]["key_claims"]) == 1
 
-    async def test_run_batch_handles_empty_claims(
-        self, theme: dict[str, Any]
+    async def test_run_batch_reask_fires_on_invalid_claim_ids(
+        self, theme: dict[str, Any], claims: list[dict[str, Any]]
     ) -> None:
+        """run_batch reasks the batch agent with a specific failure message
+        naming the offending theme and claim_id."""
+        review_with_invalid = BatchThemeReviewResult(
+            reviews=[
+                SingleThemeReview(
+                    theme_name="Chronobiology",
+                    synthesis="Analysis.",
+                    consensus=["Agreement."],
+                    key_claims=[
+                        ReviewedClaim(claim_id="c1", paper_id="p1", summary="Valid."),
+                        ReviewedClaim(claim_id="nonexistent", paper_id="p1", summary="Invalid."),
+                    ],
+                ),
+            ],
+        )
+
+        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
+            agent = ThemeReviewerAgent()
+
+        with (
+            patch(
+                "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+            ) as mock_retry,
+            patch("pipeline.agents.theme_reviewer.reask", new_callable=AsyncMock) as mock_reask,
+        ):
+            mock_retry.return_value = review_with_invalid
+            mock_reask.return_value = review_with_invalid
+            await agent.run_batch([theme], claims)
+
+        assert mock_reask.await_count == 1
+        call = mock_reask.call_args
+        failure_description = call.args[2]
+        assert "nonexistent" in failure_description
+        assert "Chronobiology" in failure_description
+
+    async def test_run_batch_reask_success_replaces_invalid_ids(
+        self, theme: dict[str, Any], claims: list[dict[str, Any]]
+    ) -> None:
+        """A successful reask's corrected output is used, not discarded."""
+        review_with_invalid = BatchThemeReviewResult(
+            reviews=[
+                SingleThemeReview(
+                    theme_name="Chronobiology",
+                    synthesis="Analysis.",
+                    consensus=["Agreement."],
+                    key_claims=[
+                        ReviewedClaim(claim_id="c1", paper_id="p1", summary="Valid."),
+                        ReviewedClaim(claim_id="nonexistent", paper_id="p1", summary="Invalid."),
+                    ],
+                ),
+            ],
+        )
+        corrected_review = BatchThemeReviewResult(
+            reviews=[
+                SingleThemeReview(
+                    theme_name="Chronobiology",
+                    synthesis="Analysis.",
+                    consensus=["Agreement."],
+                    key_claims=[
+                        ReviewedClaim(claim_id="c1", paper_id="p1", summary="Valid."),
+                        ReviewedClaim(claim_id="c2", paper_id="p2", summary="Also valid."),
+                    ],
+                ),
+            ],
+        )
+
+        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
+            agent = ThemeReviewerAgent()
+
+        with (
+            patch(
+                "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+            ) as mock_retry,
+            patch("pipeline.agents.theme_reviewer.reask", new_callable=AsyncMock) as mock_reask,
+        ):
+            mock_retry.return_value = review_with_invalid
+            mock_reask.return_value = corrected_review
+            results = await agent.run_batch([theme], claims)
+
+        assert results[0]["claim_ids"] == ["c1", "c2"]
+        assert len(results[0]["key_claims"]) == 2
+
+    async def test_run_batch_no_reask_when_all_ids_valid(
+        self,
+        theme: dict[str, Any],
+        claims: list[dict[str, Any]],
+        mock_batch_result: BatchThemeReviewResult,
+    ) -> None:
+        """run_batch never calls reask when all claim_ids are valid."""
+        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
+            agent = ThemeReviewerAgent()
+
+        with (
+            patch(
+                "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+            ) as mock_retry,
+            patch("pipeline.agents.theme_reviewer.reask", new_callable=AsyncMock) as mock_reask,
+        ):
+            mock_retry.return_value = mock_batch_result
+            await agent.run_batch([theme], claims)
+
+        mock_reask.assert_not_called()
+
+    async def test_run_batch_handles_empty_claims(self, theme: dict[str, Any]) -> None:
         """run_batch works when no claims are provided."""
         review_no_claims = BatchThemeReviewResult(
             reviews=[
@@ -418,7 +558,9 @@ class TestThemeReviewerAgentRunBatch:
         with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
             agent = ThemeReviewerAgent()
 
-        with patch("pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+        with patch(
+            "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
             mock_retry.return_value = review_no_claims
             results = await agent.run_batch([theme], [])
 
@@ -427,13 +569,18 @@ class TestThemeReviewerAgentRunBatch:
         assert len(results[0]["gaps"]) == 1
 
     async def test_run_batch_passes_batch_theme_review_result_schema(
-        self, theme: dict[str, Any], claims: list[dict[str, Any]], mock_batch_result: BatchThemeReviewResult
+        self,
+        theme: dict[str, Any],
+        claims: list[dict[str, Any]],
+        mock_batch_result: BatchThemeReviewResult,
     ) -> None:
         """run_batch passes BatchThemeReviewResult as the expected model class."""
         with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
             agent = ThemeReviewerAgent()
 
-        with patch("pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+        with patch(
+            "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
             mock_retry.return_value = mock_batch_result
             await agent.run_batch([theme], claims)
 
@@ -443,8 +590,7 @@ class TestThemeReviewerAgentRunBatch:
     async def test_run_batch_splits_into_batches(self) -> None:
         """run_batch calls run_agent_with_retry once per batch of themes."""
         themes = [
-            {"id": f"t{i}", "name": f"Theme {i}", "description": f"Desc {i}"}
-            for i in range(7)
+            {"id": f"t{i}", "name": f"Theme {i}", "description": f"Desc {i}"} for i in range(7)
         ]
         # batch_size=5 means 2 batches: [5, 2]
         batch_result_5 = BatchThemeReviewResult(
@@ -471,7 +617,9 @@ class TestThemeReviewerAgentRunBatch:
         with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
             agent = ThemeReviewerAgent(batch_size=5)
 
-        with patch("pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+        with patch(
+            "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
             mock_retry.side_effect = [batch_result_5, batch_result_2]
             results = await agent.run_batch(themes, [])
 
