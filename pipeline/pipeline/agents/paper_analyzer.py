@@ -13,8 +13,9 @@ from pydantic import BaseModel, Field
 
 from pipeline.agents.gate import evaluate_topic_gate
 from pipeline.agents.models import create_model
-from pipeline.agents.parsing import normalize_theme_name, run_agent_with_retry
+from pipeline.agents.parsing import normalize_theme_name, reask, run_agent_with_retry
 from pipeline.agents.prompts.paper_analyzer import PAPER_ANALYZER_PROMPT
+from pipeline.core.embedding import cosine_similarity, embed_batch
 from pipeline.core.exceptions import TopicGateRejectedError
 from pipeline.core.tokens import count_tokens
 
@@ -97,6 +98,80 @@ async def _pack_under_budget(content: str, budget: int) -> list[str]:
     return sub_chunks
 
 
+# --- Provenance grounding (f-007/f-016): claim.text vs claim.deep ---
+
+
+async def _grounding_scores(claims: list[ExtractedClaim]) -> list[float]:
+    """Cosine similarity between each claim.text and its own claim.deep.
+
+    Batched into a single embed_batch call (claim texts then deep texts, same
+    order) rather than one embed_text call per claim per field.
+    """
+    if not claims:
+        return []
+    texts = [c.text for c in claims] + [c.deep for c in claims]
+    vectors = await embed_batch(texts)
+    n = len(claims)
+    return [cosine_similarity(vectors[i], vectors[n + i]) for i in range(n)]
+
+
+def _build_grounding_failure_description(
+    flagged: list[tuple[str, ExtractedClaim, float]],
+    threshold: float,
+) -> str:
+    """One combined failure description covering every flagged claim in the
+    paper — mirrors theme_reviewer's invalid_by_theme/miss_names pattern of a
+    single reask call per batch, not one reask per item."""
+    lines = [
+        f'- theme "{theme_name}", position [p.{c.position.page},§{c.position.paragraph}]: '
+        f'claim "{c.text}" is not well-supported by its own "deep" excerpt '
+        f'"{c.deep}" (similarity {score:.2f} < required {threshold:.2f})'
+        for theme_name, c, score in flagged
+    ]
+    return (
+        "The following claims are not sufficiently grounded in their own 'deep' "
+        "source paragraph. For each: either correct 'deep' so it verbatim-contains "
+        "the claim, or correct 'text' so it accurately reflects what 'deep' says. "
+        "Do not invent a new claim.\n" + "\n".join(lines)
+    )
+
+
+async def _drop_ungrounded(
+    analysis: PaperAnalysisResult,
+    threshold: float,
+    paper_id: str,
+) -> PaperAnalysisResult:
+    """Recompute grounding scores and remove any claim still below threshold.
+
+    Uses model_copy(update=...) rather than reconstructing ThemeWithClaims/
+    PaperAnalysisResult via the constructor: model_copy does not re-run
+    min_length=1 validation on the updated field, so a theme legitimately
+    ending up with zero claims after a drop doesn't raise — the theme is kept
+    (claims_out simply has none for it), consistent with existing downstream
+    code tolerating arbitrary claims_out contents.
+    """
+    new_themes = []
+    for theme in analysis.themes:
+        scores = await _grounding_scores(theme.claims)
+        kept = []
+        for claim, score in zip(theme.claims, scores, strict=True):
+            if score < threshold:
+                logger.warning(
+                    "Provenance check dropped claim: paper_id=%s theme=%s "
+                    "position=[p.%d,§%d] score=%.3f threshold=%.3f",
+                    paper_id,
+                    theme.name,
+                    claim.position.page,
+                    claim.position.paragraph,
+                    score,
+                    threshold,
+                )
+                continue
+            kept.append(claim)
+        new_themes.append(theme.model_copy(update={"claims": kept}))
+    return analysis.model_copy(update={"themes": new_themes})
+
+
 # --- Agent ---
 
 
@@ -118,6 +193,59 @@ class PaperAnalyzerAgent:
             structured_outputs=True,
             debug_mode=settings.llm_debug_mode,
         )
+
+    async def _enforce_provenance(
+        self,
+        analysis: PaperAnalysisResult,
+        message: str,
+        paper_id: str,
+        *,
+        on_event: Callable[[Any], Awaitable[None]] | None,
+    ) -> PaperAnalysisResult:
+        """Flag claims not cosine-supported by their own deep excerpt, reask
+        once (combined failure description for the whole paper), then drop
+        anything still ungrounded after the reask attempt."""
+        from pipeline.config import settings
+
+        threshold = settings.provenance_similarity_threshold
+        flagged: list[tuple[str, ExtractedClaim, float]] = []
+        for theme in analysis.themes:
+            scores = await _grounding_scores(theme.claims)
+            for claim, score in zip(theme.claims, scores, strict=True):
+                if score < threshold:
+                    flagged.append((theme.name, claim, score))
+                    logger.info(
+                        "Provenance check flagged claim: paper_id=%s theme=%s "
+                        "position=[p.%d,§%d] score=%.3f threshold=%.3f",
+                        paper_id,
+                        theme.name,
+                        claim.position.page,
+                        claim.position.paragraph,
+                        score,
+                        threshold,
+                    )
+
+        if not flagged:
+            return analysis
+
+        failure_description = _build_grounding_failure_description(flagged, threshold)
+
+        corrected = await reask(
+            self._agent,
+            message,
+            failure_description,
+            PaperAnalysisResult,
+            fallback=lambda: analysis,
+            max_attempts=2,
+            context={
+                "paper_id": paper_id,
+                "stage": "paper_analysis",
+                "reask": "provenance_grounding",
+            },
+            on_event=on_event,
+        )
+
+        return await _drop_ungrounded(corrected, threshold, paper_id)
 
     async def run(
         self,
@@ -165,6 +293,12 @@ class PaperAnalyzerAgent:
                 context=context,
                 on_event=on_event,
             )
+            analysis = await self._enforce_provenance(
+                analysis,
+                content,
+                paper_id,
+                on_event=on_event,
+            )
             themes_out, claims_out = self._split_analysis(analysis, paper_id)
         else:
             logger.warning(
@@ -184,6 +318,12 @@ class PaperAnalyzerAgent:
                     sub_content,
                     PaperAnalysisResult,
                     context={**context, "sub_chunk": i},
+                    on_event=on_event,
+                )
+                sub_analysis = await self._enforce_provenance(
+                    sub_analysis,
+                    sub_content,
+                    paper_id,
                     on_event=on_event,
                 )
                 sub_themes, sub_claims = self._split_analysis(sub_analysis, paper_id)
