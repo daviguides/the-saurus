@@ -18,10 +18,8 @@ exposed for direct testing and standalone use.
 
 from __future__ import annotations
 
-import math
-
 from pipeline.config import settings
-from pipeline.core.embedding import embed_batch
+from pipeline.core.embedding import cosine_similarity, embed_batch
 
 from .models import Paragraph
 
@@ -49,17 +47,6 @@ def chunk_by_heading(paragraphs: list[Paragraph]) -> list[list[Paragraph]]:
     return chunks
 
 
-def _cosine_similarity(a: list[float], b: list[float]) -> float:
-    """Cosine similarity between two embedding vectors. Pure Python — no numpy
-    dependency justified for a rare fallback path over 1536-dim vectors."""
-    dot = sum(x * y for x, y in zip(a, b, strict=True))
-    norm_a = math.sqrt(sum(x * x for x in a))
-    norm_b = math.sqrt(sum(y * y for y in b))
-    if norm_a == 0.0 or norm_b == 0.0:
-        return 0.0
-    return dot / (norm_a * norm_b)
-
-
 async def chunk_by_similarity(
     paragraphs: list[Paragraph], *, threshold: float | None = None
 ) -> list[list[Paragraph]]:
@@ -75,7 +62,7 @@ async def chunk_by_similarity(
 
     chunks: list[list[Paragraph]] = [[paragraphs[0]]]
     for i in range(1, len(paragraphs)):
-        if _cosine_similarity(vectors[i - 1], vectors[i]) < resolved_threshold:
+        if cosine_similarity(vectors[i - 1], vectors[i]) < resolved_threshold:
             chunks.append([])
         chunks[-1].append(paragraphs[i])
     return chunks

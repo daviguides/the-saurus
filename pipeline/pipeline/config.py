@@ -36,6 +36,12 @@ class Settings(BaseSettings):
         0.55  # Tier 2: adjacent-paragraph cosine similarity split point
     )
 
+    # Extraction — provenance grounding (M3, f-007/f-016): claim.text vs claim.deep
+    # cosine similarity threshold. Provisional — Guardrails Hub's provenance_embeddings
+    # default (0.8) is calibrated for RAG top-k retrieval, not a single short-claim-
+    # vs-paragraph pair; no golden-set calibration exists yet (research.md).
+    provenance_similarity_threshold: float = 0.65
+
     # Persistence
     jobs_dir: str = "./jobs"
 
