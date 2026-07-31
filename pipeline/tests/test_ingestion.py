@@ -13,6 +13,7 @@ from pipeline.ingestion import IngestedPaper, IngestionError, ingest_pdf
 from pipeline.ingestion.extract import (
     QUALITY_THRESHOLD,
     _check_quality,
+    _scrub_pii,
     extract_pdfplumber,
     extract_pymupdf,
 )
@@ -304,3 +305,77 @@ class TestQualityCheck:
     def test_zero_pages(self) -> None:
         paper = IngestedPaper(title="Test", page_count=0, paragraphs=[])
         assert _check_quality(paper) is False
+
+
+@pytest.fixture
+def pii_pdf() -> bytes:
+    """Paper with author block plus an email, a phone number, and a city name in body text."""
+    return _make_pdf([
+        [
+            ("title", "A Survey of Neural Architecture Search Methods"),
+            ("author", "Jane Rodriguez, John Doe"),
+            ("heading", "Abstract"),
+            ("body", "Neural Architecture Search has emerged as a promising approach."),
+            ("heading", "Correspondence"),
+            (
+                "body",
+                "Contact the corresponding author at j.rodriguez@example.edu or call "
+                "555-123-4567. The lab is based in Palo Alto.",
+            ),
+        ],
+    ])
+
+
+class TestPiiScrub:
+    def test_email_redacted(self, pii_pdf: bytes) -> None:
+        result = ingest_pdf(pii_pdf)
+        body = " ".join(p.text for p in result.paragraphs)
+        assert "j.rodriguez@example.edu" not in body
+        assert "[EMAIL]" in body
+
+    def test_phone_redacted(self, pii_pdf: bytes) -> None:
+        result = ingest_pdf(pii_pdf)
+        body = " ".join(p.text for p in result.paragraphs)
+        assert "555-123-4567" not in body
+        assert "[PHONE]" in body
+
+    def test_location_redacted(self, pii_pdf: bytes) -> None:
+        result = ingest_pdf(pii_pdf)
+        body = " ".join(p.text for p in result.paragraphs)
+        assert "Palo Alto" not in body
+        assert "[LOCATION]" in body
+
+    def test_author_names_preserved(self, pii_pdf: bytes) -> None:
+        result = ingest_pdf(pii_pdf)
+        assert "Jane Rodriguez" in result.authors
+        assert "John Doe" in result.authors
+
+    def test_paragraph_count_unchanged(self, pii_pdf: bytes) -> None:
+        result = ingest_pdf(pii_pdf)
+        raw_count = len(extract_pymupdf(pii_pdf).paragraphs)
+        assert len(result.paragraphs) == raw_count
+
+    def test_non_pii_paragraph_unchanged(self, pii_pdf: bytes) -> None:
+        result = ingest_pdf(pii_pdf)
+        abstract = next(p for p in result.paragraphs if "promising approach" in p.text)
+        assert abstract.text == "Neural Architecture Search has emerged as a promising approach."
+
+    def test_redaction_logged_without_pii_value(
+        self, pii_pdf: bytes, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        with caplog.at_level("INFO", logger="pipeline.ingestion.extract"):
+            ingest_pdf(pii_pdf)
+
+        redaction_logs = [r for r in caplog.records if "PII redacted" in r.message]
+        assert len(redaction_logs) >= 3  # email + phone + location
+        for record in redaction_logs:
+            assert "j.rodriguez@example.edu" not in record.message
+            assert "555-123-4567" not in record.message
+            assert "Palo Alto" not in record.message
+            assert "page=" in record.message
+            assert "paragraph=" in record.message
+
+    def test_scrub_pii_passes_through_clean_paragraphs(self) -> None:
+        clean = [IngParagraph(page=1, index=1, text="Deep learning improves accuracy.")]
+        scrubbed = _scrub_pii(clean)
+        assert scrubbed[0].text == clean[0].text
