@@ -11,6 +11,10 @@ import resource
 import statistics
 import time
 
+import torch
+
+torch.set_num_threads(1)  # match the Helm pod's 1-CPU limit
+
 from alignscore import AlignScore
 from huggingface_hub import hf_hub_download
 

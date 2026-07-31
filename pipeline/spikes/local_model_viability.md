@@ -70,9 +70,9 @@ Once all three were fixed, **inference actually ran successfully** — this is a
 
 **Footprint**:
 - Disk: venv = **850MB**; checkpoint download (`AlignScore-base.ckpt`, the only artifact published — full training checkpoint including optimizer state, not just inference weights) = **1.8GB**. Total ≈ **2.65GB disk**, before even counting the model's own transitive deps overlap with DeBERTa's.
-- **Peak RSS: 3.86GB** — **nearly 4× the pod's entire 1Gi memory limit**, on its own, before the FastAPI app or any other process in the pod.
+- **Peak RSS: 3.24-3.86GB across runs** — **3.2-3.9× the pod's entire 1Gi memory limit**, on its own, before the FastAPI app or any other process in the pod.
 
-**Latency** (4 synthesis-vs-evidence pairs matching `SingleThemeReview.synthesis` + `key_claims` shape, batched, 10 repeats): batch-of-4 P50 **599ms**, ≈**150ms/pair**. **13× slower per call than DeBERTa's 11.5ms.**
+**Latency** (4 synthesis-vs-evidence pairs matching `SingleThemeReview.synthesis` + `key_claims` shape, batched, 10 repeats, single-threaded via `torch.set_num_threads(1)` to match the pod's 1-CPU limit): batch-of-4 P50 **1394.6ms**, ≈**349ms/pair**. **30× slower per call than DeBERTa's 11.5ms.** (An earlier unpinned-thread run measured 150ms/pair — corrected here to match the actual pod constraint; single-threaded is markedly slower, as expected for a 355M-effective-parameter model without multi-core parallelism.)
 
 **Sanity check** (grounded / fabricated / partially-grounded / contradicted synthesis vs the same evidence): scores **0.279 / 0.0015 / 0.0076 / 0.0003**. Real discriminative signal — grounded is ~37-900× higher than the three non-grounded cases — but the absolute "grounded" score (0.28) is far from 1.0, consistent with AlignScore's known calibration (a continuous alignment score needing a tuned threshold, not a probability to read at face value).
 
@@ -110,7 +110,7 @@ Both models cleanly separate the grounded pair from all three non-grounded ones 
 |---|---|---|---|---|---|
 | DeBERTa-v3 MNLI (`nli-deberta-v3-base`) | Clean, no blocker | ~1.5GB | 799MB (78% of 1Gi limit) | 11.5ms P50 | **GO** — tight footprint, workable alone in the pod; sanity check surfaced a real threshold-tuning need for M5 |
 | spaCy (`en_core_web_sm`) | Clean, no blocker (wheel gap from research.md has since closed — verified live) | 107MB | 158MB | 4.0ms P50 | **GO** — clear win, cheapest of the three |
-| AlignScore (as-declared) | **Blocked** on Python 3.14 (confirmed); runs on Python 3.10 after 3 undeclared manual fixes | ~2.65GB | **3.86GB (386% of 1Gi limit)** | 150ms/pair (13× DeBERTa) | **NO-GO** |
+| AlignScore (as-declared) | **Blocked** on Python 3.14 (confirmed); runs on Python 3.10 after 3 undeclared manual fixes | ~2.65GB | **3.2-3.9GB (320-390% of 1Gi limit)** | 349ms/pair single-threaded (30× DeBERTa) | **NO-GO** |
 | AlignScore (override, modern deps) | **Blocked** — real `pytorch_lightning` 2.x API break past the import layer, confirms declared pin is load-bearing | — | — | — | **NO-GO**, would require forking the package |
 
 **No model was added to `pipeline/pyproject.toml` / `pipeline/uv.lock`** — all measurement happened in scratch `pipeline/spikes/.venv-*` environments, gitignored.
