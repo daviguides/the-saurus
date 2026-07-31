@@ -467,3 +467,147 @@ class TestThemeReviewerAgentRunBatch:
 
         assert mock_retry.call_count == 2
         assert len(results) == 7
+
+
+# --- theme_name reask tests (f-006) ---
+
+
+class TestThemeReviewerReask:
+    """Test _find_theme miss → reask() integration."""
+
+    @pytest.fixture
+    def theme(self) -> dict[str, Any]:
+        return _make_theme()
+
+    @pytest.fixture
+    def claims(self) -> list[dict[str, Any]]:
+        return _make_claims()
+
+    async def test_run_batch_skips_reask_when_no_mismatch(
+        self, theme: dict[str, Any], claims: list[dict[str, Any]]
+    ) -> None:
+        """No theme_name mismatch → reask() is never called."""
+        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
+            agent = ThemeReviewerAgent()
+
+        with (
+            patch(
+                "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+            ) as mock_retry,
+            patch("pipeline.agents.theme_reviewer.reask", new_callable=AsyncMock) as mock_reask,
+        ):
+            mock_retry.return_value = _make_batch_review_result()
+            results = await agent.run_batch([theme], claims)
+
+        mock_reask.assert_not_called()
+        assert results[0]["theme_id"] == "canonical-1"
+
+    async def test_run_batch_reasks_on_theme_name_mismatch(
+        self, theme: dict[str, Any], claims: list[dict[str, Any]]
+    ) -> None:
+        """Unmatched theme_name triggers exactly one reask(); corrected result resolves theme_id."""
+        mismatched_result = BatchThemeReviewResult(
+            reviews=[
+                SingleThemeReview(
+                    theme_name="Completely Unrelated Topic",
+                    synthesis="Synthesis.",
+                    consensus=["Agreement."],
+                ),
+            ],
+        )
+        corrected_result = _make_batch_review_result()
+
+        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
+            agent = ThemeReviewerAgent()
+
+        with (
+            patch(
+                "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+            ) as mock_retry,
+            patch("pipeline.agents.theme_reviewer.reask", new_callable=AsyncMock) as mock_reask,
+        ):
+            mock_retry.return_value = mismatched_result
+            mock_reask.return_value = corrected_result
+            results = await agent.run_batch([theme], claims)
+
+        mock_reask.assert_called_once()
+        call_args = mock_reask.call_args
+        failure_description = call_args[0][2]
+        assert "Completely Unrelated Topic" in failure_description
+        assert "Chronobiology" in failure_description
+        assert results[0]["theme_id"] == "canonical-1"
+        assert results[0]["label"] == "Chronobiology"
+
+    async def test_run_batch_reask_exhaustion_matches_current_fallback(
+        self, theme: dict[str, Any], claims: list[dict[str, Any]]
+    ) -> None:
+        """Reask exhaustion (fallback fires) reproduces today's raw-name fallback exactly."""
+        mismatched_result = BatchThemeReviewResult(
+            reviews=[
+                SingleThemeReview(
+                    theme_name="Completely Unrelated Topic",
+                    synthesis="Synthesis.",
+                    consensus=["Agreement."],
+                ),
+            ],
+        )
+
+        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
+            agent = ThemeReviewerAgent()
+
+        async def _fake_reask(*_args: Any, fallback: Any, **_kwargs: Any) -> Any:
+            return fallback()
+
+        with (
+            patch(
+                "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+            ) as mock_retry,
+            patch("pipeline.agents.theme_reviewer.reask", side_effect=_fake_reask) as mock_reask,
+        ):
+            mock_retry.return_value = mismatched_result
+            results = await agent.run_batch([theme], claims)
+
+        mock_reask.assert_called_once()
+        assert results[0]["theme_id"] == "Completely Unrelated Topic"
+        assert results[0]["label"] == "Completely Unrelated Topic"
+
+    async def test_run_batch_multiple_misses_trigger_single_reask(
+        self, claims: list[dict[str, Any]]
+    ) -> None:
+        """Multiple mismatched theme_names in one batch trigger exactly one reask() call."""
+        second_theme = {
+            **_make_theme(), "id": "canonical-2", "name": "Gene Therapy", "label": "Gene Therapy",
+        }
+        themes = [_make_theme(), second_theme]
+        mismatched_result = BatchThemeReviewResult(
+            reviews=[
+                SingleThemeReview(
+                    theme_name="Unrelated A",
+                    synthesis="Synthesis A.",
+                    consensus=["Agreement A."],
+                ),
+                SingleThemeReview(
+                    theme_name="Unrelated B",
+                    synthesis="Synthesis B.",
+                    consensus=["Agreement B."],
+                ),
+            ],
+        )
+
+        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
+            agent = ThemeReviewerAgent()
+
+        with (
+            patch(
+                "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+            ) as mock_retry,
+            patch("pipeline.agents.theme_reviewer.reask", new_callable=AsyncMock) as mock_reask,
+        ):
+            mock_retry.return_value = mismatched_result
+            mock_reask.return_value = mismatched_result
+            await agent.run_batch(themes, claims)
+
+        mock_reask.assert_called_once()
+        failure_description = mock_reask.call_args[0][2]
+        assert "Unrelated A" in failure_description
+        assert "Unrelated B" in failure_description
