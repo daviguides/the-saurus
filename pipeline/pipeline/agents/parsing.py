@@ -156,3 +156,50 @@ async def run_agent_with_retry[T: BaseModel](
         f"{agent_name} failed after {max_retries} attempts: {last_error}",
         agent_name=agent_name,
     )
+
+
+async def reask[T: BaseModel](
+    agent: AgnoAgent,
+    message: str,
+    failure_description: str,
+    output_schema: type[T],
+    fallback: Callable[[], T],
+    *,
+    max_attempts: int = 2,
+    retry_delay: float | None = None,
+    timeout: float = LLM_TIMEOUT,
+    context: dict[str, Any] | None = None,
+    on_event: Callable[[Any], Awaitable[None]] | None = None,
+) -> T:
+    """Re-invoke agent with failure feedback appended; fall back on exhaustion.
+
+    Extends run_agent_with_retry rather than duplicating its semaphore/
+    timeout/backoff loop: the corrected message is sent through that same
+    retry loop capped at max_attempts, so a single shared mechanism backs
+    every detection point that needs feedback-driven correction.
+    """
+    corrected_message = (
+        f"{message}\n\n"
+        f"Your previous response had an issue: {failure_description}\n"
+        f"Please correct this and provide a valid response."
+    )
+
+    agent_name = agent.name or agent.__class__.__name__
+
+    try:
+        return await run_agent_with_retry(
+            agent,
+            corrected_message,
+            output_schema,
+            max_retries=max_attempts,
+            retry_delay=retry_delay,
+            timeout=timeout,
+            context=context,
+            on_event=on_event,
+        )
+    except AgentResponseError:
+        logger.warning(
+            "%s reask exhausted after %d attempts, using fallback",
+            agent_name, max_attempts,
+        )
+        return fallback()
