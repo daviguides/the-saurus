@@ -146,7 +146,9 @@ class TestThemeDedupAgentRun:
         with patch("pipeline.agents.theme_dedup.AgnoAgent"):
             agent = ThemeDedupAgent()
 
-        with patch("pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+        with patch(
+            "pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
             mock_retry.return_value = mock_dedup
             result = await agent.run({"themes": input_themes})
 
@@ -156,7 +158,11 @@ class TestThemeDedupAgentRun:
         # Chronobiology group merged 3 themes from 3 papers
         chrono = next(t for t in canonical if t["name"] == "Chronobiology")
         assert set(chrono["paper_ids"]) == {"p1", "p2", "p3"}
-        assert set(chrono["aliases"]) == {"Chronobiology", "Circadian Biology", "Biological Rhythms"}
+        assert set(chrono["aliases"]) == {
+            "Chronobiology",
+            "Circadian Biology",
+            "Biological Rhythms",
+        }
         assert set(chrono["source_theme_ids"]) == {"t1", "t3", "t5"}
 
     async def test_run_singleton_themes_preserved(
@@ -165,7 +171,9 @@ class TestThemeDedupAgentRun:
         with patch("pipeline.agents.theme_dedup.AgnoAgent"):
             agent = ThemeDedupAgent()
 
-        with patch("pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+        with patch(
+            "pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
             mock_retry.return_value = mock_dedup
             result = await agent.run({"themes": input_themes})
 
@@ -181,7 +189,9 @@ class TestThemeDedupAgentRun:
         with patch("pipeline.agents.theme_dedup.AgnoAgent"):
             agent = ThemeDedupAgent()
 
-        with patch("pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+        with patch(
+            "pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
             mock_retry.return_value = mock_dedup
             result = await agent.run({"themes": input_themes})
 
@@ -200,7 +210,9 @@ class TestThemeDedupAgentRun:
         with patch("pipeline.agents.theme_dedup.AgnoAgent"):
             agent = ThemeDedupAgent()
 
-        with patch("pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+        with patch(
+            "pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
             mock_retry.return_value = mock_dedup
             result = await agent.run({"themes": input_themes})
 
@@ -213,7 +225,9 @@ class TestThemeDedupAgentRun:
         with patch("pipeline.agents.theme_dedup.AgnoAgent"):
             agent = ThemeDedupAgent()
 
-        with patch("pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+        with patch(
+            "pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
             mock_retry.return_value = mock_dedup
             result = await agent.run({"themes": input_themes})
 
@@ -232,7 +246,9 @@ class TestThemeDedupAgentRun:
         with patch("pipeline.agents.theme_dedup.AgnoAgent"):
             agent = ThemeDedupAgent()
 
-        with patch("pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+        with patch(
+            "pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
             mock_retry.return_value = mock_dedup
             await agent.run({"themes": input_themes})
 
@@ -252,9 +268,116 @@ class TestThemeDedupAgentRun:
         with patch("pipeline.agents.theme_dedup.AgnoAgent"):
             agent = ThemeDedupAgent()
 
-        with patch("pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock) as mock_retry:
+        with patch(
+            "pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
             mock_retry.return_value = mock_dedup
             result = await agent.run({"themes": input_themes})
 
         for t in result["themes"]:
             assert t["label"] == t["name"]
+
+
+# --- member_indices bounds-check reask tests ---
+
+
+class TestThemeDedupReask:
+    """Test the out-of-range member_indices → reask() path."""
+
+    @pytest.fixture
+    def input_themes(self) -> list[dict[str, Any]]:
+        return _make_input_themes()
+
+    async def test_run_no_reask_when_indices_valid(
+        self, input_themes: list[dict[str, Any]]
+    ) -> None:
+        """All indices in range: reask() must never be invoked."""
+        mock_dedup = _make_dedup_result()
+
+        with patch("pipeline.agents.theme_dedup.AgnoAgent"):
+            agent = ThemeDedupAgent()
+
+        with (
+            patch(
+                "pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock
+            ) as mock_retry,
+            patch("pipeline.agents.theme_dedup.reask", new_callable=AsyncMock) as mock_reask,
+        ):
+            mock_retry.return_value = mock_dedup
+            await agent.run({"themes": input_themes})
+
+        mock_reask.assert_not_called()
+
+    async def test_run_reasks_with_offender_and_valid_range(
+        self, input_themes: list[dict[str, Any]]
+    ) -> None:
+        """Out-of-range index triggers reask() naming it and the valid range."""
+        bad_dedup = ThemeDedupResult(
+            groups=[
+                ThemeGroup(
+                    canonical_name="Chronobiology",
+                    description="Study of biological rhythms.",
+                    member_indices=[0, 99],
+                ),
+            ]
+        )
+        corrected_dedup = ThemeDedupResult(
+            groups=[
+                ThemeGroup(
+                    canonical_name="Chronobiology",
+                    description="Study of biological rhythms.",
+                    member_indices=[0, 2],
+                ),
+            ]
+        )
+
+        with patch("pipeline.agents.theme_dedup.AgnoAgent"):
+            agent = ThemeDedupAgent()
+
+        with (
+            patch(
+                "pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock
+            ) as mock_retry,
+            patch("pipeline.agents.theme_dedup.reask", new_callable=AsyncMock) as mock_reask,
+        ):
+            mock_retry.return_value = bad_dedup
+            mock_reask.return_value = corrected_dedup
+            result = await agent.run({"themes": input_themes})
+
+        mock_reask.assert_called_once()
+        failure_description = mock_reask.call_args[0][2]
+        assert "99" in failure_description
+        assert f"0..{len(input_themes) - 1}" in failure_description
+
+        chrono = result["themes"][0]
+        assert set(chrono["source_theme_ids"]) == {"t1", "t3"}
+
+    async def test_run_falls_back_to_silent_skip_on_reask_exhaustion(
+        self, input_themes: list[dict[str, Any]]
+    ) -> None:
+        """reask() exhaustion (fallback returns original invalid result) still drops bad index."""
+        bad_dedup = ThemeDedupResult(
+            groups=[
+                ThemeGroup(
+                    canonical_name="Chronobiology",
+                    description="Study of biological rhythms.",
+                    member_indices=[0, 99],
+                ),
+            ]
+        )
+
+        with patch("pipeline.agents.theme_dedup.AgnoAgent"):
+            agent = ThemeDedupAgent()
+
+        with (
+            patch(
+                "pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock
+            ) as mock_retry,
+            patch("pipeline.agents.theme_dedup.reask", new_callable=AsyncMock) as mock_reask,
+        ):
+            mock_retry.return_value = bad_dedup
+            mock_reask.return_value = bad_dedup  # simulates reask's own fallback firing
+            result = await agent.run({"themes": input_themes})
+
+        chrono = result["themes"][0]
+        assert chrono["source_theme_ids"] == ["t1"]

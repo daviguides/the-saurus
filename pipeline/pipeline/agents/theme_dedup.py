@@ -10,7 +10,7 @@ from agno.agent import Agent as AgnoAgent
 from pydantic import BaseModel, Field
 
 from pipeline.agents.models import create_model
-from pipeline.agents.parsing import run_agent_with_retry
+from pipeline.agents.parsing import reask, run_agent_with_retry
 from pipeline.agents.prompts.theme_dedup import THEME_DEDUP_PROMPT
 
 # --- Pydantic output models ---
@@ -72,7 +72,9 @@ class ThemeDedupAgent:
         message = "\n".join(lines)
 
         dedup = await run_agent_with_retry(
-            self._agent, message, ThemeDedupResult,
+            self._agent,
+            message,
+            ThemeDedupResult,
             context={
                 "stage": "theme_dedup",
                 "theme_count": len(all_themes),
@@ -80,6 +82,31 @@ class ThemeDedupAgent:
             },
             on_event=on_event,
         )
+
+        out_of_range = [
+            (group.canonical_name, idx)
+            for group in dedup.groups
+            for idx in group.member_indices
+            if not (0 <= idx < len(all_themes))
+        ]
+        if out_of_range:
+            offenders = "; ".join(
+                f"group '{name}' references index {idx}" for name, idx in out_of_range
+            )
+            original_dedup = dedup
+            dedup = await reask(
+                self._agent,
+                message,
+                f"{offenders}. Valid indices are 0..{len(all_themes) - 1}.",
+                ThemeDedupResult,
+                fallback=lambda: original_dedup,
+                context={
+                    "stage": "theme_dedup",
+                    "theme_count": len(all_themes),
+                    "raw_theme_count": len(all_themes),
+                },
+                on_event=on_event,
+            )
 
         # Map LLM groups back to concrete theme data
         theme_map: dict[str, list[str]] = {}
@@ -103,15 +130,17 @@ class ThemeDedupAgent:
                         aliases.append(name)
 
             theme_map[canonical_id] = source_ids
-            canonical_themes.append({
-                "id": canonical_id,
-                "name": group.canonical_name,
-                "label": group.canonical_name,
-                "description": group.description,
-                "paper_ids": paper_ids,
-                "aliases": aliases,
-                "source_theme_ids": source_ids,
-            })
+            canonical_themes.append(
+                {
+                    "id": canonical_id,
+                    "name": group.canonical_name,
+                    "label": group.canonical_name,
+                    "description": group.description,
+                    "paper_ids": paper_ids,
+                    "aliases": aliases,
+                    "source_theme_ids": source_ids,
+                }
+            )
 
         return {
             "theme_map": theme_map,
