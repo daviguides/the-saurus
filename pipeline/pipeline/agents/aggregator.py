@@ -13,7 +13,7 @@ from agno.agent import Agent as AgnoAgent
 from pydantic import BaseModel, Field
 
 from pipeline.agents.models import create_model
-from pipeline.agents.parsing import run_agent_with_retry
+from pipeline.agents.parsing import reask, run_agent_with_retry
 from pipeline.agents.prompts.aggregator import SECTION_BATCH_PROMPT, TITLE_ABSTRACT_PROMPT
 
 logger = logging.getLogger(__name__)
@@ -140,6 +140,42 @@ class AggregatorAgent:
         all_sections = [s for r in batch_results for s in r.sections]
         all_citations = _merge_citations(batch_results)
 
+        orphans = _find_orphan_refs(all_sections, all_citations)
+        if orphans:
+            theme_to_batch_idx = {
+                review.get("theme_id", ""): idx
+                for idx, batch in enumerate(batches, 1)
+                for review in batch
+            }
+            affected: dict[int, dict[str, list[int]]] = defaultdict(dict)
+            for theme_id, refs in orphans.items():
+                batch_idx = theme_to_batch_idx.get(theme_id)
+                if batch_idx is not None:
+                    affected[batch_idx][theme_id] = refs
+
+            logger.info("Aggregator: %d batch(es) with orphan refs, reasking", len(affected))
+
+            reasked_results = await asyncio.gather(
+                *[
+                    self._reask_orphaned_batch(
+                        batch_idx,
+                        batches[batch_idx - 1],
+                        len(batches),
+                        theme_orphans,
+                        claim_lookup,
+                        claim_to_ref,
+                        batch_results[batch_idx - 1],
+                        on_event,
+                    )
+                    for batch_idx, theme_orphans in affected.items()
+                ]
+            )
+            for batch_idx, new_result in zip(affected.keys(), reasked_results, strict=True):
+                batch_results[batch_idx - 1] = new_result
+
+            all_sections = [s for r in batch_results for s in r.sections]
+            all_citations = _merge_citations(batch_results)
+
         title_abstract = await self._run_title_abstract(all_sections, on_event)
 
         merged = AggregatorResult(
@@ -222,6 +258,54 @@ class AggregatorAgent:
             message,
             TitleAbstractResult,
             context={"stage": "aggregation_reduce", "section_count": len(sections)},
+            on_event=on_event,
+        )
+
+    async def _reask_orphaned_batch(
+        self,
+        batch_idx: int,
+        batch: list[dict[str, Any]],
+        n_batches: int,
+        theme_orphans: dict[str, list[int]],
+        claim_lookup: dict[str, dict[str, Any]],
+        claim_to_ref: dict[str, int],
+        original_result: SectionBatchResult,
+        on_event: Callable[[Any], Awaitable[None]] | None,
+    ) -> SectionBatchResult:
+        """Reask a batch whose sections have post-reconciliation orphan refs.
+
+        Rebuilds the batch's original message (pure function of its inputs —
+        no caching needed) and appends one combined failure description
+        naming every orphaned theme in the batch, mirroring
+        theme_reviewer.py's invalid_by_theme reask pattern.
+        """
+        message = _build_batch_message(batch, claim_lookup, claim_to_ref)
+        label_by_theme_id = {
+            t.get("theme_id", ""): t.get("label", t.get("theme_id", "")) for t in batch
+        }
+
+        failure_description = "\n".join(
+            f'For theme "{label_by_theme_id.get(theme_id, theme_id)}": reference(s) '
+            f"{', '.join(f'[{n}]' for n in refs)} appear in your content but have no "
+            f"matching entry in your citations list — for each, either add a citations "
+            f"entry mapping it to a claim_id/paper_id from the claim registry, or "
+            f"remove the marker from the text."
+            for theme_id, refs in theme_orphans.items()
+        )
+
+        return await reask(
+            self._section_agent,
+            message,
+            failure_description,
+            SectionBatchResult,
+            fallback=lambda: original_result,
+            max_attempts=2,
+            context={
+                "stage": "aggregation",
+                "batch": f"{batch_idx}/{n_batches}",
+                "themes_in_batch": len(batch),
+                "reask": "orphan_ref",
+            },
             on_event=on_event,
         )
 
@@ -371,6 +455,26 @@ def _merge_citations(batch_results: list[SectionBatchResult]) -> list[ReviewCita
 _REF_PATTERN = re.compile(r"\[(\d+)\]")
 
 
+def _find_orphan_refs(
+    sections: list[ReviewSection],
+    citations: list[ReviewCitation],
+) -> dict[str, list[int]]:
+    """Find [N] refs in section content with no matching citation entry.
+
+    Pure detection pass, run post-merge (against the FULL merged citation
+    set) so a ref resolved by a different batch is never a false positive.
+    Feeds the reask phase; _resolve_citations does the actual (terminal)
+    strip-clean once reask has had its chance.
+    """
+    known_refs = {c.ref_number for c in citations}
+    orphans: dict[str, list[int]] = {}
+    for section in sections:
+        missing = sorted({int(n) for n in _REF_PATTERN.findall(section.content)} - known_refs)
+        if missing:
+            orphans[section.theme_id] = missing
+    return orphans
+
+
 def _resolve_citations(
     sections: list[ReviewSection],
     citations: list[ReviewCitation],
@@ -401,10 +505,16 @@ def _resolve_citations(
             pos = ref_to_pos.get(ref_num)
             if pos is not None:
                 return f'[{ref_num}](cite:{ref_num} "{pos}")'
-            logger.warning("Orphan reference [%d] in section %s", ref_num, section.theme_id)
-            return match.group(0)  # leave as-is
+            logger.warning(
+                "Stripping unresolved orphan reference [%d] in section %s (reask exhausted)",
+                ref_num,
+                section.theme_id,
+            )
+            return ""  # strip-clean
 
         content = _REF_PATTERN.sub(replace_ref, content)
+        content = re.sub(r"[ \t]{2,}", " ", content)  # collapse double-space from strip
+        content = re.sub(r"[ \t]+([.,;:])", r"\1", content)  # strip space before punctuation
         resolved.append(
             ReviewSection(
                 theme_id=section.theme_id,
