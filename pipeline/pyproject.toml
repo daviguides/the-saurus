@@ -38,6 +38,12 @@ dependencies = [
     # — peak RSS 3.2-3.9GB vs the pod's 1Gi memory limit, Python 3.14 install
     # blocked (torch pin ceiling cp311), override path confirmed broken
     # (pytorch_lightning 2.x API break). See spikes/local_model_viability.md.
+    # nemoguardrails: Colang topic-gate flow constraint (M3 §4.2, d-012). GO
+    # verdict from this task's research.md spike — installs clean on Python
+    # 3.13/3.14 (no torch/langchain), pure flow-gate runs with models: [] and
+    # zero LLM calls via process_events_async (generate_events_async is broken
+    # in 0.23.0 for Colang 2.x — see research.md Finding 3).
+    "nemoguardrails>=0.23.0",
 ]
 
 [build-system]

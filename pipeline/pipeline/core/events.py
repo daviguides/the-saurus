@@ -28,6 +28,7 @@ class EventType(StrEnum):
     PAPER_INGESTED = "paper_ingested"
     PAPER_PROCESSED = "paper_processed"
     PAPER_ANALYZED = "paper_analyzed"
+    PAPER_REJECTED = "paper_rejected"
     THEME_EXTRACTED = "theme_extracted"
     THEME_DEDUPLICATED = "theme_deduplicated"
     CLAIM_EXTRACTED = "claim_extracted"

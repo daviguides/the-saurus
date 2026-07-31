@@ -26,6 +26,7 @@ from pipeline.core import (
     JobState,
     JobStatus,
     PaperEntry,
+    TopicGateRejectedError,
     quarantine_job,
     read_yaml,
     write_status,
@@ -447,6 +448,8 @@ async def _run_parallel_per_paper(
             "paper_id": paper.paper_id,
             "title": paper.title,
             "content": content,
+            "authors": paper.authors,
+            "page_count": paper.page_count,
         }
         if extra_inputs:
             for key, mapping in extra_inputs.items():
@@ -485,6 +488,17 @@ async def _run_parallel_per_paper(
                 result = merge_fn(successful)
             await tracker.stage_item_done(stage, paper.paper_id)
             return result
+        except TopicGateRejectedError as exc:
+            logger.info(
+                "Paper %s rejected by topic gate: %s", paper.paper_id, exc.reason,
+            )
+            await tracker.stage_item_done(stage, paper.paper_id)
+            if emitter is not None:
+                await emitter.emit(
+                    EventType.PAPER_REJECTED,
+                    {"paper_id": paper.paper_id, "reason": exc.reason},
+                )
+            return exc
         except Exception as exc:
             logger.error("Paper %s failed in %s: %s", paper.paper_id, stage, exc)
             await tracker.stage_item_done(stage, paper.paper_id)

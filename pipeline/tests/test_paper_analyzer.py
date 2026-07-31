@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from pydantic import ValidationError
 
+from pipeline.agents.gate import TopicGateResult
 from pipeline.agents.paper_analyzer import (
     ClaimPosition,
     ExtractedClaim,
@@ -15,6 +16,7 @@ from pipeline.agents.paper_analyzer import (
     merge_chunk_results,
 )
 from pipeline.agents.protocol import Agent
+from pipeline.core.exceptions import TopicGateRejectedError
 
 # --- Constants ---
 
@@ -192,6 +194,15 @@ class TestPaperAnalysisResult:
 class TestPaperAnalyzerRun:
     """Test PaperAnalyzerAgent.run() output splitting logic."""
 
+    @pytest.fixture(autouse=True)
+    def _gate_accepts_by_default(self):
+        """These tests exercise output-splitting, not the topic gate — default
+        the gate to accept so short/metadata-less fixtures don't reject before
+        run_agent_with_retry is reached. Gate-specific tests below override."""
+        mock_gate = AsyncMock(return_value=TopicGateResult(verdict="accept"))
+        with patch("pipeline.agents.paper_analyzer.evaluate_topic_gate", mock_gate):
+            yield mock_gate
+
     @pytest.mark.asyncio
     async def test_run_splits_themes_and_claims(self) -> None:
         """run() splits PaperAnalysisResult into themes and claims dicts."""
@@ -337,6 +348,68 @@ class TestPaperAnalyzerRun:
         assert isinstance(positions[0], dict)
         assert "page" in positions[0]
         assert "paragraph" in positions[0]
+
+    @pytest.mark.asyncio
+    async def test_run_raises_and_skips_llm_when_gate_rejects(
+        self, _gate_accepts_by_default,
+    ) -> None:
+        """A gate rejection raises TopicGateRejectedError before the LLM call."""
+        # Arrange
+        _gate_accepts_by_default.return_value = TopicGateResult(
+            verdict="reject", reason="quality_or_metadata",
+        )
+        mock_retry = AsyncMock(return_value=_make_analysis(num_themes=1))
+
+        input_data: dict[str, Any] = {
+            "paper_id": PAPER_ID,
+            "content": "short",
+            "title": "",
+            "authors": [],
+            "page_count": 1,
+        }
+
+        with patch(
+            "pipeline.agents.paper_analyzer.run_agent_with_retry",
+            mock_retry,
+        ):
+            agent = PaperAnalyzerAgent()
+
+            # Act / Assert
+            with pytest.raises(TopicGateRejectedError) as exc_info:
+                await agent.run(input_data)
+
+        assert exc_info.value.reason == "quality_or_metadata"
+        mock_retry.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_run_proceeds_to_llm_when_gate_accepts(
+        self, _gate_accepts_by_default,
+    ) -> None:
+        """A gate acceptance lets run_agent_with_retry get called normally."""
+        # Arrange
+        analysis = _make_analysis(num_themes=1)
+        mock_retry = AsyncMock(return_value=analysis)
+
+        input_data: dict[str, Any] = {
+            "paper_id": PAPER_ID,
+            "content": "Full paper text here.",
+            "title": "Test Paper",
+            "authors": ["Author A"],
+            "page_count": 3,
+        }
+
+        with patch(
+            "pipeline.agents.paper_analyzer.run_agent_with_retry",
+            mock_retry,
+        ):
+            agent = PaperAnalyzerAgent()
+
+            # Act
+            result = await agent.run(input_data)
+
+        # Assert
+        mock_retry.assert_called_once()
+        assert "themes" in result
 
 
 # --- merge_chunk_results ---

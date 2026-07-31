@@ -19,7 +19,15 @@ from pipeline.agents import (
     StubThemeReviewer,
 )
 from pipeline.agents.judge_gate import JudgeGateResult
-from pipeline.core import Event, EventEmitter, EventType, JobState, read_status, read_yaml
+from pipeline.core import (
+    Event,
+    EventEmitter,
+    EventType,
+    JobState,
+    TopicGateRejectedError,
+    read_status,
+    read_yaml,
+)
 from pipeline.engine import Stage, run_pipeline
 from pipeline.engine.stages import STAGES
 
@@ -465,6 +473,72 @@ class TestPipelineExecution:
 
         event_types = [e.event_type for e in events]
         assert EventType.JOB_FAILED in event_types
+
+    async def test_topic_gate_rejection_skips_paper_not_job(self, jobs_dir: Path):
+        """A topic-gate rejection for one paper doesn't fail the job — the
+        rejected paper is skipped, the accepted paper's output is persisted,
+        and PAPER_REJECTED is emitted with the reason."""
+        job_id, paper_ids = _create_test_job(jobs_dir, paper_count=2)
+        rejected_id, accepted_id = paper_ids
+        emitter = EventEmitter(job_id, jobs_dir)
+        events = _collect_events(emitter)
+
+        class GatingAnalyzer:
+            async def run(self, input: dict, **kwargs) -> dict:
+                if input["paper_id"] == rejected_id:
+                    raise TopicGateRejectedError(
+                        "rejected by topic gate", reason="quality_or_metadata",
+                    )
+                return {
+                    "themes": [{
+                        "id": "theme-1",
+                        "name": "Theme",
+                        "description": "Desc",
+                        "paper_id": accepted_id,
+                        "positions": [{"page": 1, "paragraph": 1}],
+                    }],
+                    "claims": [{
+                        "id": "claim-1",
+                        "theme_id": "theme-1",
+                        "theme_name": "Theme",
+                        "text": "Claim text.",
+                        "page": 1,
+                        "paragraph": 1,
+                        "deep": "Deep text.",
+                        "summary": "Summary.",
+                        "source": {"paper_id": accepted_id, "page": 1, "paragraph": 1},
+                    }],
+                }
+
+        with (
+            patch("pipeline.engine.orchestrator.get_or_create_emitter", return_value=emitter),
+            _patch_qdrant(),
+            patch(
+                "pipeline.engine.orchestrator.PaperAnalyzerAgent",
+                return_value=GatingAnalyzer(),
+            ),
+            _patch_theme_dedup(),
+            _patch_theme_reviewer(),
+            _patch_aggregator(),
+        ):
+            await run_pipeline(job_id, jobs_dir)
+
+        status = await read_status(job_id, jobs_dir)
+        assert status is not None
+        assert status.status == JobState.COMPLETED
+
+        job_path = jobs_dir / job_id
+        assert (job_path / "themes" / f"{accepted_id}.yaml").exists()
+        assert (job_path / "claims" / f"{accepted_id}.yaml").exists()
+        assert not (job_path / "themes" / f"{rejected_id}.yaml").exists()
+        assert not (job_path / "claims" / f"{rejected_id}.yaml").exists()
+
+        rejected_events = [
+            e for e in events if e.event_type == EventType.PAPER_REJECTED
+        ]
+        assert len(rejected_events) == 1
+        assert rejected_events[0].payload["paper_id"] == rejected_id
+        assert rejected_events[0].payload["reason"] == "quality_or_metadata"
 
     async def test_judge_gate_quarantine(self, jobs_dir: Path):
         """If the judge gate quarantines, status is QUARANTINED, not COMPLETED/FAILED,

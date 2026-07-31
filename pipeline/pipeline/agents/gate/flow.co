@@ -1,0 +1,11 @@
+flow topic gate
+  when TopicGateCheck() as $e
+    $quality_ok = await CheckQualityAction(content=$e.content, page_count=$e.page_count)
+    $meta_ok = await CheckMetadataAction(title=$e.title, authors=$e.authors)
+    if not $quality_ok or not $meta_ok
+      send TopicGateRejected(reason="quality_or_metadata")
+    else
+      send TopicGateAccepted
+
+flow main
+  activate topic gate
