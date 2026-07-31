@@ -284,7 +284,7 @@ async def _run_paper_analysis(ctx: PipelineContext) -> AnalysisResults:
 async def _run_theme_dedup(
     ctx: PipelineContext, analysis_results: AnalysisResults,
 ) -> DedupResult:
-    """Stage 2: Theme Dedup — divide-and-conquer: cluster, dedup per bucket (parallel), reconcile."""
+    """Stage 2: Theme Dedup — D&C: cluster, dedup per bucket (parallel), reconcile."""
     all_themes: list[dict[str, Any]] = []
     for _paper, result in analysis_results:
         all_themes.extend(result.get("themes", []))
