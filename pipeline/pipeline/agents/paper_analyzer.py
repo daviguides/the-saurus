@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+import logging
 from collections.abc import Awaitable, Callable
 from typing import Any
 from uuid import uuid4
@@ -14,6 +16,9 @@ from pipeline.agents.models import create_model
 from pipeline.agents.parsing import normalize_theme_name, run_agent_with_retry
 from pipeline.agents.prompts.paper_analyzer import PAPER_ANALYZER_PROMPT
 from pipeline.core.exceptions import TopicGateRejectedError
+from pipeline.core.tokens import count_tokens
+
+logger = logging.getLogger(__name__)
 
 # --- Pydantic output models ---
 
@@ -49,6 +54,49 @@ class PaperAnalysisResult(BaseModel):
     themes: list[ThemeWithClaims] = Field(min_length=1)
 
 
+# --- Context window budget ---
+
+
+async def _pack_under_budget(content: str, budget: int) -> list[str]:
+    """Greedily pack content's blank-line-separated paragraph blocks into
+    sub-chunks that stay under budget tokens, without splitting a paragraph
+    mid-block.
+
+    A single block that alone exceeds budget is forwarded as its own
+    oversized sub-chunk (best-effort) rather than truncated — silent
+    truncation is itself a grounding hazard (design-doc §4.1).
+    """
+    blocks = [b for b in content.split("\n\n") if b.strip()]
+    if not blocks:
+        return [content]
+
+    block_tokens = await asyncio.gather(*(count_tokens(b) for b in blocks))
+
+    sub_chunks: list[str] = []
+    current_blocks: list[str] = []
+    current_tokens = 0
+
+    for block, tokens in zip(blocks, block_tokens, strict=True):
+        if tokens > budget:
+            logger.warning(
+                "Paragraph block exceeds token budget alone (%d > %d); "
+                "forwarding as its own sub-chunk",
+                tokens,
+                budget,
+            )
+        if current_blocks and current_tokens + tokens > budget:
+            sub_chunks.append("\n\n".join(current_blocks))
+            current_blocks = []
+            current_tokens = 0
+        current_blocks.append(block)
+        current_tokens += tokens
+
+    if current_blocks:
+        sub_chunks.append("\n\n".join(current_blocks))
+
+    return sub_chunks
+
+
 # --- Agent ---
 
 
@@ -77,6 +125,8 @@ class PaperAnalyzerAgent:
         *,
         on_event: Callable[[Any], Awaitable[None]] | None = None,
     ) -> dict[str, Any]:
+        from pipeline.config import settings
+
         paper_id = data["paper_id"]
         content = data["content"]
 
@@ -92,52 +142,102 @@ class PaperAnalyzerAgent:
                 reason=gate_result.reason or "topic gate rejected",
             )
 
-        analysis = await run_agent_with_retry(
-            self._agent, content, PaperAnalysisResult,
-            context={
-                "paper_id": paper_id,
-                "paper_title": data.get("title", ""),
-                "stage": "paper_analysis",
-            },
-            on_event=on_event,
-        )
+        context = {
+            "paper_id": paper_id,
+            "paper_title": data.get("title", ""),
+            "stage": "paper_analysis",
+        }
 
-        # Split into separate themes and claims outputs
-        # (maintains compatibility with downstream stages)
-        themes_out = []
-        claims_out = []
+        # CWM (§4.1): measure instructions + content together, act on the
+        # result — not the count-then-log-only pattern run_agent_with_retry
+        # uses for every caller (this agent's chunking fallback is not
+        # shared, so the enforcement lives here, not in the shared retry
+        # loop).
+        prompt_tokens = await count_tokens(PAPER_ANALYZER_PROMPT)
+        content_tokens = await count_tokens(content)
+        budget = settings.chunk_token_threshold
 
-        for theme in analysis.themes:
-            theme_id = str(uuid4())
-            themes_out.append({
-                "id": theme_id,
-                "name": theme.name,
-                "description": theme.description,
-                "paper_id": paper_id,
-                "positions": [p.model_dump() for p in theme.positions],
-            })
-
-            for claim in theme.claims:
-                claims_out.append({
-                    "id": str(uuid4()),
-                    "theme_id": theme_id,
-                    "theme_name": theme.name,
-                    "text": claim.text,
-                    "page": claim.position.page,
-                    "paragraph": claim.position.paragraph,
-                    "deep": claim.deep,
-                    "summary": claim.summary,
-                    "source": {
-                        "paper_id": paper_id,
-                        "page": claim.position.page,
-                        "paragraph": claim.position.paragraph,
-                    },
-                })
+        if prompt_tokens + content_tokens <= budget:
+            analysis = await run_agent_with_retry(
+                self._agent,
+                content,
+                PaperAnalysisResult,
+                context=context,
+                on_event=on_event,
+            )
+            themes_out, claims_out = self._split_analysis(analysis, paper_id)
+        else:
+            logger.warning(
+                "Paper %s over token budget (%d > %d), splitting into sub-chunks",
+                paper_id,
+                prompt_tokens + content_tokens,
+                budget,
+            )
+            sub_chunks = await _pack_under_budget(
+                content,
+                max(budget - prompt_tokens, 1),
+            )
+            chunk_results: list[dict[str, Any]] = []
+            for i, sub_content in enumerate(sub_chunks):
+                sub_analysis = await run_agent_with_retry(
+                    self._agent,
+                    sub_content,
+                    PaperAnalysisResult,
+                    context={**context, "sub_chunk": i},
+                    on_event=on_event,
+                )
+                sub_themes, sub_claims = self._split_analysis(sub_analysis, paper_id)
+                chunk_results.append({"themes": sub_themes, "claims": sub_claims})
+            merged = merge_chunk_results(chunk_results)
+            themes_out, claims_out = merged["themes"], merged["claims"]
 
         return {
             "themes": themes_out,
             "claims": claims_out,
         }
+
+    def _split_analysis(
+        self,
+        analysis: PaperAnalysisResult,
+        paper_id: str,
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        """Split a PaperAnalysisResult into separate themes and claims dicts
+        (maintains compatibility with downstream stages)."""
+        themes_out: list[dict[str, Any]] = []
+        claims_out: list[dict[str, Any]] = []
+
+        for theme in analysis.themes:
+            theme_id = str(uuid4())
+            themes_out.append(
+                {
+                    "id": theme_id,
+                    "name": theme.name,
+                    "description": theme.description,
+                    "paper_id": paper_id,
+                    "positions": [p.model_dump() for p in theme.positions],
+                }
+            )
+
+            for claim in theme.claims:
+                claims_out.append(
+                    {
+                        "id": str(uuid4()),
+                        "theme_id": theme_id,
+                        "theme_name": theme.name,
+                        "text": claim.text,
+                        "page": claim.position.page,
+                        "paragraph": claim.position.paragraph,
+                        "deep": claim.deep,
+                        "summary": claim.summary,
+                        "source": {
+                            "paper_id": paper_id,
+                            "page": claim.position.page,
+                            "paragraph": claim.position.paragraph,
+                        },
+                    }
+                )
+
+        return themes_out, claims_out
 
 
 def merge_chunk_results(chunk_results: list[dict[str, Any]]) -> dict[str, Any]:
@@ -172,9 +272,7 @@ def merge_chunk_results(chunk_results: list[dict[str, Any]]) -> dict[str, Any]:
     for chunk in chunk_results:
         for claim in chunk.get("claims", []):
             merged_claim = dict(claim)
-            merged_claim["theme_id"] = theme_id_remap.get(
-                claim["theme_id"], claim["theme_id"]
-            )
+            merged_claim["theme_id"] = theme_id_remap.get(claim["theme_id"], claim["theme_id"])
             merged_claims.append(merged_claim)
 
     return {

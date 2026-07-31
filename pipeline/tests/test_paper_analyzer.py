@@ -13,8 +13,10 @@ from pipeline.agents.paper_analyzer import (
     PaperAnalysisResult,
     PaperAnalyzerAgent,
     ThemeWithClaims,
+    _pack_under_budget,
     merge_chunk_results,
 )
+from pipeline.agents.prompts.paper_analyzer import PAPER_ANALYZER_PROMPT
 from pipeline.agents.protocol import Agent
 from pipeline.core.exceptions import TopicGateRejectedError
 
@@ -72,10 +74,7 @@ def _make_theme(
 
 def _make_analysis(num_themes: int = 1) -> PaperAnalysisResult:
     """Build a valid PaperAnalysisResult."""
-    themes = [
-        _make_theme(name=f"Theme {i}")
-        for i in range(num_themes)
-    ]
+    themes = [_make_theme(name=f"Theme {i}") for i in range(num_themes)]
     return PaperAnalysisResult(themes=themes)
 
 
@@ -229,9 +228,7 @@ class TestPaperAnalyzerRun:
         assert "themes" in result
         assert "claims" in result
         assert len(result["themes"]) == 2
-        assert all(
-            t["paper_id"] == PAPER_ID for t in result["themes"]
-        )
+        assert all(t["paper_id"] == PAPER_ID for t in result["themes"])
 
     @pytest.mark.asyncio
     async def test_run_claims_reference_theme_ids(self) -> None:
@@ -351,12 +348,14 @@ class TestPaperAnalyzerRun:
 
     @pytest.mark.asyncio
     async def test_run_raises_and_skips_llm_when_gate_rejects(
-        self, _gate_accepts_by_default,
+        self,
+        _gate_accepts_by_default,
     ) -> None:
         """A gate rejection raises TopicGateRejectedError before the LLM call."""
         # Arrange
         _gate_accepts_by_default.return_value = TopicGateResult(
-            verdict="reject", reason="quality_or_metadata",
+            verdict="reject",
+            reason="quality_or_metadata",
         )
         mock_retry = AsyncMock(return_value=_make_analysis(num_themes=1))
 
@@ -383,7 +382,8 @@ class TestPaperAnalyzerRun:
 
     @pytest.mark.asyncio
     async def test_run_proceeds_to_llm_when_gate_accepts(
-        self, _gate_accepts_by_default,
+        self,
+        _gate_accepts_by_default,
     ) -> None:
         """A gate acceptance lets run_agent_with_retry get called normally."""
         # Arrange
@@ -478,10 +478,14 @@ class TestMergeChunkResults:
     def test_merged_positions_are_unioned(self) -> None:
         """Positions from both chunks are combined, duplicates removed."""
         chunk1 = _make_chunk_result(
-            "t1", "Gene Therapy", positions=[{"page": 1, "paragraph": 1}],
+            "t1",
+            "Gene Therapy",
+            positions=[{"page": 1, "paragraph": 1}],
         )
         chunk2 = _make_chunk_result(
-            "t2", "gene therapy", positions=[{"page": 1, "paragraph": 1}, {"page": 5, "paragraph": 2}],
+            "t2",
+            "gene therapy",
+            positions=[{"page": 1, "paragraph": 1}, {"page": 5, "paragraph": 2}],
         )
 
         merged = merge_chunk_results([chunk1, chunk2])
@@ -526,6 +530,192 @@ class TestMergeChunkResults:
         merged = merge_chunk_results([{"themes": [], "claims": []}])
 
         assert merged == {"themes": [], "claims": []}
+
+
+# --- _pack_under_budget ---
+
+
+class TestPackUnderBudget:
+    """Validate the local greedy re-split fallback for over-budget content."""
+
+    @pytest.mark.asyncio
+    async def test_single_block_passthrough(self) -> None:
+        """Content with no blank-line separators stays a single sub-chunk."""
+        content = "Full paper text here."
+
+        with patch(
+            "pipeline.agents.paper_analyzer.count_tokens",
+            AsyncMock(return_value=200),
+        ):
+            result = await _pack_under_budget(content, 10)
+
+        assert result == [content]
+
+    @pytest.mark.asyncio
+    async def test_blocks_under_budget_stay_together(self) -> None:
+        """Blocks that together fit under budget are not split."""
+        blocks = ["Block one.", "Block two."]
+        content = "\n\n".join(blocks)
+
+        with patch(
+            "pipeline.agents.paper_analyzer.count_tokens",
+            AsyncMock(side_effect=[10, 10]),
+        ):
+            result = await _pack_under_budget(content, 100)
+
+        assert result == [content]
+
+    @pytest.mark.asyncio
+    async def test_greedy_packing_splits_at_budget_boundary(self) -> None:
+        """Blocks are grouped greedily, splitting once the running total
+        would exceed budget."""
+        blocks = ["Block one.", "Block two.", "Block three."]
+        content = "\n\n".join(blocks)
+
+        with patch(
+            "pipeline.agents.paper_analyzer.count_tokens",
+            AsyncMock(side_effect=[10, 10, 10]),
+        ):
+            result = await _pack_under_budget(content, 25)
+
+        assert result == ["Block one.\n\nBlock two.", "Block three."]
+
+    @pytest.mark.asyncio
+    async def test_oversized_single_block_forwarded_not_dropped(self) -> None:
+        """A block that alone exceeds budget is forwarded as-is, not
+        truncated or dropped — no silent-truncation path exists."""
+        content = "One enormous paragraph that alone busts the budget."
+
+        with patch(
+            "pipeline.agents.paper_analyzer.count_tokens",
+            AsyncMock(return_value=9999),
+        ):
+            result = await _pack_under_budget(content, 10)
+
+        assert result == [content]
+
+    @pytest.mark.asyncio
+    async def test_empty_content_returns_content_as_single_element(self) -> None:
+        """Blank/whitespace-only content produces a one-element passthrough
+        rather than an empty list."""
+        with patch(
+            "pipeline.agents.paper_analyzer.count_tokens",
+            AsyncMock(return_value=0),
+        ):
+            result = await _pack_under_budget("   ", 10)
+
+        assert result == ["   "]
+
+
+# --- Token-budget enforcement in run() (§4.1 CWM) ---
+
+
+class TestPaperAnalyzerRunBudget:
+    """Test PaperAnalyzerAgent.run()'s pre-call token-budget check and its
+    over-budget chunk-and-merge branch."""
+
+    @pytest.fixture(autouse=True)
+    def _gate_accepts_by_default(self):
+        mock_gate = AsyncMock(return_value=TopicGateResult(verdict="accept"))
+        with patch("pipeline.agents.paper_analyzer.evaluate_topic_gate", mock_gate):
+            yield mock_gate
+
+    @pytest.mark.asyncio
+    async def test_under_budget_takes_single_call_path(self) -> None:
+        """Content under budget results in exactly one run_agent_with_retry call."""
+        analysis = _make_analysis(num_themes=1)
+        mock_retry = AsyncMock(return_value=analysis)
+
+        input_data: dict[str, Any] = {
+            "paper_id": PAPER_ID,
+            "content": "Short content.",
+        }
+
+        with (
+            patch(
+                "pipeline.agents.paper_analyzer.run_agent_with_retry",
+                mock_retry,
+            ),
+            patch(
+                "pipeline.agents.paper_analyzer.count_tokens",
+                AsyncMock(return_value=10),
+            ),
+        ):
+            agent = PaperAnalyzerAgent()
+            result = await agent.run(input_data)
+
+        mock_retry.assert_called_once()
+        assert "themes" in result
+
+    @pytest.mark.asyncio
+    async def test_budget_check_counts_prompt_and_content_together(self) -> None:
+        """The budget check measures PAPER_ANALYZER_PROMPT alongside content,
+        not content alone."""
+        analysis = _make_analysis(num_themes=1)
+        mock_retry = AsyncMock(return_value=analysis)
+        mock_count = AsyncMock(return_value=10)
+
+        input_data: dict[str, Any] = {
+            "paper_id": PAPER_ID,
+            "content": "Short content.",
+        }
+
+        with (
+            patch(
+                "pipeline.agents.paper_analyzer.run_agent_with_retry",
+                mock_retry,
+            ),
+            patch(
+                "pipeline.agents.paper_analyzer.count_tokens",
+                mock_count,
+            ),
+        ):
+            agent = PaperAnalyzerAgent()
+            await agent.run(input_data)
+
+        counted_args = [c.args[0] for c in mock_count.await_args_list]
+        assert PAPER_ANALYZER_PROMPT in counted_args
+        assert "Short content." in counted_args
+
+    @pytest.mark.asyncio
+    async def test_over_budget_splits_into_multiple_calls_and_merges(self) -> None:
+        """Content over budget is packed into sub-chunks, each gets its own
+        run_agent_with_retry call, and results are merged — not truncated."""
+        theme_a = _make_theme(name="Theme A")
+        theme_b = _make_theme(name="Theme B")
+        mock_retry = AsyncMock(
+            side_effect=[
+                PaperAnalysisResult(themes=[theme_a]),
+                PaperAnalysisResult(themes=[theme_b]),
+            ],
+        )
+
+        input_data: dict[str, Any] = {
+            "paper_id": PAPER_ID,
+            "content": "Block one.\n\nBlock two.",
+        }
+
+        with (
+            patch(
+                "pipeline.agents.paper_analyzer.run_agent_with_retry",
+                mock_retry,
+            ),
+            patch(
+                "pipeline.agents.paper_analyzer.count_tokens",
+                AsyncMock(return_value=9000),
+            ),
+            patch(
+                "pipeline.agents.paper_analyzer._pack_under_budget",
+                AsyncMock(return_value=["Block one.", "Block two."]),
+            ),
+        ):
+            agent = PaperAnalyzerAgent()
+            result = await agent.run(input_data)
+
+        assert mock_retry.call_count == 2
+        theme_names = {t["name"] for t in result["themes"]}
+        assert theme_names == {"Theme A", "Theme B"}
+        assert len(result["claims"]) == 2
 
 
 # --- Protocol compliance ---
