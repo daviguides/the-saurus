@@ -30,7 +30,7 @@ from pipeline.core.tokens import count_tokens
 from pipeline.engine import run_pipeline
 from pipeline.ingestion import (
     IngestionError,
-    chunk_by_heading,
+    chunk_paper,
     ingest_pdf,
     render_annotated_markdown,
 )
@@ -170,7 +170,7 @@ async def create_job(files: list[UploadFile]) -> CreateJobResponse:
             md_path = job_path / f"{paper_id}.md"
             await asyncio.to_thread(md_path.write_text, full_markdown)
         else:
-            paragraph_chunks = chunk_by_heading(result.paragraphs)
+            paragraph_chunks = await chunk_paper(result.paragraphs)
             logger.info(
                 "Paper %s (%d tokens) exceeds chunk_token_threshold=%d, "
                 "split into %d chunk(s)",
