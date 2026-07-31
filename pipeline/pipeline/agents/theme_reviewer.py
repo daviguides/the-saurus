@@ -9,6 +9,8 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 from agno.agent import Agent as AgnoAgent
+from guardrails import Guard
+from guardrails.validator_base import FailResult, PassResult, Validator, register_validator
 from pydantic import BaseModel, Field
 
 from pipeline.agents.models import create_model
@@ -23,10 +25,27 @@ BATCH_SIZE = 5
 # --- Pydantic output models ---
 
 
+@register_validator(name="claim-id-membership", data_type="string")
+class ClaimIdMembership(Validator):
+    """claim_id must be in this batch's valid_ids (supplied via validate() metadata).
+
+    Fails closed: an absent `valid_ids` key in metadata is treated as an empty
+    set, not a bypass.
+    """
+
+    def validate(self, value: str, metadata: dict) -> PassResult | FailResult:
+        valid_ids = metadata.get("valid_ids", set())
+        if value not in valid_ids:
+            return FailResult(
+                error_message=f"claim_id '{value}' is not in the valid set for this batch"
+            )
+        return PassResult()
+
+
 class ReviewedClaim(BaseModel):
     """A claim referenced in the review, with its source."""
 
-    claim_id: str
+    claim_id: str = Field(json_schema_extra={"validators": [ClaimIdMembership(on_fail="reask")]})
     paper_id: str
     summary: str
 
@@ -46,6 +65,33 @@ class BatchThemeReviewResult(BaseModel):
     """Structured output: reviews for multiple themes in one call."""
 
     reviews: list[SingleThemeReview] = Field(min_length=1)
+
+
+# Built once at import time: Guard.for_pydantic reads validators off the class
+# definition, which doesn't change per call — only the `metadata` passed to
+# .validate() (namely valid_ids) varies per batch.
+_claim_id_guard = Guard.for_pydantic(BatchThemeReviewResult)
+
+
+def _build_claim_id_failure_description(guard: Guard, result: BatchThemeReviewResult) -> str:
+    """Reproduce the per-theme claim_id failure message from Guard's reask list.
+
+    Must be called synchronously, immediately after `guard.validate(...)`, with
+    no `await` in between — `guard.history.last` is shared mutable state on a
+    module-level Guard reused across batches gathered concurrently.
+    """
+    reasks = guard.history.last.iterations[-1].outputs.reasks
+    bad_ids_by_theme_idx: dict[int, list[str]] = defaultdict(list)
+    for field_reask in reasks:
+        theme_idx = field_reask.path[1]
+        bad_ids_by_theme_idx[theme_idx].append(field_reask.incorrect_value)
+
+    return "\n".join(
+        f'For theme "{result.reviews[idx].theme_name}": claim_id '
+        f'{", ".join(ids)} {"is" if len(ids) == 1 else "are"} not in the valid set '
+        f"for this batch — provide valid claim_ids or omit these entries."
+        for idx, ids in bad_ids_by_theme_idx.items()
+    )
 
 
 # --- Agent ---
@@ -130,23 +176,20 @@ class ThemeReviewerAgent:
                 for c in claims_list:
                     valid_ids.add(c.get("id", ""))
 
-            invalid_by_theme: dict[str, list[str]] = {}
-            for review in result.reviews:
-                bad_ids = [kc.claim_id for kc in review.key_claims if kc.claim_id not in valid_ids]
-                if bad_ids:
-                    invalid_by_theme[review.theme_name] = bad_ids
+            # Guard.validate() is synchronous and does no I/O — it runs to
+            # completion within this coroutine's turn, so no other
+            # concurrently-gathered batch's call can interleave with it. The
+            # failure-description build below must stay synchronous too (see
+            # _build_claim_id_failure_description docstring).
+            guard_outcome = _claim_id_guard.validate(
+                result.model_dump_json(), metadata={"valid_ids": valid_ids}
+            )
 
-            if invalid_by_theme:
+            if not guard_outcome.validation_passed:
+                failure_description = _build_claim_id_failure_description(_claim_id_guard, result)
                 logger.warning(
-                    "ThemeReviewer batch %d: %d theme(s) with invalid claim_ids, reasking",
+                    "ThemeReviewer batch %d: invalid claim_ids detected, reasking",
                     batch_idx,
-                    len(invalid_by_theme),
-                )
-                failure_description = "\n".join(
-                    f'For theme "{name}": claim_id {", ".join(ids)} '
-                    f"{'is' if len(ids) == 1 else 'are'} not in the valid set for this batch — "
-                    f"provide valid claim_ids or omit these entries."
-                    for name, ids in invalid_by_theme.items()
                 )
                 original_result = result
                 result = await reask(
