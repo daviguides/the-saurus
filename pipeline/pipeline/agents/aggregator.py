@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 from collections import defaultdict
@@ -13,9 +14,12 @@ from pydantic import BaseModel, Field
 
 from pipeline.agents.models import create_model
 from pipeline.agents.parsing import run_agent_with_retry
-from pipeline.agents.prompts.aggregator import AGGREGATOR_PROMPT
+from pipeline.agents.prompts.aggregator import SECTION_BATCH_PROMPT, TITLE_ABSTRACT_PROMPT
 
 logger = logging.getLogger(__name__)
+
+# Themes per LLM call — balances quality vs call count (mirrors theme_reviewer.py)
+BATCH_SIZE = 5
 
 # --- Pydantic output models ---
 
@@ -38,12 +42,26 @@ class ReviewSection(BaseModel):
 
 
 class AggregatorResult(BaseModel):
-    """Full literature review output from the LLM."""
+    """Full literature review output, merged from batch + reduce calls."""
 
     title: str = Field(min_length=1)
     abstract: str = Field(min_length=1)
     sections: list[ReviewSection] = Field(min_length=1)
     citations: list[ReviewCitation] = Field(default_factory=list)
+
+
+class SectionBatchResult(BaseModel):
+    """Structured output: sections + their citations for one batch of themes."""
+
+    sections: list[ReviewSection] = Field(min_length=1)
+    citations: list[ReviewCitation] = Field(default_factory=list)
+
+
+class TitleAbstractResult(BaseModel):
+    """Structured output: corpus-level title + abstract from assembled sections."""
+
+    title: str = Field(min_length=1)
+    abstract: str = Field(min_length=1)
 
 
 # --- Agent ---
@@ -52,20 +70,34 @@ class AggregatorResult(BaseModel):
 class AggregatorAgent:
     """Synthesizes all theme reviews into a cohesive literature review.
 
-    Wraps an Agno agent internally but satisfies the pipeline Agent protocol.
+    Shards section generation into parallel batches of themes (mirroring
+    theme_reviewer.py's BATCH_SIZE pattern), with a final reduce pass for
+    title/abstract. Citation ref numbers are pre-assigned globally before
+    any batch is dispatched, so parallel batches never collide.
+
+    Wraps two Agno agents internally but satisfies the pipeline Agent protocol.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, batch_size: int = BATCH_SIZE) -> None:
         from pipeline.config import settings
 
-        self._agent = AgnoAgent(
-            name="Aggregator",
+        self._section_agent = AgnoAgent(
+            name="AggregatorSection",
             model=create_model(),
-            instructions=AGGREGATOR_PROMPT,
-            output_schema=AggregatorResult,
+            instructions=SECTION_BATCH_PROMPT,
+            output_schema=SectionBatchResult,
             structured_outputs=True,
             debug_mode=settings.llm_debug_mode,
         )
+        self._title_agent = AgnoAgent(
+            name="AggregatorTitleAbstract",
+            model=create_model(),
+            instructions=TITLE_ABSTRACT_PROMPT,
+            output_schema=TitleAbstractResult,
+            structured_outputs=True,
+            debug_mode=settings.llm_debug_mode,
+        )
+        self._batch_size = batch_size
 
     async def run(
         self,
@@ -81,32 +113,52 @@ class AggregatorAgent:
         claim_lookup = _build_claim_lookup(claims)
         paper_lookup = {p["paper_id"]: p for p in papers}
 
-        # Build numbered claim registry and LLM message
-        claim_registry, message = _build_message(theme_reviews, claim_lookup)
+        # Pre-assign global ref numbers before any batch is dispatched
+        _ref_to_claim, claim_to_ref = _assign_ref_numbers(theme_reviews)
 
-        llm_result = await run_agent_with_retry(
-            self._agent, message, AggregatorResult,
-            context={
-                "stage": "aggregation",
-                "theme_count": len(theme_reviews),
-            },
-            on_event=on_event,
+        batches = [
+            theme_reviews[i : i + self._batch_size]
+            for i in range(0, len(theme_reviews), self._batch_size)
+        ]
+
+        logger.info(
+            "Aggregator: %d themes in %d batches (size %d)",
+            len(theme_reviews),
+            len(batches),
+            self._batch_size,
+        )
+
+        batch_results = await asyncio.gather(
+            *[
+                self._process_section_batch(
+                    idx, batch, len(batches), claim_lookup, claim_to_ref, on_event
+                )
+                for idx, batch in enumerate(batches, 1)
+            ]
+        )
+
+        all_sections = [s for r in batch_results for s in r.sections]
+        all_citations = _merge_citations(batch_results)
+
+        title_abstract = await self._run_title_abstract(all_sections, on_event)
+
+        merged = AggregatorResult(
+            title=title_abstract.title,
+            abstract=title_abstract.abstract,
+            sections=all_sections,
+            citations=all_citations,
         )
 
         # Post-process: resolve [N] → [N](p.X,§Y) in section content
-        resolved_sections = _resolve_citations(
-            llm_result.sections, llm_result.citations, claim_lookup
-        )
+        resolved_sections = _resolve_citations(merged.sections, merged.citations, claim_lookup)
 
         # Build per-paper reference table
-        references = _build_references(
-            llm_result.citations, claim_lookup, paper_lookup
-        )
+        references = _build_references(merged.citations, claim_lookup, paper_lookup)
 
         # Build output matching contract
         sections_out = []
         for section in resolved_sections:
-            claim_ids = _collect_claim_ids(section.citation_refs, llm_result.citations)
+            claim_ids = _collect_claim_ids(section.citation_refs, merged.citations)
             sections_out.append(
                 {
                     "theme_id": section.theme_id,
@@ -126,16 +178,52 @@ class AggregatorAgent:
                 "page": claim_lookup.get(c.claim_id, {}).get("source", {}).get("page", 0),
                 "paragraph": claim_lookup.get(c.claim_id, {}).get("source", {}).get("paragraph", 0),
             }
-            for c in llm_result.citations
+            for c in merged.citations
         ]
 
         return {
-            "title": llm_result.title,
-            "abstract": llm_result.abstract,
+            "title": merged.title,
+            "abstract": merged.abstract,
             "sections": sections_out,
             "citations": citations_out,
             "references": references,
         }
+
+    async def _process_section_batch(
+        self,
+        batch_idx: int,
+        batch: list[dict[str, Any]],
+        n_batches: int,
+        claim_lookup: dict[str, dict[str, Any]],
+        claim_to_ref: dict[str, int],
+        on_event: Callable[[Any], Awaitable[None]] | None,
+    ) -> SectionBatchResult:
+        message = _build_batch_message(batch, claim_lookup, claim_to_ref)
+        return await run_agent_with_retry(
+            self._section_agent,
+            message,
+            SectionBatchResult,
+            context={
+                "stage": "aggregation",
+                "batch": f"{batch_idx}/{n_batches}",
+                "themes_in_batch": len(batch),
+            },
+            on_event=on_event,
+        )
+
+    async def _run_title_abstract(
+        self,
+        sections: list[ReviewSection],
+        on_event: Callable[[Any], Awaitable[None]] | None,
+    ) -> TitleAbstractResult:
+        message = _build_title_abstract_message(sections)
+        return await run_agent_with_retry(
+            self._title_agent,
+            message,
+            TitleAbstractResult,
+            context={"stage": "aggregation_reduce", "section_count": len(sections)},
+            on_event=on_event,
+        )
 
 
 # --- Helpers ---
@@ -146,35 +234,59 @@ def _build_claim_lookup(claims: list[dict[str, Any]]) -> dict[str, dict[str, Any
     return {c["id"]: c for c in claims if "id" in c}
 
 
-def _build_message(
+def _assign_ref_numbers(
     theme_reviews: list[dict[str, Any]],
-    claim_lookup: dict[str, dict[str, Any]],
-) -> tuple[dict[int, str], str]:
-    """Build LLM message with theme reviews and a numbered claim registry.
+) -> tuple[dict[int, str], dict[str, int]]:
+    """Walk every theme review's key_claims once, assign global sequential ref numbers.
 
-    Returns (claim_registry, message_text).
-    claim_registry maps ref_number → claim_id.
+    Reuses the ref if the same claim appears in multiple themes. Runs once,
+    before any batch is dispatched, so parallel batches never collide on
+    ref numbers.
+
+    Returns (ref_to_claim, claim_to_ref).
     """
     ref_counter = 0
-    claim_registry: dict[int, str] = {}
-    claim_id_to_ref: dict[str, int] = {}
+    ref_to_claim: dict[int, str] = {}
+    claim_to_ref: dict[str, int] = {}
 
+    for review in theme_reviews:
+        for kc in review.get("key_claims", []):
+            cid = kc.get("claim_id", "")
+            if cid not in claim_to_ref:
+                ref_counter += 1
+                claim_to_ref[cid] = ref_counter
+                ref_to_claim[ref_counter] = cid
+
+    return ref_to_claim, claim_to_ref
+
+
+def _build_batch_message(
+    batch: list[dict[str, Any]],
+    claim_lookup: dict[str, dict[str, Any]],
+    claim_to_ref: dict[str, int],
+) -> str:
+    """Build LLM message for one batch of themes, scoped to their pre-assigned refs.
+
+    Only includes the batch's own theme reviews and the claim registry
+    entries relevant to them — bounds per-call input size regardless of
+    total corpus size.
+    """
     lines: list[str] = []
     lines.append("=== THEME REVIEWS ===")
     lines.append("")
 
-    for i, review in enumerate(theme_reviews, 1):
+    batch_registry: dict[int, tuple[str, str]] = {}  # ref -> (claim_id, paper_id)
+
+    for i, review in enumerate(batch, 1):
         label = review.get("label", review.get("theme_id", f"Theme {i}"))
         lines.append(f"--- THEME {i}: {label} ---")
         lines.append("")
 
-        # Synthesis
         synthesis = review.get("review", "")
         if synthesis:
             lines.append(f"SYNTHESIS: {synthesis}")
             lines.append("")
 
-        # Consensus
         consensus = review.get("consensus", [])
         if consensus:
             lines.append("CONSENSUS:")
@@ -182,7 +294,6 @@ def _build_message(
                 lines.append(f"  - {point}")
             lines.append("")
 
-        # Disagreements
         disagreements = review.get("disagreements", [])
         if disagreements:
             lines.append("DISAGREEMENTS:")
@@ -190,7 +301,6 @@ def _build_message(
                 lines.append(f"  - {point}")
             lines.append("")
 
-        # Gaps
         gaps = review.get("gaps", [])
         if gaps:
             lines.append("GAPS:")
@@ -198,7 +308,6 @@ def _build_message(
                 lines.append(f"  - {gap}")
             lines.append("")
 
-        # Key claims with ref numbers
         key_claims = review.get("key_claims", [])
         if key_claims:
             lines.append("KEY CLAIMS:")
@@ -207,44 +316,56 @@ def _build_message(
                 pid = kc.get("paper_id", "")
                 summary = kc.get("summary", "")
 
-                # Assign ref number (reuse if same claim cited in multiple themes)
-                if cid in claim_id_to_ref:
-                    ref = claim_id_to_ref[cid]
-                else:
-                    ref_counter += 1
-                    ref = ref_counter
-                    claim_id_to_ref[cid] = ref
-                    claim_registry[ref] = cid
+                ref = claim_to_ref.get(cid)
+                if ref is None:
+                    continue
+                batch_registry[ref] = (cid, pid)
 
-                # Add position info if available
                 claim_data = claim_lookup.get(cid, {})
                 source = claim_data.get("source", {})
                 page = source.get("page", "?")
                 para = source.get("paragraph", "?")
 
-                lines.append(
-                    f"  [{ref}] {summary} (paper: {pid}, p.{page},§{para})"
-                )
+                lines.append(f"  [{ref}] {summary} (paper: {pid}, p.{page},§{para})")
             lines.append("")
 
-    # Claim registry summary
+        lines.append("")
+
     lines.append("=== CLAIM REGISTRY ===")
-    lines.append("Use these [N] numbers for inline citations in your review.")
+    lines.append("Use these [N] numbers for inline citations in your response.")
     lines.append("")
-    for ref, cid in sorted(claim_registry.items()):
-        pid = claim_id_to_ref_paper(cid, theme_reviews)
+    for ref, (cid, pid) in sorted(batch_registry.items()):
         lines.append(f"  [{ref}] claim_id={cid} paper_id={pid}")
 
-    return claim_registry, "\n".join(lines)
+    return "\n".join(lines)
 
 
-def claim_id_to_ref_paper(claim_id: str, theme_reviews: list[dict[str, Any]]) -> str:
-    """Find paper_id for a claim_id from theme reviews' key_claims."""
-    for review in theme_reviews:
-        for kc in review.get("key_claims", []):
-            if kc.get("claim_id") == claim_id:
-                return kc.get("paper_id", "unknown")
-    return "unknown"
+def _build_title_abstract_message(sections: list[ReviewSection]) -> str:
+    """Build LLM message for the title/abstract reduce pass from assembled sections."""
+    lines: list[str] = []
+    lines.append("=== SECTIONS ===")
+    lines.append("")
+
+    for section in sections:
+        lines.append(f"--- {section.label} ---")
+        lines.append(section.content)
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+def _merge_citations(batch_results: list[SectionBatchResult]) -> list[ReviewCitation]:
+    """Concat each batch's citations, deduping by ref_number (keep first).
+
+    The same claim can be cited by themes in two different batches (both
+    assigned the same ref number at pre-assignment time) — dedupe so the
+    merged list has one entry per ref_number.
+    """
+    merged: dict[int, ReviewCitation] = {}
+    for result in batch_results:
+        for citation in result.citations:
+            merged.setdefault(citation.ref_number, citation)
+    return [merged[ref] for ref in sorted(merged)]
 
 
 _REF_PATTERN = re.compile(r"\[(\d+)\]")
@@ -279,7 +400,7 @@ def _resolve_citations(
             ref_num = int(match.group(1))
             pos = ref_to_pos.get(ref_num)
             if pos is not None:
-                return f"[{ref_num}](cite:{ref_num} \"{pos}\")"
+                return f'[{ref_num}](cite:{ref_num} "{pos}")'
             logger.warning("Orphan reference [%d] in section %s", ref_num, section.theme_id)
             return match.group(0)  # leave as-is
 
@@ -333,9 +454,7 @@ def _build_references(
     return references
 
 
-def _collect_claim_ids(
-    citation_refs: list[int], citations: list[ReviewCitation]
-) -> list[str]:
+def _collect_claim_ids(citation_refs: list[int], citations: list[ReviewCitation]) -> list[str]:
     """Collect claim_ids for the given ref_numbers."""
     ref_to_claim = {c.ref_number: c.claim_id for c in citations}
     return [ref_to_claim[ref] for ref in citation_refs if ref in ref_to_claim]
