@@ -78,7 +78,9 @@ def _validate_ref_resolves(value: int, metadata: dict[str, Any]) -> ValidationRe
     if value in valid_refs:
         return PassResult()
     return FailResult(
-        error_message=f"citation_refs contains [{value}], which has no matching citations[].ref_number"
+        error_message=(
+            f"citation_refs contains [{value}], which has no matching citations[].ref_number"
+        )
     )
 
 
@@ -126,7 +128,9 @@ def _strip_invalid_citations(
         )
         for section in llm_result.sections
     ]
-    return llm_result.model_copy(update={"sections": cleaned_sections, "citations": valid_citations})
+    return llm_result.model_copy(
+        update={"sections": cleaned_sections, "citations": valid_citations}
+    )
 
 
 async def _enforce_citation_integrity(

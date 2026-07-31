@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from pipeline.agents.aggregator import (
+    _CITATION_RAIL_PATH,
     AggregatorAgent,
     AggregatorResult,
     ReviewCitation,
@@ -18,7 +19,6 @@ from pipeline.agents.aggregator import (
     _build_batch_message,
     _build_claim_lookup,
     _build_references,
-    _CITATION_RAIL_PATH,
     _citation_guard,
     _collect_claim_ids,
     _enforce_citation_integrity,
