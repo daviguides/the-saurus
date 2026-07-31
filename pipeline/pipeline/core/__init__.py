@@ -8,6 +8,7 @@ from .exceptions import (
     PersistenceError,
     PipelineError,
     StageError,
+    TopicGateRejectedError,
 )
 from .models import JobState, JobStatus, PaperEntry
 from .persistence import (
@@ -34,6 +35,7 @@ __all__ = [
     "PipelineError",
     "QdrantIndexer",
     "StageError",
+    "TopicGateRejectedError",
     "create_job_dir",
     "embed_batch",
     "embed_text",

@@ -27,3 +27,11 @@ class PersistenceError(PipelineError):
 
 class IngestionError(PipelineError):
     """Error extracting PDF content."""
+
+
+class TopicGateRejectedError(PipelineError):
+    """Raised when a paper is rejected by the pre-analysis topic gate."""
+
+    def __init__(self, message: str, reason: str) -> None:
+        super().__init__(message)
+        self.reason = reason
