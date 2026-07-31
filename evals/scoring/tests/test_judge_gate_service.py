@@ -98,3 +98,27 @@ def test_score_review_quarantine_on_citation_fail() -> None:
     body = response.json()
     assert body["verdict"] == "quarantine"
     assert body["citation_accuracy"]["passed"] is False
+
+
+def test_score_toxicity_pass() -> None:
+    with (
+        patch("scoring.judge_gate_service.create_deepeval_judge", return_value=MagicMock()),
+        patch("scoring.judge_gate_service.ToxicityMetric", return_value=_mock_metric(0.0, True)),
+    ):
+        response = client.post("/score-toxicity", json={"text": "Clean review text."})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["passed"] is True
+    assert body["score"] == 0.0
+
+
+def test_score_toxicity_fail() -> None:
+    with (
+        patch("scoring.judge_gate_service.create_deepeval_judge", return_value=MagicMock()),
+        patch("scoring.judge_gate_service.ToxicityMetric", return_value=_mock_metric(0.8, False)),
+    ):
+        response = client.post("/score-toxicity", json={"text": "Toxic review text."})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["passed"] is False
+    assert body["score"] == 0.8
