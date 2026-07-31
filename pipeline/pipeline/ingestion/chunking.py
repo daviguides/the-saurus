@@ -16,16 +16,20 @@ def chunk_by_heading(paragraphs: list[Paragraph]) -> list[list[Paragraph]]:
     """Split paragraphs into chunks at each section heading (heading_level == 2).
 
     Front matter — title, authors, abstract-without-heading, i.e. everything
-    before the first section heading — stays in chunk 0 rather than becoming
-    its own theme-less chunk.
+    before the first section heading — merges into that first section's
+    chunk rather than becoming its own front-matter-only chunk, which would
+    almost always yield zero extractable themes (min_length=1 failure).
     """
     if not paragraphs:
         return []
 
     chunks: list[list[Paragraph]] = [[]]
+    seen_section_heading = False
     for p in paragraphs:
-        if p.heading_level == 2 and chunks[-1]:
-            chunks.append([])
+        if p.heading_level == 2:
+            if seen_section_heading:
+                chunks.append([])
+            seen_section_heading = True
         chunks[-1].append(p)
 
     return chunks

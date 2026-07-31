@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from pipeline.agents.parsing import (
     AgentResponseError,
     estimate_tokens,
+    normalize_theme_name,
     run_agent_with_retry,
 )
 
@@ -57,6 +58,30 @@ class TestEstimateTokens:
     def test_exact_multiple(self) -> None:
         """String of exactly 8 chars yields 2 tokens."""
         assert estimate_tokens("12345678") == 2
+
+
+# --- normalize_theme_name ---
+
+
+class TestNormalizeThemeName:
+    """Validate theme-name normalization for cross-output matching."""
+
+    def test_lowercases(self) -> None:
+        assert normalize_theme_name("Neural Plasticity") == "neural plasticity"
+
+    def test_strips_leading_trailing_whitespace(self) -> None:
+        assert normalize_theme_name("  Neural Plasticity  ") == "neural plasticity"
+
+    def test_collapses_internal_whitespace(self) -> None:
+        assert normalize_theme_name("Neural   Plasticity") == "neural plasticity"
+
+    def test_collapses_underscores_and_hyphens(self) -> None:
+        assert normalize_theme_name("Neural_Plasticity-Study") == "neural plasticity study"
+
+    def test_equivalent_names_normalize_equal(self) -> None:
+        assert normalize_theme_name("Gene-Therapy_Vectors") == normalize_theme_name(
+            "  gene therapy   vectors  "
+        )
 
 
 # --- Agno event helpers ---
