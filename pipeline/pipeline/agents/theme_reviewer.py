@@ -12,7 +12,7 @@ from agno.agent import Agent as AgnoAgent
 from pydantic import BaseModel, Field
 
 from pipeline.agents.models import create_model
-from pipeline.agents.parsing import reask, run_agent_with_retry
+from pipeline.agents.parsing import normalize_theme_name, reask, run_agent_with_retry
 from pipeline.agents.prompts.theme_reviewer import THEME_REVIEWER_PROMPT
 
 logger = logging.getLogger(__name__)
@@ -168,18 +168,12 @@ class ThemeReviewerAgent:
 
             # Map results back to theme IDs
             # B4: Normalize theme names more aggressively for matching
-            def _normalize_name(name: str) -> str:
-                """Normalize theme name: lowercase, strip, collapse whitespace and punctuation."""
-                import re as _re
-
-                return _re.sub(r"[\s_\-]+", " ", name.lower().strip())
-
-            theme_name_to_id = {_normalize_name(t.get("name", "")): t["id"] for t in batch}
-            theme_name_to_meta = {_normalize_name(t.get("name", "")): t for t in batch}
+            theme_name_to_id = {normalize_theme_name(t.get("name", "")): t["id"] for t in batch}
+            theme_name_to_meta = {normalize_theme_name(t.get("name", "")): t for t in batch}
 
             def _find_theme(review_name: str) -> tuple[str, dict[str, Any]]:
                 """Find matching theme by exact or substring match."""
-                key = _normalize_name(review_name)
+                key = normalize_theme_name(review_name)
                 # Exact match
                 if key in theme_name_to_id:
                     return theme_name_to_id[key], theme_name_to_meta[key]

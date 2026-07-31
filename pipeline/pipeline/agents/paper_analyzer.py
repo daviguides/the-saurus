@@ -10,7 +10,7 @@ from agno.agent import Agent as AgnoAgent
 from pydantic import BaseModel, Field
 
 from pipeline.agents.models import create_model
-from pipeline.agents.parsing import run_agent_with_retry
+from pipeline.agents.parsing import normalize_theme_name, run_agent_with_retry
 from pipeline.agents.prompts.paper_analyzer import PAPER_ANALYZER_PROMPT
 
 # --- Pydantic output models ---
@@ -124,3 +124,46 @@ class PaperAnalyzerAgent:
             "themes": themes_out,
             "claims": claims_out,
         }
+
+
+def merge_chunk_results(chunk_results: list[dict[str, Any]]) -> dict[str, Any]:
+    """Merge per-chunk PaperAnalyzerAgent outputs into one paper-level result.
+
+    Reconciles the same theme found in different chunks by exact normalized
+    name match (no substring/fuzzy fallback — chunk-merge clusters unknowns
+    against unknowns, unlike theme_reviewer's match against a small known
+    candidate set, so a fuzzy match risks merging genuinely distinct themes).
+    The first chunk to produce a given theme name keeps its id as canonical;
+    later occurrences contribute only their positions. Claims are remapped
+    to the canonical theme_id and concatenated.
+    """
+    themes_by_key: dict[str, dict[str, Any]] = {}
+    theme_id_remap: dict[str, str] = {}
+
+    for chunk in chunk_results:
+        for theme in chunk.get("themes", []):
+            key = normalize_theme_name(theme.get("name", ""))
+            canonical = themes_by_key.get(key)
+            if canonical is None:
+                canonical = dict(theme)
+                canonical["positions"] = list(theme.get("positions", []))
+                themes_by_key[key] = canonical
+            else:
+                for position in theme.get("positions", []):
+                    if position not in canonical["positions"]:
+                        canonical["positions"].append(position)
+            theme_id_remap[theme["id"]] = canonical["id"]
+
+    merged_claims: list[dict[str, Any]] = []
+    for chunk in chunk_results:
+        for claim in chunk.get("claims", []):
+            merged_claim = dict(claim)
+            merged_claim["theme_id"] = theme_id_remap.get(
+                claim["theme_id"], claim["theme_id"]
+            )
+            merged_claims.append(merged_claim)
+
+    return {
+        "themes": list(themes_by_key.values()),
+        "claims": merged_claims,
+    }

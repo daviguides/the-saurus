@@ -24,6 +24,18 @@ def estimate_tokens(text: str) -> int:
     return len(text) // CHARS_PER_TOKEN
 
 
+def normalize_theme_name(name: str) -> str:
+    """Normalize a theme name for equality comparison across LLM outputs.
+
+    Lowercase, strip, collapse whitespace/underscore/hyphen runs to a single
+    space — shared by theme_reviewer's LLM-output-to-canonical-theme matching
+    and paper_analyzer's cross-chunk theme merge.
+    """
+    import re
+
+    return re.sub(r"[\s_\-]+", " ", name.lower().strip())
+
+
 class AgentResponseError(AgentError):
     """Raised when agent produces invalid or empty response."""
 
