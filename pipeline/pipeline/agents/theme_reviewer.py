@@ -217,14 +217,13 @@ def _build_batch_message(
     lines: list[str] = []
     lines.append(f"Analyze the following {len(themes)} themes:\n")
 
-    for i, theme in enumerate(themes, 1):
+    for theme in themes:
         name = theme.get("name", theme.get("label", "Unknown"))
         desc = theme.get("description", "")
         aliases = ", ".join(theme.get("aliases", []))
         theme_id = theme["id"]
 
-        lines.append(f"{'='*60}")
-        lines.append(f"THEME {i}: {name}")
+        lines.append(f'<theme id="{theme_id}" name="{name}">')
         lines.append(f"DESCRIPTION: {desc}")
         if aliases:
             lines.append(f"ALIASES: {aliases}")
@@ -247,11 +246,15 @@ def _build_batch_message(
                 page = claim.get("page", claim.get("source", {}).get("page", "?"))
                 para = claim.get("paragraph", claim.get("source", {}).get("paragraph", "?"))
                 deep = claim.get("deep", "")
-                lines.append(f"  [{cid}] {summary} (p.{page},§{para})")
+                lines.append(
+                    f'  <claim id="{cid}" paper="{pid}" page="{page}" '
+                    f'paragraph="{para}">{summary}</claim>'
+                )
                 if deep:
                     lines.append(f"      Context: {deep[:300]}")
             lines.append("")
 
+        lines.append("</theme>")
         lines.append("")
 
     return "\n".join(lines)

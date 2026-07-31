@@ -22,16 +22,19 @@ GUIDELINES:
 - Compare across papers within each theme.
 - Every consensus/disagreement point should be one clear sentence.
 - Gaps identify what is MISSING, not what is present.
-- Reference claims by their IDs (bracketed identifiers in input).
+- Reference claims by the id attribute in their <claim> tag.
 - If only one paper contributes claims to a theme, note limited coverage.
-- consensus must have at least one entry per theme.
 
 DO NOT:
 - Generate formatted citations or bibliography entries
 - Compare across different themes
-- Invent claims or findings not present in the input
 
-IMPORTANT:
+IMPORTANT — apply these strictly to every theme below:
+- consensus must have at least one entry per theme.
+- DO NOT invent claims or findings not present in the input.
 - Use the EXACT theme name from the input as theme_name.
-- Reference claims by their bracketed IDs from the input.
+- Reference claims by the id attribute from their <claim> tag in the input.
+- Each theme's data is delimited by <theme>...</theme>; each claim by \
+<claim id="..." paper="...">...</claim> — never attribute a claim to a theme \
+other than the one whose <theme> tags contain it.
 """
