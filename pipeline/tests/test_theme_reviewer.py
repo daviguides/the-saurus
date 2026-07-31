@@ -7,12 +7,17 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from guardrails.validator_base import FailResult, PassResult
+
 from pipeline.agents.theme_reviewer import (
     BatchThemeReviewResult,
+    ClaimIdMembership,
     ReviewedClaim,
     SingleThemeReview,
     ThemeReviewerAgent,
     _build_batch_message,
+    _build_claim_id_failure_description,
+    _claim_id_guard,
 )
 
 # --- Pydantic model tests ---
@@ -108,6 +113,75 @@ class TestPydanticModels:
         """Reviews list must have at least one entry (min_length=1)."""
         with pytest.raises(Exception):
             BatchThemeReviewResult(reviews=[])
+
+
+# --- ClaimIdMembership validator tests ---
+
+
+class TestClaimIdMembership:
+    """Test ClaimIdMembership.validate() in isolation from Guard machinery."""
+
+    def test_passes_for_member_id(self) -> None:
+        """A claim_id present in metadata's valid_ids passes."""
+        validator = ClaimIdMembership(on_fail="reask")
+        result = validator.validate("c1", {"valid_ids": {"c1", "c2"}})
+        assert isinstance(result, PassResult)
+
+    def test_fails_for_non_member_id(self) -> None:
+        """A claim_id absent from metadata's valid_ids fails with a descriptive message."""
+        validator = ClaimIdMembership(on_fail="reask")
+        result = validator.validate("bogus", {"valid_ids": {"c1", "c2"}})
+        assert isinstance(result, FailResult)
+        assert "bogus" in result.error_message
+
+    def test_fails_closed_when_valid_ids_missing_from_metadata(self) -> None:
+        """Missing valid_ids in metadata must fail validation, not silently pass.
+
+        A bug that silently no-ops here (as the Annotated[...] attachment
+        pattern did during exploration) would show as every input passing,
+        masking the entire feature.
+        """
+        validator = ClaimIdMembership(on_fail="reask")
+        result = validator.validate("c1", {})
+        assert isinstance(result, FailResult)
+
+
+# --- _build_claim_id_failure_description tests ---
+
+
+class TestBuildClaimIdFailureDescription:
+    """Test the reasks-to-message builder against the real 3-level schema."""
+
+    def test_multi_theme_grouping(self) -> None:
+        """Two invalid claim_ids in two different themes both appear, grouped by theme."""
+        result = BatchThemeReviewResult(
+            reviews=[
+                SingleThemeReview(
+                    theme_name="Theme A",
+                    synthesis="Synthesis A.",
+                    consensus=["Agreement A."],
+                    key_claims=[
+                        ReviewedClaim(claim_id="bad1", paper_id="p1", summary="Invalid A."),
+                    ],
+                ),
+                SingleThemeReview(
+                    theme_name="Theme B",
+                    synthesis="Synthesis B.",
+                    consensus=["Agreement B."],
+                    key_claims=[
+                        ReviewedClaim(claim_id="bad2", paper_id="p1", summary="Invalid B."),
+                    ],
+                ),
+            ],
+        )
+        _claim_id_guard.validate(result.model_dump_json(), metadata={"valid_ids": {"good1"}})
+
+        description = _build_claim_id_failure_description(_claim_id_guard, result)
+
+        assert "Theme A" in description
+        assert "Theme B" in description
+        assert "bad1" in description
+        assert "bad2" in description
 
 
 # --- Message building tests ---
@@ -520,6 +594,57 @@ class TestThemeReviewerAgentRunBatch:
 
         assert results[0]["claim_ids"] == ["c1", "c2"]
         assert len(results[0]["key_claims"]) == 2
+
+    async def test_run_batch_reask_multi_theme_multi_invalid_ids(
+        self, claims: list[dict[str, Any]]
+    ) -> None:
+        """Two invalid claim_ids across two different themes in one batch produce
+        a single reask() call naming both themes and both bad ids."""
+        second_theme = {
+            **_make_theme(), "id": "canonical-2", "name": "Gene Therapy", "label": "Gene Therapy",
+        }
+        themes = [_make_theme(), second_theme]
+        review_with_invalid = BatchThemeReviewResult(
+            reviews=[
+                SingleThemeReview(
+                    theme_name="Chronobiology",
+                    synthesis="Analysis A.",
+                    consensus=["Agreement A."],
+                    key_claims=[
+                        ReviewedClaim(claim_id="c1", paper_id="p1", summary="Valid."),
+                        ReviewedClaim(claim_id="bad-a", paper_id="p1", summary="Invalid A."),
+                    ],
+                ),
+                SingleThemeReview(
+                    theme_name="Gene Therapy",
+                    synthesis="Analysis B.",
+                    consensus=["Agreement B."],
+                    key_claims=[
+                        ReviewedClaim(claim_id="bad-b", paper_id="p1", summary="Invalid B."),
+                    ],
+                ),
+            ],
+        )
+
+        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
+            agent = ThemeReviewerAgent()
+
+        with (
+            patch(
+                "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+            ) as mock_retry,
+            patch("pipeline.agents.theme_reviewer.reask", new_callable=AsyncMock) as mock_reask,
+        ):
+            mock_retry.return_value = review_with_invalid
+            mock_reask.return_value = review_with_invalid
+            await agent.run_batch(themes, claims)
+
+        mock_reask.assert_called_once()
+        failure_description = mock_reask.call_args[0][2]
+        assert "Chronobiology" in failure_description
+        assert "Gene Therapy" in failure_description
+        assert "bad-a" in failure_description
+        assert "bad-b" in failure_description
 
     async def test_run_batch_no_reask_when_all_ids_valid(
         self,
