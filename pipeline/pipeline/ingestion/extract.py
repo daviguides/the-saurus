@@ -294,9 +294,7 @@ def _scrub_pii(paragraphs: list[Paragraph]) -> list[Paragraph]:
             scrubbed.append(p)
             continue
         for entity_type in entity_types:
-            logger.info(
-                "PII redacted: type=%s page=%d paragraph=%d", entity_type, p.page, p.index
-            )
+            logger.info("PII redacted: type=%s page=%d paragraph=%d", entity_type, p.page, p.index)
         scrubbed.append(p.model_copy(update={"text": text}))
     return scrubbed
 

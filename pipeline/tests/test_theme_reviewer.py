@@ -896,3 +896,150 @@ class TestThemeReviewerReask:
         failure_description = mock_reask.call_args[0][2]
         assert "Unrelated A" in failure_description
         assert "Unrelated B" in failure_description
+
+
+# --- output-side PII scrub tests ---
+
+
+class TestOutputSidePiiScrub:
+    """Test the §3.2 output-side PII scrub applied in run_batch()."""
+
+    @pytest.fixture
+    def theme(self) -> dict[str, Any]:
+        return _make_theme()
+
+    @pytest.fixture
+    def claims(self) -> list[dict[str, Any]]:
+        return _make_claims()
+
+    async def test_synthesis_person_redacted(
+        self, theme: dict[str, Any], claims: list[dict[str, Any]]
+    ) -> None:
+        """A PERSON name leaked into synthesis prose is redacted."""
+        review_with_pii = BatchThemeReviewResult(
+            reviews=[
+                SingleThemeReview(
+                    theme_name="Chronobiology",
+                    synthesis="A participant named Robert Chen disclosed personal details.",
+                    consensus=["Both papers confirm circadian rhythms influence physiology."],
+                ),
+            ],
+        )
+
+        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
+            agent = ThemeReviewerAgent()
+
+        with patch(
+            "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
+            mock_retry.return_value = review_with_pii
+            results = await agent.run_batch([theme], claims)
+
+        assert "Robert Chen" not in results[0]["review"]
+        assert "[PERSON]" in results[0]["review"]
+
+    async def test_consensus_email_redacted(
+        self, theme: dict[str, Any], claims: list[dict[str, Any]]
+    ) -> None:
+        """An email leaked into a consensus bullet is redacted, list length preserved."""
+        review_with_pii = BatchThemeReviewResult(
+            reviews=[
+                SingleThemeReview(
+                    theme_name="Chronobiology",
+                    synthesis="Both papers confirm circadian rhythms influence physiology.",
+                    consensus=[
+                        "Agreement A.",
+                        "Contact j.rodriguez@example.edu for the raw dataset.",
+                    ],
+                ),
+            ],
+        )
+
+        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
+            agent = ThemeReviewerAgent()
+
+        with patch(
+            "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
+            mock_retry.return_value = review_with_pii
+            results = await agent.run_batch([theme], claims)
+
+        assert len(results[0]["consensus"]) == 2
+        assert results[0]["consensus"][0] == "Agreement A."
+        assert "j.rodriguez@example.edu" not in results[0]["consensus"][1]
+        assert "[EMAIL]" in results[0]["consensus"][1]
+
+    async def test_disagreements_gaps_key_claims_untouched(
+        self, theme: dict[str, Any], claims: list[dict[str, Any]]
+    ) -> None:
+        """Only synthesis/consensus are in scope — other fields pass through unchanged."""
+        review = _make_batch_review_result()
+
+        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
+            agent = ThemeReviewerAgent()
+
+        with patch(
+            "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
+            mock_retry.return_value = review
+            results = await agent.run_batch([theme], claims)
+
+        expected = review.reviews[0]
+        assert results[0]["disagreements"] == expected.disagreements
+        assert results[0]["gaps"] == expected.gaps
+        assert results[0]["key_claims"][0]["summary"] == expected.key_claims[0].summary
+
+    async def test_clean_review_unaffected(
+        self, theme: dict[str, Any], claims: list[dict[str, Any]]
+    ) -> None:
+        """No PII present → synthesis/consensus pass through byte-for-byte."""
+        clean_result = _make_batch_review_result()
+
+        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
+            agent = ThemeReviewerAgent()
+
+        with patch(
+            "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
+            mock_retry.return_value = clean_result
+            results = await agent.run_batch([theme], claims)
+
+        expected = clean_result.reviews[0]
+        assert results[0]["review"] == expected.synthesis
+        assert results[0]["consensus"] == expected.consensus
+
+    async def test_redaction_logged_without_pii_value(
+        self,
+        theme: dict[str, Any],
+        claims: list[dict[str, Any]],
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """Redaction is logged with entity type + theme_id, never the raw PII value."""
+        review_with_pii = BatchThemeReviewResult(
+            reviews=[
+                SingleThemeReview(
+                    theme_name="Chronobiology",
+                    synthesis="A participant named Robert Chen disclosed personal details.",
+                    consensus=["Agreement A."],
+                ),
+            ],
+        )
+
+        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
+            agent = ThemeReviewerAgent()
+
+        with (
+            patch(
+                "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+            ) as mock_retry,
+            caplog.at_level("INFO", logger="pipeline.agents.theme_reviewer"),
+        ):
+            mock_retry.return_value = review_with_pii
+            await agent.run_batch([theme], claims)
+
+        redaction_logs = [r for r in caplog.records if "PII redacted (output-side)" in r.message]
+        assert len(redaction_logs) >= 1
+        for record in redaction_logs:
+            assert "Robert Chen" not in record.message
+            assert "stage=theme_review" in record.message
+            assert "theme_id=" in record.message
