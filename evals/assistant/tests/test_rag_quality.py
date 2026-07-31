@@ -30,11 +30,11 @@ class TestAssistantRAGQuality:
     """Evaluate assistant answer quality."""
 
     def test_answer_relevancy(
-        self, golden_dataset, gemini_judge, assistant_baseline,
+        self, golden_dataset, eval_judge, assistant_baseline,
     ):
         """Assistant answers are relevant to user questions."""
         metric = create_answer_relevancy_metric(
-            model=gemini_judge,
+            model=eval_judge,
             threshold=assistant_baseline["answer_relevancy"] * 0.95,
         )
 

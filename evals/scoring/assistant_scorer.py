@@ -9,8 +9,9 @@ Usage:
 
 import asyncio
 import logging
-import os
 import random
+
+from judge import create_ragas_judge
 
 logger = logging.getLogger(__name__)
 
@@ -21,21 +22,14 @@ async def score_assistant_traces():
     """Fetch assistant traces from Langfuse and score."""
     try:
         from langfuse import get_client
-        from ragas.metrics.collections import ResponseRelevancy
         from ragas.dataset_schema import SingleTurnSample
-        from ragas.llms import llm_factory
-        from google import genai
+        from ragas.metrics.collections import ResponseRelevancy
     except ImportError:
         logger.error("Missing dependencies. Run: cd evals && uv sync")
         return
 
     langfuse = get_client()
-    api_key = os.environ.get(
-        "GOOGLE_API_KEY",
-        os.environ.get("PIPELINE_LLM_API_KEY", ""),
-    )
-    client = genai.Client(api_key=api_key)
-    llm = llm_factory("gemini-2.5-flash", provider="google", client=client)
+    llm = create_ragas_judge()
 
     traces = langfuse.api.trace.list(name="assistant").data
     if not traces:
