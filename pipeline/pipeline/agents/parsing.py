@@ -64,10 +64,7 @@ async def run_agent_with_retry[T: BaseModel](
     input_tokens = await count_tokens(message)
     logger.info(
         "Starting %s (stream) | input_chars=%d input_tokens=%d stage=%s",
-        agent_name,
-        len(message),
-        input_tokens,
-        stage,
+        agent_name, len(message), input_tokens, stage,
     )
 
     last_error: Exception | None = None
@@ -77,11 +74,7 @@ async def run_agent_with_retry[T: BaseModel](
             async with llm_semaphore:
                 logger.info(
                     "%s Acquired semaphore (attempt %d/%d) paper_id=%s stage=%s",
-                    agent_name,
-                    attempt,
-                    max_retries,
-                    paper_id,
-                    stage,
+                    agent_name, attempt, max_retries, paper_id, stage,
                 )
 
                 async with asyncio.timeout(timeout):
@@ -101,8 +94,7 @@ async def run_agent_with_retry[T: BaseModel](
                                 await on_event(event)
                             except Exception:
                                 logger.debug(
-                                    "Event callback error",
-                                    exc_info=True,
+                                    "Event callback error", exc_info=True,
                                 )
 
                         if isinstance(event, RunCompletedEvent):
@@ -133,39 +125,31 @@ async def run_agent_with_retry[T: BaseModel](
                         return output_schema.model_validate(result_content)
 
         except TimeoutError:
-            last_error = TimeoutError(f"{agent_name} timed out after {timeout}s")
+            last_error = TimeoutError(
+                f"{agent_name} timed out after {timeout}s"
+            )
             logger.warning(
                 "%s timed out (attempt %d/%d)",
-                agent_name,
-                attempt,
-                max_retries,
+                agent_name, attempt, max_retries,
             )
         except AgentResponseError as e:
             last_error = e
             logger.warning(
                 "%s response error (attempt %d/%d): %s",
-                agent_name,
-                attempt,
-                max_retries,
-                e,
+                agent_name, attempt, max_retries, e,
             )
         except Exception as e:
             last_error = e
             logger.warning(
                 "%s unexpected error (attempt %d/%d): %s",
-                agent_name,
-                attempt,
-                max_retries,
-                e,
+                agent_name, attempt, max_retries, e,
             )
 
         if attempt < max_retries:
             # B7: Exponential backoff with jitter
             delay = retry_delay * (2 ** (attempt - 1)) + random.uniform(0, retry_delay * 0.5)
             logger.info(
-                "%s retrying in %.1fs...",
-                agent_name,
-                delay,
+                "%s retrying in %.1fs...", agent_name, delay,
             )
             await asyncio.sleep(delay)
 
@@ -217,7 +201,6 @@ async def reask[T: BaseModel](
     except AgentResponseError:
         logger.warning(
             "%s reask exhausted after %d attempts, using fallback",
-            agent_name,
-            max_attempts,
+            agent_name, max_attempts,
         )
         return fallback()

@@ -4,14 +4,16 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from agno.agent import RunCompletedEvent, RunErrorEvent
 from pydantic import BaseModel
+
+from agno.agent import RunCompletedEvent, RunErrorEvent
 
 from pipeline.agents.parsing import (
     AgentResponseError,
     estimate_tokens,
     run_agent_with_retry,
 )
+
 
 # --- Constants ---
 
@@ -116,27 +118,20 @@ class TestRunAgentWithRetry:
             return_value=_mock_arun_success(model),
         )
 
-        with (
-            patch(
-                "pipeline.agents.models.llm_semaphore",
-                asyncio.Semaphore(1),
-            ),
-            patch(
-                "pipeline.config.settings",
-                MagicMock(
-                    llm_max_retries=3,
-                    llm_retry_delay=0.0,
-                ),
+        with patch(
+            "pipeline.agents.models.llm_semaphore",
+            asyncio.Semaphore(1),
+        ), patch(
+            "pipeline.config.settings",
+            MagicMock(
+                llm_max_retries=3,
+                llm_retry_delay=0.0,
             ),
         ):
             # Act
             result = await run_agent_with_retry(
-                agent,
-                "test message",
-                SampleModel,
-                max_retries=1,
-                retry_delay=0.0,
-                timeout=5.0,
+                agent, "test message", SampleModel,
+                max_retries=1, retry_delay=0.0, timeout=5.0,
             )
 
         # Assert
@@ -154,26 +149,19 @@ class TestRunAgentWithRetry:
             ),
         )
 
-        with (
-            patch(
-                "pipeline.agents.models.llm_semaphore",
-                asyncio.Semaphore(1),
-            ),
-            patch(
-                "pipeline.config.settings",
-                MagicMock(
-                    llm_max_retries=1,
-                    llm_retry_delay=0.0,
-                ),
+        with patch(
+            "pipeline.agents.models.llm_semaphore",
+            asyncio.Semaphore(1),
+        ), patch(
+            "pipeline.config.settings",
+            MagicMock(
+                llm_max_retries=1,
+                llm_retry_delay=0.0,
             ),
         ):
             result = await run_agent_with_retry(
-                agent,
-                "msg",
-                SampleModel,
-                max_retries=1,
-                retry_delay=0.0,
-                timeout=5.0,
+                agent, "msg", SampleModel,
+                max_retries=1, retry_delay=0.0, timeout=5.0,
             )
 
         assert result.name == VALID_NAME
@@ -192,26 +180,19 @@ class TestRunAgentWithRetry:
             ],
         )
 
-        with (
-            patch(
-                "pipeline.agents.models.llm_semaphore",
-                asyncio.Semaphore(1),
-            ),
-            patch(
-                "pipeline.config.settings",
-                MagicMock(
-                    llm_max_retries=3,
-                    llm_retry_delay=0.0,
-                ),
+        with patch(
+            "pipeline.agents.models.llm_semaphore",
+            asyncio.Semaphore(1),
+        ), patch(
+            "pipeline.config.settings",
+            MagicMock(
+                llm_max_retries=3,
+                llm_retry_delay=0.0,
             ),
         ):
             result = await run_agent_with_retry(
-                agent,
-                "msg",
-                SampleModel,
-                max_retries=3,
-                retry_delay=0.0,
-                timeout=5.0,
+                agent, "msg", SampleModel,
+                max_retries=3, retry_delay=0.0, timeout=5.0,
             )
 
         assert result.name == VALID_NAME
@@ -229,26 +210,19 @@ class TestRunAgentWithRetry:
             ],
         )
 
-        with (
-            patch(
-                "pipeline.agents.models.llm_semaphore",
-                asyncio.Semaphore(1),
-            ),
-            patch(
-                "pipeline.config.settings",
-                MagicMock(
-                    llm_max_retries=3,
-                    llm_retry_delay=0.0,
-                ),
+        with patch(
+            "pipeline.agents.models.llm_semaphore",
+            asyncio.Semaphore(1),
+        ), patch(
+            "pipeline.config.settings",
+            MagicMock(
+                llm_max_retries=3,
+                llm_retry_delay=0.0,
             ),
         ):
             result = await run_agent_with_retry(
-                agent,
-                "msg",
-                SampleModel,
-                max_retries=3,
-                retry_delay=0.0,
-                timeout=5.0,
+                agent, "msg", SampleModel,
+                max_retries=3, retry_delay=0.0, timeout=5.0,
             )
 
         assert result.name == VALID_NAME
@@ -261,17 +235,14 @@ class TestRunAgentWithRetry:
             side_effect=RuntimeError("API down"),
         )
 
-        with (
-            patch(
-                "pipeline.agents.models.llm_semaphore",
-                asyncio.Semaphore(1),
-            ),
-            patch(
-                "pipeline.config.settings",
-                MagicMock(
-                    llm_max_retries=2,
-                    llm_retry_delay=0.0,
-                ),
+        with patch(
+            "pipeline.agents.models.llm_semaphore",
+            asyncio.Semaphore(1),
+        ), patch(
+            "pipeline.config.settings",
+            MagicMock(
+                llm_max_retries=2,
+                llm_retry_delay=0.0,
             ),
         ):
             with pytest.raises(
@@ -279,12 +250,8 @@ class TestRunAgentWithRetry:
                 match="failed after 2 attempts",
             ):
                 await run_agent_with_retry(
-                    agent,
-                    "msg",
-                    SampleModel,
-                    max_retries=2,
-                    retry_delay=0.0,
-                    timeout=5.0,
+                    agent, "msg", SampleModel,
+                    max_retries=2, retry_delay=0.0, timeout=5.0,
                 )
 
     async def test_calls_count_tokens_with_message(self) -> None:
@@ -296,30 +263,22 @@ class TestRunAgentWithRetry:
             return_value=_mock_arun_success(model),
         )
 
-        with (
-            patch(
-                "pipeline.agents.models.llm_semaphore",
-                asyncio.Semaphore(1),
+        with patch(
+            "pipeline.agents.models.llm_semaphore",
+            asyncio.Semaphore(1),
+        ), patch(
+            "pipeline.config.settings",
+            MagicMock(
+                llm_max_retries=1,
+                llm_retry_delay=0.0,
             ),
-            patch(
-                "pipeline.config.settings",
-                MagicMock(
-                    llm_max_retries=1,
-                    llm_retry_delay=0.0,
-                ),
-            ),
-            patch(
-                "pipeline.core.tokens.count_tokens",
-                AsyncMock(return_value=99),
-            ) as mock_count_tokens,
-        ):
+        ), patch(
+            "pipeline.core.tokens.count_tokens",
+            AsyncMock(return_value=99),
+        ) as mock_count_tokens:
             await run_agent_with_retry(
-                agent,
-                "test message",
-                SampleModel,
-                max_retries=1,
-                retry_delay=0.0,
-                timeout=5.0,
+                agent, "test message", SampleModel,
+                max_retries=1, retry_delay=0.0, timeout=5.0,
             )
 
         mock_count_tokens.assert_awaited_once_with("test message")
@@ -338,26 +297,19 @@ class TestRunAgentWithRetry:
         async def callback(event):
             received_events.append(event)
 
-        with (
-            patch(
-                "pipeline.agents.models.llm_semaphore",
-                asyncio.Semaphore(1),
-            ),
-            patch(
-                "pipeline.config.settings",
-                MagicMock(
-                    llm_max_retries=1,
-                    llm_retry_delay=0.0,
-                ),
+        with patch(
+            "pipeline.agents.models.llm_semaphore",
+            asyncio.Semaphore(1),
+        ), patch(
+            "pipeline.config.settings",
+            MagicMock(
+                llm_max_retries=1,
+                llm_retry_delay=0.0,
             ),
         ):
             await run_agent_with_retry(
-                agent,
-                "msg",
-                SampleModel,
-                max_retries=1,
-                retry_delay=0.0,
-                timeout=5.0,
+                agent, "msg", SampleModel,
+                max_retries=1, retry_delay=0.0, timeout=5.0,
                 on_event=callback,
             )
 
