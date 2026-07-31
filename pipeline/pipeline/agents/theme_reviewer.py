@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field
 from pipeline.agents.models import create_model
 from pipeline.agents.parsing import normalize_theme_name, reask, run_agent_with_retry
 from pipeline.agents.prompts.theme_reviewer import THEME_REVIEWER_PROMPT
+from pipeline.core import pii
 
 logger = logging.getLogger(__name__)
 
@@ -263,12 +264,31 @@ class ThemeReviewerAgent:
                 # Validate claim IDs (worst case: same silent filter as before reask)
                 validated_claims = [kc for kc in review.key_claims if kc.claim_id in valid_ids]
 
+                # §3.2 output-side PII scrub: broader (PERSON-inclusive) than
+                # input-side, catches PII that leaked into generated prose.
+                synthesis, found_types = pii.scrub_text(
+                    review.synthesis, entities=pii.OUTPUT_SIDE_ENTITIES
+                )
+                consensus: list[str] = []
+                for point in review.consensus:
+                    scrubbed_point, point_types = pii.scrub_text(
+                        point, entities=pii.OUTPUT_SIDE_ENTITIES
+                    )
+                    consensus.append(scrubbed_point)
+                    found_types.extend(point_types)
+                for entity_type in dict.fromkeys(found_types):
+                    logger.info(
+                        "PII redacted (output-side): type=%s stage=theme_review theme_id=%s",
+                        entity_type,
+                        theme_id or review.theme_name,
+                    )
+
                 batch_reviews.append(
                     {
                         "theme_id": theme_id or review.theme_name,
                         "label": theme_meta.get("name", review.theme_name),
-                        "review": review.synthesis,
-                        "consensus": review.consensus,
+                        "review": synthesis,
+                        "consensus": consensus,
                         "disagreements": review.disagreements,
                         "gaps": review.gaps,
                         "claim_ids": [kc.claim_id for kc in validated_claims],

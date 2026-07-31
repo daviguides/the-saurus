@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 from pipeline.agents.models import create_model
 from pipeline.agents.parsing import reask, run_agent_with_retry
 from pipeline.agents.prompts.aggregator import SECTION_BATCH_PROMPT, TITLE_ABSTRACT_PROMPT
+from pipeline.core import pii
 
 logger = logging.getLogger(__name__)
 
@@ -187,6 +188,11 @@ class AggregatorAgent:
 
         # Post-process: resolve [N] → [N](p.X,§Y) in section content
         resolved_sections = _resolve_citations(merged.sections, merged.citations, claim_lookup)
+
+        # §3.2 output-side PII scrub: broader (PERSON-inclusive) than
+        # input-side, catches PII that leaked into generated prose. Runs
+        # after citation resolution so [N] markers are never touched.
+        resolved_sections = _scrub_sections(resolved_sections)
 
         # Build per-paper reference table
         references = _build_references(merged.citations, claim_lookup, paper_lookup)
@@ -525,6 +531,28 @@ def _resolve_citations(
         )
 
     return resolved
+
+
+def _scrub_sections(sections: list[ReviewSection]) -> list[ReviewSection]:
+    """Broader (PERSON-inclusive) output-side PII scrub on resolved section content.
+
+    Only content is scrubbed — title/abstract are the milestone-6
+    "presidio-output-side-rescrub-section-content" task's territory (runs
+    later, post-RAIL-Guard, on the final assembled result).
+    """
+    scrubbed = []
+    for section in sections:
+        content, entity_types = pii.scrub_text(section.content, entities=pii.OUTPUT_SIDE_ENTITIES)
+        for entity_type in dict.fromkeys(entity_types):
+            logger.info(
+                "PII redacted (output-side): type=%s stage=aggregation theme_id=%s",
+                entity_type,
+                section.theme_id,
+            )
+        scrubbed.append(
+            section if not entity_types else section.model_copy(update={"content": content})
+        )
+    return scrubbed
 
 
 def _build_references(
