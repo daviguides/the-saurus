@@ -16,6 +16,7 @@ from typing import Any, Literal
 import httpx
 from pydantic import BaseModel
 
+from pipeline.agents.review_text import build_review_text
 from pipeline.config import settings
 
 logger = logging.getLogger(__name__)
@@ -43,7 +44,7 @@ async def score_review(
         return JudgeGateResult(verdict="pass")
 
     payload = {
-        "actual_output": _build_actual_output(review),
+        "actual_output": build_review_text(review),
         "retrieval_context": [c.get("text", "") for c in claims],
         "expected_output": json.dumps(review),
     }
@@ -81,12 +82,3 @@ async def score_review(
     ]
     reason = f"judge gate failed rubric item(s): {', '.join(failed)}"
     return JudgeGateResult(verdict="quarantine", reason=reason, scores=scores)
-
-
-def _build_actual_output(review: dict[str, Any]) -> str:
-    """Flatten title/abstract/sections into the text the judge model scores."""
-    sections_text = "\n\n".join(
-        f"## {s.get('label', '')}\n{s.get('content', '')}"
-        for s in review.get("sections", [])
-    )
-    return f"# {review.get('title', '')}\n\n{review.get('abstract', '')}\n\n{sections_text}"
