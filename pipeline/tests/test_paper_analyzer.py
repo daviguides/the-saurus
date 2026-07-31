@@ -13,11 +13,13 @@ from pipeline.agents.paper_analyzer import (
     PaperAnalysisResult,
     PaperAnalyzerAgent,
     ThemeWithClaims,
+    _grounding_scores,
     _pack_under_budget,
     merge_chunk_results,
 )
 from pipeline.agents.prompts.paper_analyzer import PAPER_ANALYZER_PROMPT
 from pipeline.agents.protocol import Agent
+from pipeline.config import settings
 from pipeline.core.exceptions import TopicGateRejectedError
 
 # --- Constants ---
@@ -201,6 +203,19 @@ class TestPaperAnalyzerRun:
         mock_gate = AsyncMock(return_value=TopicGateResult(verdict="accept"))
         with patch("pipeline.agents.paper_analyzer.evaluate_topic_gate", mock_gate):
             yield mock_gate
+
+    @pytest.fixture(autouse=True)
+    def _grounded_by_default(self):
+        """These tests exercise output-splitting, not provenance grounding —
+        default embed_batch/cosine_similarity so every claim passes threshold
+        and reask is never triggered. Provenance-specific tests live in
+        TestPaperAnalyzerProvenance below."""
+        mock_embed_batch = AsyncMock(side_effect=lambda texts: [[1.0] for _ in texts])
+        with (
+            patch("pipeline.agents.paper_analyzer.embed_batch", mock_embed_batch),
+            patch("pipeline.agents.paper_analyzer.cosine_similarity", return_value=1.0),
+        ):
+            yield
 
     @pytest.mark.asyncio
     async def test_run_splits_themes_and_claims(self) -> None:
@@ -708,6 +723,11 @@ class TestPaperAnalyzerRunBudget:
                 "pipeline.agents.paper_analyzer._pack_under_budget",
                 AsyncMock(return_value=["Block one.", "Block two."]),
             ),
+            patch(
+                "pipeline.agents.paper_analyzer.embed_batch",
+                AsyncMock(side_effect=lambda texts: [[1.0] for _ in texts]),
+            ),
+            patch("pipeline.agents.paper_analyzer.cosine_similarity", return_value=0.9),
         ):
             agent = PaperAnalyzerAgent()
             result = await agent.run(input_data)
@@ -716,6 +736,141 @@ class TestPaperAnalyzerRunBudget:
         theme_names = {t["name"] for t in result["themes"]}
         assert theme_names == {"Theme A", "Theme B"}
         assert len(result["claims"]) == 2
+
+
+# --- Provenance grounding (_grounding_scores / _enforce_provenance / _drop_ungrounded) ---
+
+
+class TestGroundingScores:
+    """Unit tests for _grounding_scores: batches text+deep into one embed call."""
+
+    @pytest.mark.asyncio
+    async def test_batches_single_embed_call_in_text_then_deep_order(self) -> None:
+        claims = [
+            _make_claim(text="Claim A", page=1, paragraph=1),
+            _make_claim(text="Claim B", page=2, paragraph=2),
+        ]
+        mock_embed_batch = AsyncMock(return_value=[[1.0], [1.0], [1.0], [1.0]])
+
+        with (
+            patch("pipeline.agents.paper_analyzer.embed_batch", mock_embed_batch),
+            patch("pipeline.agents.paper_analyzer.cosine_similarity", return_value=0.42),
+        ):
+            scores = await _grounding_scores(claims)
+
+        mock_embed_batch.assert_awaited_once_with(["Claim A", "Claim B", CLAIM_DEEP, CLAIM_DEEP])
+        assert scores == [0.42, 0.42]
+
+    @pytest.mark.asyncio
+    async def test_empty_claims_returns_empty_without_calling_embed(self) -> None:
+        mock_embed_batch = AsyncMock()
+
+        with patch("pipeline.agents.paper_analyzer.embed_batch", mock_embed_batch):
+            scores = await _grounding_scores([])
+
+        assert scores == []
+        mock_embed_batch.assert_not_called()
+
+
+class TestPaperAnalyzerProvenance:
+    """Test PaperAnalyzerAgent.run()'s extraction-time grounding check."""
+
+    @pytest.fixture(autouse=True)
+    def _gate_accepts(self):
+        mock_gate = AsyncMock(return_value=TopicGateResult(verdict="accept"))
+        with patch("pipeline.agents.paper_analyzer.evaluate_topic_gate", mock_gate):
+            yield mock_gate
+
+    @pytest.mark.asyncio
+    async def test_no_reask_when_all_claims_grounded(self) -> None:
+        analysis = _make_analysis(num_themes=1)
+        mock_retry = AsyncMock(return_value=analysis)
+        mock_reask = AsyncMock()
+        mock_embed_batch = AsyncMock(side_effect=lambda texts: [[1.0] for _ in texts])
+
+        with (
+            patch("pipeline.agents.paper_analyzer.run_agent_with_retry", mock_retry),
+            patch("pipeline.agents.paper_analyzer.reask", mock_reask),
+            patch("pipeline.agents.paper_analyzer.embed_batch", mock_embed_batch),
+            patch("pipeline.agents.paper_analyzer.cosine_similarity", return_value=0.9),
+        ):
+            agent = PaperAnalyzerAgent()
+            result = await agent.run({"paper_id": PAPER_ID, "content": "text"})
+
+        mock_reask.assert_not_called()
+        assert len(result["claims"]) == 1
+
+    @pytest.mark.asyncio
+    async def test_reask_correction_keeps_claim(self) -> None:
+        """A flagged claim survives if the reask-corrected result re-passes the check."""
+        analysis = _make_analysis(num_themes=1)
+        corrected = _make_analysis(num_themes=1)
+        mock_retry = AsyncMock(return_value=analysis)
+        mock_reask = AsyncMock(return_value=corrected)
+        mock_embed_batch = AsyncMock(side_effect=lambda texts: [[1.0] for _ in texts])
+
+        with (
+            patch("pipeline.agents.paper_analyzer.run_agent_with_retry", mock_retry),
+            patch("pipeline.agents.paper_analyzer.reask", mock_reask),
+            patch("pipeline.agents.paper_analyzer.embed_batch", mock_embed_batch),
+            patch(
+                "pipeline.agents.paper_analyzer.cosine_similarity",
+                side_effect=[0.3, 0.9],
+            ),
+        ):
+            agent = PaperAnalyzerAgent()
+            result = await agent.run({"paper_id": PAPER_ID, "content": "text"})
+
+        mock_reask.assert_awaited_once()
+        assert len(result["claims"]) == 1
+
+    @pytest.mark.asyncio
+    async def test_reask_exhausted_drops_claim_and_logs(self, caplog) -> None:
+        """A claim still ungrounded after reask is dropped from the output and logged."""
+        analysis = _make_analysis(num_themes=1)
+        mock_retry = AsyncMock(return_value=analysis)
+        # Simulates reask()'s own fallback path: returns the original, uncorrected result.
+        mock_reask = AsyncMock(return_value=analysis)
+        mock_embed_batch = AsyncMock(side_effect=lambda texts: [[1.0] for _ in texts])
+
+        with (
+            patch("pipeline.agents.paper_analyzer.run_agent_with_retry", mock_retry),
+            patch("pipeline.agents.paper_analyzer.reask", mock_reask),
+            patch("pipeline.agents.paper_analyzer.embed_batch", mock_embed_batch),
+            patch(
+                "pipeline.agents.paper_analyzer.cosine_similarity",
+                side_effect=[0.3, 0.3],
+            ),
+            caplog.at_level("WARNING"),
+        ):
+            agent = PaperAnalyzerAgent()
+            result = await agent.run({"paper_id": PAPER_ID, "content": "text"})
+
+        mock_reask.assert_awaited_once()
+        assert result["claims"] == []
+        assert len(result["themes"]) == 1  # theme itself is kept, just empty of claims
+        assert "Provenance check dropped claim" in caplog.text
+
+    @pytest.mark.asyncio
+    async def test_threshold_is_configurable(self) -> None:
+        """A lowered threshold accepts a claim that would otherwise be flagged."""
+        analysis = _make_analysis(num_themes=1)
+        mock_retry = AsyncMock(return_value=analysis)
+        mock_reask = AsyncMock()
+        mock_embed_batch = AsyncMock(side_effect=lambda texts: [[1.0] for _ in texts])
+
+        with (
+            patch("pipeline.agents.paper_analyzer.run_agent_with_retry", mock_retry),
+            patch("pipeline.agents.paper_analyzer.reask", mock_reask),
+            patch("pipeline.agents.paper_analyzer.embed_batch", mock_embed_batch),
+            patch("pipeline.agents.paper_analyzer.cosine_similarity", return_value=0.5),
+            patch.object(settings, "provenance_similarity_threshold", 0.1),
+        ):
+            agent = PaperAnalyzerAgent()
+            result = await agent.run({"paper_id": PAPER_ID, "content": "text"})
+
+        mock_reask.assert_not_called()
+        assert len(result["claims"]) == 1
 
 
 # --- Protocol compliance ---
