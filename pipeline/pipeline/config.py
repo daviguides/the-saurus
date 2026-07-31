@@ -55,6 +55,11 @@ class Settings(BaseSettings):
     judge_gate_url: str | None = None
     judge_gate_timeout: float = 30.0
 
+    # Toxic content gate — opt-in runtime quarantine gate (§7.4), same
+    # opt-in-only-when-set convention as api_key/judge_gate_url above
+    toxic_gate_url: str | None = None
+    toxic_gate_timeout: float = 30.0
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",")]

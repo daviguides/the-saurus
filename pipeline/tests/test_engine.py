@@ -19,6 +19,7 @@ from pipeline.agents import (
     StubThemeReviewer,
 )
 from pipeline.agents.judge_gate import JudgeGateResult
+from pipeline.agents.toxic_gate import ToxicGateResult
 from pipeline.core import (
     Event,
     EventEmitter,
@@ -575,6 +576,50 @@ class TestPipelineExecution:
         assert (job_path / "review.yaml").exists()
         review = await read_yaml(job_path / "review.yaml")
         assert review is not None
+
+        event_types = [e.event_type for e in events]
+        assert EventType.REVIEW_QUARANTINED in event_types
+        assert EventType.REVIEW_GENERATED not in event_types
+        assert EventType.JOB_COMPLETED not in event_types
+
+    async def test_toxic_gate_quarantine(self, jobs_dir: Path):
+        """If the toxic gate quarantines, status is QUARANTINED, review.yaml
+        is still written, and the (more expensive) judge gate is never called."""
+        job_id, _ = _create_test_job(jobs_dir, paper_count=1)
+        emitter = EventEmitter(job_id, jobs_dir)
+        events = _collect_events(emitter)
+
+        with (
+            patch("pipeline.engine.orchestrator.get_or_create_emitter", return_value=emitter),
+            _patch_qdrant(),
+            _patch_paper_analyzer(),
+            _patch_theme_dedup(),
+            _patch_theme_reviewer(),
+            _patch_aggregator(),
+            patch(
+                "pipeline.engine.orchestrator.check_toxicity",
+                return_value=ToxicGateResult(
+                    verdict="quarantine",
+                    reason="toxic content detected in: title",
+                    score=0.9,
+                ),
+            ),
+            patch("pipeline.engine.orchestrator.score_review") as mock_score_review,
+        ):
+            await run_pipeline(job_id, jobs_dir)
+
+        status = await read_status(job_id, jobs_dir)
+        assert status is not None
+        assert status.status == JobState.QUARANTINED
+        assert status.quarantine_reason is not None
+        assert "title" in status.quarantine_reason
+
+        job_path = jobs_dir / job_id
+        assert (job_path / "review.yaml").exists()
+        review = await read_yaml(job_path / "review.yaml")
+        assert review is not None
+
+        mock_score_review.assert_not_called()
 
         event_types = [e.event_type for e in events]
         assert EventType.REVIEW_QUARANTINED in event_types
