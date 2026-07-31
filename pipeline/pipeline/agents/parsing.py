@@ -49,6 +49,7 @@ async def run_agent_with_retry[T: BaseModel](
     """
     from pipeline.agents.models import llm_semaphore
     from pipeline.config import settings
+    from pipeline.core.tokens import count_tokens
 
     if max_retries is None:
         max_retries = settings.llm_max_retries
@@ -60,9 +61,9 @@ async def run_agent_with_retry[T: BaseModel](
     stage = ctx.get("stage", "")
     paper_id = ctx.get("paper_id", "")
 
-    input_tokens = estimate_tokens(message)
+    input_tokens = await count_tokens(message)
     logger.info(
-        "Starting %s (stream) | input_chars=%d input_tokens~%d stage=%s",
+        "Starting %s (stream) | input_chars=%d input_tokens=%d stage=%s",
         agent_name, len(message), input_tokens, stage,
     )
 
