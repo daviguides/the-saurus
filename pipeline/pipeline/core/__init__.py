@@ -1,5 +1,6 @@
 """Pipeline core: persistence, events, models, vector indexing, and exceptions."""
 
+from .clustering import cluster_themes, reconcile_canonical_themes
 from .embedding import embed_batch, embed_text
 from .events import Event, EventEmitter, EventType
 from .exceptions import (
@@ -36,6 +37,7 @@ __all__ = [
     "QdrantIndexer",
     "StageError",
     "TopicGateRejectedError",
+    "cluster_themes",
     "create_job_dir",
     "embed_batch",
     "embed_text",
@@ -44,6 +46,7 @@ __all__ = [
     "read_events",
     "read_status",
     "read_yaml",
+    "reconcile_canonical_themes",
     "write_status",
     "write_yaml",
 ]
