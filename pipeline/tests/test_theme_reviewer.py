@@ -128,7 +128,7 @@ class TestBuildBatchMessage:
         ]
         claims_per_theme: dict[str, list[dict[str, Any]]] = {"t1": []}
         msg = _build_batch_message(themes, claims_per_theme)
-        assert "THEME 1: Chronobiology" in msg
+        assert '<theme id="t1" name="Chronobiology">' in msg
         assert "DESCRIPTION: Study of biological rhythms." in msg
         assert "Circadian Biology" in msg
         assert "Biological Rhythms" in msg
@@ -159,8 +159,8 @@ class TestBuildBatchMessage:
         msg = _build_batch_message(themes, claims_per_theme)
         assert "Paper: p1" in msg
         assert "Paper: p2" in msg
-        assert "[c1]" in msg
-        assert "[c2]" in msg
+        assert '<claim id="c1"' in msg
+        assert '<claim id="c2"' in msg
 
     def test_includes_claim_ids(self) -> None:
         """Claim IDs appear in bracket notation."""
@@ -177,14 +177,14 @@ class TestBuildBatchMessage:
             ],
         }
         msg = _build_batch_message(themes, claims_per_theme)
-        assert "[uuid-123]" in msg
+        assert '<claim id="uuid-123"' in msg
 
     def test_empty_claims(self) -> None:
         """Theme with no claims shows 0 papers."""
         themes = [{"id": "t1", "name": "X", "description": "Y"}]
         claims_per_theme: dict[str, list[dict[str, Any]]] = {"t1": []}
         msg = _build_batch_message(themes, claims_per_theme)
-        assert "THEME 1: X" in msg
+        assert '<theme id="t1" name="X">' in msg
         assert "0 paper(s)" in msg
 
     def test_multiple_themes_in_batch(self) -> None:
@@ -195,9 +195,19 @@ class TestBuildBatchMessage:
         ]
         claims_per_theme: dict[str, list[dict[str, Any]]] = {"t1": [], "t2": []}
         msg = _build_batch_message(themes, claims_per_theme)
-        assert "THEME 1: Theme A" in msg
-        assert "THEME 2: Theme B" in msg
+        assert '<theme id="t1" name="Theme A">' in msg
+        assert '<theme id="t2" name="Theme B">' in msg
         assert "Analyze the following 2 themes" in msg
+
+    def test_theme_tags_are_paired(self) -> None:
+        """Every <theme ...> opening tag has a matching closing </theme>."""
+        themes = [
+            {"id": "t1", "name": "Theme A", "description": "Desc A"},
+            {"id": "t2", "name": "Theme B", "description": "Desc B"},
+        ]
+        claims_per_theme: dict[str, list[dict[str, Any]]] = {"t1": [], "t2": []}
+        msg = _build_batch_message(themes, claims_per_theme)
+        assert msg.count("<theme ") == msg.count("</theme>") == 2
 
 
 # --- Agent run tests ---
