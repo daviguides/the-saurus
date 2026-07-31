@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-judge-gate
+  labels:
+    app.kubernetes.io/name: judge-gate
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.judgeGate.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: judge-gate
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: judge-gate
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: judge-gate
+          image: "{{ .Values.judgeGate.image.repository }}:{{ .Values.judgeGate.image.tag }}"
+          imagePullPolicy: {{ .Values.judgeGate.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8013
+              protocol: TCP
+          env:
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secrets
+                  key: ANTHROPIC_API_KEY
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            {{- toYaml .Values.judgeGate.resources | nindent 12 }}

@@ -13,6 +13,9 @@ data:
   # Restate
   PIPELINE_RESTATE_INGRESS_URL: "http://{{ .Release.Name }}-restate-ingress:8080"
 
+  # Judge gate — opt-in post-aggregation quality gate (§8.2)
+  PIPELINE_JUDGE_GATE_URL: "http://{{ .Release.Name }}-judge-gate:8013"
+
   # Qdrant
   QDRANT_URL: {{ .Values.config.qdrantUrl | quote }}
 

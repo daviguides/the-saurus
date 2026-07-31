@@ -35,6 +35,13 @@ services:
       - restate
     restart: unless-stopped
 
+  judge-gate:
+    build: ./evals
+    ports:
+      - "8013:8013"
+    env_file: ./evals/.env
+    restart: unless-stopped
+
   app:
     build:
       context: ./app

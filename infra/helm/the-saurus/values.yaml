@@ -69,6 +69,21 @@ papersMcp:
       cpu: 500m
       memory: 512Mi
 
+# -- Judge-gate runtime scoring service (post-aggregation LLM-as-Judge, §8.2)
+judgeGate:
+  replicaCount: 1
+  image:
+    repository: the-saurus/judge-gate
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
 # -- Qdrant vector database
 qdrant:
   image:
@@ -188,6 +203,9 @@ config:
 secrets:
   # Pipeline
   pipelineLlmApiKey: ""          # Google AI Studio API key (Gemini)
+
+  # Judge gate — different-model judge (§8.1 self-preference-bias avoidance)
+  anthropicApiKey: ""            # Anthropic API key (EVAL_JUDGE_PROVIDER default)
 
   # Langfuse
   langfuseDatabaseUrl: ""        # PostgreSQL connection string
