@@ -3,13 +3,10 @@
 import asyncio
 from unittest.mock import MagicMock, patch
 
-import pytest
+from agno.agent import RunCompletedEvent, RunErrorEvent
 from pydantic import BaseModel
 
-from agno.agent import RunCompletedEvent, RunErrorEvent
-
 from pipeline.agents.parsing import reask
-
 
 # --- Test model ---
 
