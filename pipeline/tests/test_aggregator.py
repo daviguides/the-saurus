@@ -18,10 +18,14 @@ from pipeline.agents.aggregator import (
     _build_batch_message,
     _build_claim_lookup,
     _build_references,
+    _CITATION_RAIL_PATH,
+    _citation_guard,
     _collect_claim_ids,
+    _enforce_citation_integrity,
     _find_orphan_refs,
     _merge_citations,
     _resolve_citations,
+    _strip_invalid_citations,
 )
 from pipeline.agents.protocol import Agent
 
@@ -483,6 +487,18 @@ def _make_title_abstract_result() -> TitleAbstractResult:
     return TitleAbstractResult(
         title="A Systematic Review of Circadian Regulation and Delivery Vectors",
         abstract="This review synthesizes findings from multiple studies.",
+    )
+
+
+def _make_aggregator_result() -> AggregatorResult:
+    """Final assembled result (post batch-merge + reduce) for citation-Guard tests."""
+    batch = _make_section_batch_result()
+    title_abstract = _make_title_abstract_result()
+    return AggregatorResult(
+        title=title_abstract.title,
+        abstract=title_abstract.abstract,
+        sections=batch.sections,
+        citations=batch.citations,
     )
 
 
@@ -1145,3 +1161,120 @@ class TestOutputSidePiiScrub:
             assert "Robert Chen" not in record.message
             assert "stage=aggregation" in record.message
             assert "theme_id=t1" in record.message
+
+
+class TestCitationIntegrityGuard:
+    """RAIL citation-integrity Guard: ref-resolves + claim_id-exists (§7.1)."""
+
+    def test_rail_file_loads_without_error(self) -> None:
+        assert _citation_guard is not None
+        assert _CITATION_RAIL_PATH.exists()
+
+    async def test_valid_result_passes_silently(self) -> None:
+        claim_lookup = _build_claim_lookup(_make_claims())
+        result = _make_aggregator_result()
+
+        with patch("pipeline.agents.aggregator.reask", new_callable=AsyncMock) as mock_reask:
+            out = await _enforce_citation_integrity(
+                agent=None, llm_result=result, message="msg",
+                claim_lookup=claim_lookup, on_event=None,
+            )
+
+        mock_reask.assert_not_called()
+        assert out == result
+
+    async def test_invalid_claim_id_triggers_reask(self) -> None:
+        claim_lookup = _build_claim_lookup(_make_claims())
+        bad_result = _make_aggregator_result().model_copy(
+            update={
+                "citations": [
+                    ReviewCitation(ref_number=1, claim_id="does-not-exist", paper_id="p1"),
+                    ReviewCitation(ref_number=2, claim_id="c2", paper_id="p2"),
+                    ReviewCitation(ref_number=3, claim_id="c3", paper_id="p1"),
+                ]
+            }
+        )
+        corrected_result = _make_aggregator_result()
+
+        with patch(
+            "pipeline.agents.aggregator.reask", new_callable=AsyncMock
+        ) as mock_reask:
+            mock_reask.return_value = corrected_result
+            out = await _enforce_citation_integrity(
+                agent=None, llm_result=bad_result, message="msg",
+                claim_lookup=claim_lookup, on_event=None,
+            )
+
+        mock_reask.assert_called_once()
+        failure_description = mock_reask.call_args.args[2]
+        assert "does-not-exist" in failure_description
+        assert out == corrected_result
+
+    async def test_orphan_citation_ref_triggers_reask(self) -> None:
+        claim_lookup = _build_claim_lookup(_make_claims())
+        bad_result = _make_aggregator_result()
+        bad_result.sections[0].citation_refs.append(99)  # no citations[].ref_number == 99
+        corrected_result = _make_aggregator_result()
+
+        with patch(
+            "pipeline.agents.aggregator.reask", new_callable=AsyncMock
+        ) as mock_reask:
+            mock_reask.return_value = corrected_result
+            out = await _enforce_citation_integrity(
+                agent=None, llm_result=bad_result, message="msg",
+                claim_lookup=claim_lookup, on_event=None,
+            )
+
+        mock_reask.assert_called_once()
+        failure_description = mock_reask.call_args.args[2]
+        assert "99" in failure_description
+        assert out == corrected_result
+
+    async def test_reask_exhausted_falls_back_to_strip_clean(self) -> None:
+        claim_lookup = _build_claim_lookup(_make_claims())
+        bad_result = _make_aggregator_result().model_copy(
+            update={
+                "citations": [
+                    ReviewCitation(ref_number=1, claim_id="does-not-exist", paper_id="p1"),
+                    ReviewCitation(ref_number=2, claim_id="c2", paper_id="p2"),
+                    ReviewCitation(ref_number=3, claim_id="c3", paper_id="p1"),
+                ]
+            }
+        )
+
+        with patch(
+            "pipeline.agents.aggregator.reask", new_callable=AsyncMock
+        ) as mock_reask:
+            # reask() itself falls back on exhaustion and returns the still-invalid result
+            mock_reask.return_value = bad_result
+            out = await _enforce_citation_integrity(
+                agent=None, llm_result=bad_result, message="msg",
+                claim_lookup=claim_lookup, on_event=None,
+            )
+
+        assert [c.claim_id for c in out.citations] == ["c2", "c3"]
+        assert 1 not in out.sections[0].citation_refs
+
+
+class TestStripInvalidCitations:
+    def test_valid_only_is_passthrough(self) -> None:
+        claim_lookup = _build_claim_lookup(_make_claims())
+        result = _make_aggregator_result()
+        out = _strip_invalid_citations(result, claim_lookup)
+        assert out == result
+
+    def test_drops_invalid_claim_id(self) -> None:
+        claim_lookup = _build_claim_lookup(_make_claims())
+        result = _make_aggregator_result().model_copy(
+            update={
+                "citations": [
+                    ReviewCitation(ref_number=1, claim_id="bogus", paper_id="p1"),
+                    ReviewCitation(ref_number=2, claim_id="c2", paper_id="p2"),
+                    ReviewCitation(ref_number=3, claim_id="c3", paper_id="p1"),
+                ]
+            }
+        )
+        out = _strip_invalid_citations(result, claim_lookup)
+        assert [c.ref_number for c in out.citations] == [2, 3]
+        assert 1 not in out.sections[0].citation_refs
+        assert 2 in out.sections[0].citation_refs

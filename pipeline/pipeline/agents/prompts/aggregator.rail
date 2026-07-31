@@ -1,0 +1,29 @@
+<rail version="0.1">
+<output type="object">
+  <string name="title" required="true" description="Literature review title" />
+  <string name="abstract" required="true" description="Literature review abstract" />
+  <list name="sections" required="true">
+    <object>
+      <string name="theme_id" required="true" />
+      <string name="label" required="true" />
+      <string name="content" required="true" />
+      <list name="citation_refs">
+        <integer
+          validators="citation-integrity/ref-resolves"
+          on-fail-citation-integrity_ref-resolves="reask"
+        />
+      </list>
+    </object>
+  </list>
+  <list name="citations">
+    <object>
+      <integer name="ref_number" required="true" />
+      <string name="claim_id" required="true"
+        validators="citation-integrity/claim-id-exists"
+        on-fail-citation-integrity_claim-id-exists="reask"
+      />
+      <string name="paper_id" required="true" />
+    </object>
+  </list>
+</output>
+</rail>

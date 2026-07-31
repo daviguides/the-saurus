@@ -7,9 +7,13 @@ import logging
 import re
 from collections import defaultdict
 from collections.abc import Awaitable, Callable
+from pathlib import Path
 from typing import Any
 
 from agno.agent import Agent as AgnoAgent
+from guardrails import Guard
+from guardrails.validator_base import register_validator
+from guardrails_ai.types import FailResult, PassResult, ValidationResult
 from pydantic import BaseModel, Field
 
 from pipeline.agents.models import create_model
@@ -63,6 +67,109 @@ class TitleAbstractResult(BaseModel):
 
     title: str = Field(min_length=1)
     abstract: str = Field(min_length=1)
+
+
+# --- Citation-integrity Guard (RAIL, §7.1) ---
+
+
+@register_validator(name="citation-integrity/ref-resolves", data_type="integer")
+def _validate_ref_resolves(value: int, metadata: dict[str, Any]) -> ValidationResult:
+    valid_refs: set[int] = metadata.get("valid_ref_numbers", set())
+    if value in valid_refs:
+        return PassResult()
+    return FailResult(
+        error_message=f"citation_refs contains [{value}], which has no matching citations[].ref_number"
+    )
+
+
+@register_validator(name="citation-integrity/claim-id-exists", data_type="string")
+def _validate_claim_id_exists(value: str, metadata: dict[str, Any]) -> ValidationResult:
+    registry: set[str] = metadata.get("claim_registry", set())
+    if value in registry:
+        return PassResult()
+    return FailResult(
+        error_message=f"citation claim_id={value!r} does not exist in the claim registry"
+    )
+
+
+_CITATION_RAIL_PATH = Path(__file__).parent / "prompts" / "aggregator.rail"
+_citation_guard = Guard.for_rail(str(_CITATION_RAIL_PATH))
+
+
+def _citation_metadata(
+    llm_result: AggregatorResult, claim_lookup: dict[str, dict[str, Any]]
+) -> dict[str, Any]:
+    return {
+        "valid_ref_numbers": {c.ref_number for c in llm_result.citations},
+        "claim_registry": set(claim_lookup.keys()),
+    }
+
+
+def _describe_citation_failures(outcome: Any) -> str:
+    reasons = [
+        f"{s.property_path}: {s.failure_reason}"
+        for s in (outcome.validation_summaries or [])
+        if s.failure_reason
+    ]
+    return "; ".join(reasons) or "citation integrity validation failed"
+
+
+def _strip_invalid_citations(
+    llm_result: AggregatorResult, claim_lookup: dict[str, dict[str, Any]]
+) -> AggregatorResult:
+    """Drop citations with unknown claim_id, then drop citation_refs that no longer resolve."""
+    valid_citations = [c for c in llm_result.citations if c.claim_id in claim_lookup]
+    valid_refs = {c.ref_number for c in valid_citations}
+    cleaned_sections = [
+        section.model_copy(
+            update={"citation_refs": [r for r in section.citation_refs if r in valid_refs]}
+        )
+        for section in llm_result.sections
+    ]
+    return llm_result.model_copy(update={"sections": cleaned_sections, "citations": valid_citations})
+
+
+async def _enforce_citation_integrity(
+    agent: AgnoAgent,
+    llm_result: AggregatorResult,
+    message: str,
+    claim_lookup: dict[str, dict[str, Any]],
+    *,
+    on_event: Callable[[Any], Awaitable[None]] | None,
+) -> AggregatorResult:
+    """Validate citation integrity via RAIL Guard; reask on violation, strip-clean on exhaustion.
+
+    The Guard is a pure detector (Guard.parse); the actual re-invocation reuses
+    the existing reask() helper rather than a second retry mechanism.
+    """
+    outcome = _citation_guard.parse(
+        llm_result.model_dump_json(),
+        metadata=_citation_metadata(llm_result, claim_lookup),
+        num_reasks=0,
+    )
+    if outcome.validation_passed:
+        return llm_result
+
+    failure_description = _describe_citation_failures(outcome)
+    logger.warning("Citation integrity violation, reasking: %s", failure_description)
+
+    llm_result = await reask(
+        agent, message, failure_description, AggregatorResult,
+        fallback=lambda: llm_result, on_event=on_event,
+    )
+
+    outcome = _citation_guard.parse(
+        llm_result.model_dump_json(),
+        metadata=_citation_metadata(llm_result, claim_lookup),
+        num_reasks=0,
+    )
+    if not outcome.validation_passed:
+        logger.warning(
+            "Citation integrity still violated after reask, stripping invalid entries: %s",
+            _describe_citation_failures(outcome),
+        )
+        llm_result = _strip_invalid_citations(llm_result, claim_lookup)
+    return llm_result
 
 
 # --- Agent ---
@@ -184,6 +291,18 @@ class AggregatorAgent:
             abstract=title_abstract.abstract,
             sections=all_sections,
             citations=all_citations,
+        )
+
+        # Citation integrity runs AFTER batch merge + global ref reconciliation
+        # (§7.1/§7.3): an orphan ref may only be detectable once all batches are
+        # assembled. Reask targets the section agent with the full-corpus message;
+        # _strip_invalid_citations is the deterministic guarantee if it can't recover.
+        merged = await _enforce_citation_integrity(
+            self._section_agent,
+            merged,
+            _build_batch_message(theme_reviews, claim_lookup, claim_to_ref),
+            claim_lookup,
+            on_event=on_event,
         )
 
         # Post-process: resolve [N] → [N](p.X,§Y) in section content
