@@ -86,33 +86,33 @@ class TestReviewQuality:
     """Evaluate pipeline review output quality."""
 
     def test_faithfulness(
-        self, review_output, papers_output, gemini_judge, pipeline_baseline,
+        self, review_output, papers_output, eval_judge, pipeline_baseline,
     ):
         """Review claims are grounded in source papers."""
         metric = create_faithfulness_metric(
-            model=gemini_judge,
+            model=eval_judge,
             threshold=pipeline_baseline["faithfulness"] * 0.95,
         )
         test_case = _build_review_test_case(review_output, papers_output)
         assert_test(test_case, [metric])
 
     def test_citation_accuracy(
-        self, review_output, papers_output, gemini_judge, pipeline_baseline,
+        self, review_output, papers_output, eval_judge, pipeline_baseline,
     ):
         """Inline citations resolve to real papers."""
         metric = create_citation_accuracy_metric(
-            model=gemini_judge,
+            model=eval_judge,
             threshold=pipeline_baseline["citation_accuracy"] * 0.95,
         )
         test_case = _build_review_test_case(review_output, papers_output)
         assert_test(test_case, [metric])
 
     def test_theme_quality(
-        self, review_output, papers_output, gemini_judge, pipeline_baseline,
+        self, review_output, papers_output, eval_judge, pipeline_baseline,
     ):
         """Themes are meaningful and non-redundant."""
         metric = create_theme_quality_metric(
-            model=gemini_judge,
+            model=eval_judge,
             threshold=pipeline_baseline["theme_quality"] * 0.95,
         )
         test_case = _build_review_test_case(review_output, papers_output)
