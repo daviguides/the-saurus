@@ -1,22 +1,19 @@
 """Shared fixtures for pipeline and assistant evals."""
 
 import json
-import os
 from pathlib import Path
 
 import pytest
-from deepeval.models import GeminiModel
+
+from judge import create_deepeval_judge
 
 EVALS_DIR = Path(__file__).parent
 
 
 @pytest.fixture(scope="session")
-def gemini_judge():
-    """Gemini model used as LLM judge for all evals."""
-    return GeminiModel(
-        model="gemini-2.5-flash",
-        api_key=os.environ.get("GOOGLE_API_KEY", os.environ.get("PIPELINE_LLM_API_KEY", "")),
-    )
+def eval_judge():
+    """LLM judge used for all evals (config-driven, see judge.py)."""
+    return create_deepeval_judge()
 
 
 @pytest.fixture(scope="session")
