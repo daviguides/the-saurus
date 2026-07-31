@@ -16,8 +16,8 @@ from pathlib import Path
 from deepeval.metrics import BiasMetric, HallucinationMetric, ToxicityMetric
 from deepeval.models import GeminiModel
 from deepeval.test_case import LLMTestCase
-
 from judge import create_deepeval_judge
+
 from pipeline.metrics.citation_accuracy import create_citation_accuracy_metric
 from pipeline.metrics.faithfulness import create_faithfulness_metric
 from pipeline.metrics.theme_quality import create_theme_quality_metric

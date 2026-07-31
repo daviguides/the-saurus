@@ -22,8 +22,8 @@ async def score_pipeline_traces():
     """Fetch pipeline traces from Langfuse and score with RAGAS."""
     try:
         from langfuse import get_client
-        from ragas.metrics.collections import Faithfulness, ResponseRelevancy
         from ragas.dataset_schema import SingleTurnSample
+        from ragas.metrics.collections import Faithfulness, ResponseRelevancy
     except ImportError:
         logger.error("Missing dependencies. Run: cd evals && uv sync")
         return

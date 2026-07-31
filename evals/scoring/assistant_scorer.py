@@ -22,8 +22,8 @@ async def score_assistant_traces():
     """Fetch assistant traces from Langfuse and score."""
     try:
         from langfuse import get_client
-        from ragas.metrics.collections import ResponseRelevancy
         from ragas.dataset_schema import SingleTurnSample
+        from ragas.metrics.collections import ResponseRelevancy
     except ImportError:
         logger.error("Missing dependencies. Run: cd evals && uv sync")
         return
