@@ -44,6 +44,11 @@ class Settings(BaseSettings):
     # WebSocket
     ws_path: str = "/ws"
 
+    # Judge gate — opt-in post-aggregation quality gate (unset = disabled,
+    # matches api_key's opt-in-only-when-set convention above)
+    judge_gate_url: str | None = None
+    judge_gate_timeout: float = 30.0
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",")]

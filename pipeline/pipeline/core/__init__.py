@@ -19,6 +19,7 @@ from .persistence import (
     write_yaml,
 )
 from .qdrant import QdrantIndexer, get_indexer
+from .quarantine import quarantine_job
 
 __all__ = [
     "AgentError",
@@ -37,6 +38,7 @@ __all__ = [
     "embed_batch",
     "embed_text",
     "get_indexer",
+    "quarantine_job",
     "read_events",
     "read_status",
     "read_yaml",

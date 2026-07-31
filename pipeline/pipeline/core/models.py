@@ -13,6 +13,7 @@ class JobState(StrEnum):
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
+    QUARANTINED = "quarantined"
 
 
 class JobStatus(BaseModel):
@@ -26,6 +27,7 @@ class JobStatus(BaseModel):
     created_at: datetime
     updated_at: datetime
     error: str | None = None
+    quarantine_reason: str | None = None
 
 
 class PaperEntry(BaseModel):

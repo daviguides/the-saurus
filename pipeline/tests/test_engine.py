@@ -18,6 +18,7 @@ from pipeline.agents import (
     StubThemeDedup,
     StubThemeReviewer,
 )
+from pipeline.agents.judge_gate import JudgeGateResult
 from pipeline.core import Event, EventEmitter, EventType, JobState, read_status, read_yaml
 from pipeline.engine import Stage, run_pipeline
 from pipeline.engine.stages import STAGES
@@ -389,3 +390,44 @@ class TestPipelineExecution:
 
         event_types = [e.event_type for e in events]
         assert EventType.JOB_FAILED in event_types
+
+    async def test_judge_gate_quarantine(self, jobs_dir: Path):
+        """If the judge gate quarantines, status is QUARANTINED, not COMPLETED/FAILED,
+        and review.yaml is still written (quarantine flags content, doesn't hide it)."""
+        job_id, _ = _create_test_job(jobs_dir, paper_count=1)
+        emitter = EventEmitter(job_id, jobs_dir)
+        events = _collect_events(emitter)
+
+        with (
+            patch("pipeline.engine.orchestrator.get_or_create_emitter", return_value=emitter),
+            _patch_qdrant(),
+            _patch_paper_analyzer(),
+            _patch_theme_dedup(),
+            _patch_theme_reviewer(),
+            _patch_aggregator(),
+            patch(
+                "pipeline.engine.orchestrator.score_review",
+                return_value=JudgeGateResult(
+                    verdict="quarantine",
+                    reason="judge gate failed rubric item(s): faithfulness",
+                    scores={"faithfulness": 0.2, "citation_accuracy": 0.85},
+                ),
+            ),
+        ):
+            await run_pipeline(job_id, jobs_dir)
+
+        status = await read_status(job_id, jobs_dir)
+        assert status is not None
+        assert status.status == JobState.QUARANTINED
+        assert status.quarantine_reason is not None
+        assert "faithfulness" in status.quarantine_reason
+
+        job_path = jobs_dir / job_id
+        assert (job_path / "review.yaml").exists()
+        review = await read_yaml(job_path / "review.yaml")
+        assert review is not None
+
+        event_types = [e.event_type for e in events]
+        assert EventType.REVIEW_QUARANTINED in event_types
+        assert EventType.REVIEW_GENERATED not in event_types
+        assert EventType.JOB_COMPLETED not in event_types

@@ -32,6 +32,7 @@ class EventType(StrEnum):
     THEME_DEDUPLICATED = "theme_deduplicated"
     CLAIM_EXTRACTED = "claim_extracted"
     REVIEW_GENERATED = "review_generated"
+    REVIEW_QUARANTINED = "review_quarantined"
     AGENT_STARTED = "agent_started"
     AGENT_TOOL_CALL = "agent_tool_call"
     AGENT_TOOL_RESULT = "agent_tool_result"

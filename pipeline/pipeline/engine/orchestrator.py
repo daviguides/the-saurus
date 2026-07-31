@@ -17,6 +17,7 @@ from pipeline.agents import (
     ThemeReviewerAgent,
 )
 from pipeline.agents.event_bridge import create_agent_event_callback
+from pipeline.agents.judge_gate import score_review
 from pipeline.agents.protocol import Agent
 from pipeline.core import (
     EventEmitter,
@@ -24,6 +25,7 @@ from pipeline.core import (
     JobState,
     JobStatus,
     PaperEntry,
+    quarantine_job,
     read_yaml,
     write_status,
     write_yaml,
@@ -85,8 +87,9 @@ async def run_pipeline(job_id: str, jobs_dir: Path) -> None:
         analysis_results = await _run_paper_analysis(ctx)
         dedup_result = await _run_theme_dedup(ctx, analysis_results)
         review_results = await _run_theme_review(ctx, dedup_result, analysis_results)
-        await _run_aggregation(ctx, review_results, analysis_results)
-        await _finalize_pipeline(ctx)
+        quarantined = await _run_aggregation(ctx, review_results, analysis_results)
+        if not quarantined:
+            await _finalize_pipeline(ctx)
     except Exception as exc:
         await _handle_pipeline_failure(ctx, exc)
     finally:
@@ -336,8 +339,12 @@ async def _run_aggregation(
     ctx: PipelineContext,
     review_results: ReviewResults,
     analysis_results: AnalysisResults,
-) -> None:
-    """Stage 4: Aggregation — produce cohesive literature review with citations."""
+) -> bool:
+    """Stage 4: Aggregation — produce cohesive literature review with citations.
+
+    Returns True if the job was quarantined by the post-aggregation judge
+    gate (§8.2), False if it completed normally.
+    """
     all_claims: list[dict[str, Any]] = []
     for _paper, result in analysis_results:
         all_claims.extend(result.get("claims", []))
@@ -356,13 +363,32 @@ async def _run_aggregation(
             for p in ctx.papers
         ],
     }, on_event=agg_cb)
+
+    # review.yaml is written regardless of the gate verdict — quarantine
+    # flags content for manual review, it doesn't hide it (§7.4/§8.2 policy).
     await write_yaml(ctx.job_path / "review.yaml", review, job_id=ctx.job_id)
     if ctx.indexer:
         ctx.fire_qdrant(
             ctx.indexer.index_review(ctx.job_id, review), operation="index_review",
         )
+
+    gate_result = await score_review(review, all_claims)
+    if gate_result.verdict == "quarantine":
+        logger.warning(
+            "Job %s quarantined by judge gate: %s", ctx.job_id, gate_result.reason,
+        )
+        await quarantine_job(
+            ctx.job_id, ctx.jobs_dir, ctx.emitter,
+            created_at=ctx.tracker.created_at,
+            paper_count=len(ctx.papers),
+            stage=Stage.AGGREGATION,
+            reason=gate_result.reason or "judge gate failed",
+        )
+        return True
+
     await ctx.emitter.emit(EventType.REVIEW_GENERATED, {"title": review.get("title", "")})
     await ctx.tracker.stage_complete(Stage.AGGREGATION)
+    return False
 
 
 # ---------------------------------------------------------------------------
