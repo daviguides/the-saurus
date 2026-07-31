@@ -32,6 +32,9 @@ class Settings(BaseSettings):
 
     # Ingestion — chunking
     chunk_token_threshold: int = 8000  # papers below this take the unchunked single-call path
+    chunk_similarity_threshold: float = (
+        0.55  # Tier 2: adjacent-paragraph cosine similarity split point
+    )
 
     # Persistence
     jobs_dir: str = "./jobs"

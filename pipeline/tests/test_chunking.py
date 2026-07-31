@@ -1,8 +1,10 @@
-"""Tests for Tier 1 heading-aware structural chunking."""
+"""Tests for two-tier chunking: heading-aware structural + embedding-similarity."""
 
 from __future__ import annotations
 
-from pipeline.ingestion.chunking import chunk_by_heading
+from unittest.mock import AsyncMock, patch
+
+from pipeline.ingestion.chunking import chunk_by_heading, chunk_by_similarity, chunk_paper
 from pipeline.ingestion.models import Paragraph
 
 # --- Helpers ---
@@ -115,3 +117,89 @@ class TestChunkByHeading:
         chunks = chunk_by_heading(paragraphs)
 
         assert len(chunks) == 3
+
+
+# --- chunk_by_similarity ---
+
+
+class TestChunkBySimilarity:
+    async def test_empty_input_returns_empty_list(self) -> None:
+        assert await chunk_by_similarity([]) == []
+
+    async def test_single_paragraph_returns_single_chunk(self) -> None:
+        paragraphs = [_p("Only paragraph.", index=1)]
+
+        chunks = await chunk_by_similarity(paragraphs)
+
+        assert chunks == [paragraphs]
+
+    async def test_splits_where_similarity_drops_below_threshold(self) -> None:
+        paragraphs = [
+            _p("First.", index=1),
+            _p("Similar to first.", index=2),
+            _p("Unrelated topic.", index=3),
+        ]
+        # p0/p1 identical direction (cos=1.0, stays together);
+        # p1/p2 orthogonal (cos=0.0, below default threshold 0.55 → split)
+        vectors = [[1.0, 0.0], [1.0, 0.0], [0.0, 1.0]]
+
+        with patch("pipeline.ingestion.chunking.embed_batch", AsyncMock(return_value=vectors)):
+            chunks = await chunk_by_similarity(paragraphs)
+
+        assert [p.text for p in chunks[0]] == ["First.", "Similar to first."]
+        assert [p.text for p in chunks[1]] == ["Unrelated topic."]
+
+    async def test_threshold_override_forces_no_split(self) -> None:
+        paragraphs = [_p("A", index=1), _p("B", index=2)]
+        vectors = [[1.0, 0.0], [0.0, 1.0]]  # orthogonal, cos=0.0
+
+        with patch("pipeline.ingestion.chunking.embed_batch", AsyncMock(return_value=vectors)):
+            chunks = await chunk_by_similarity(paragraphs, threshold=-1.0)
+
+        assert len(chunks) == 1
+
+    async def test_threshold_override_forces_split_every_pair(self) -> None:
+        paragraphs = [_p("A", index=1), _p("B", index=2)]
+        vectors = [[1.0, 0.0], [1.0, 0.0]]  # identical, cos=1.0
+
+        with patch("pipeline.ingestion.chunking.embed_batch", AsyncMock(return_value=vectors)):
+            chunks = await chunk_by_similarity(paragraphs, threshold=2.0)
+
+        assert len(chunks) == 2
+
+
+# --- chunk_paper (dispatch) ---
+
+
+class TestChunkPaper:
+    async def test_empty_input_returns_empty_list(self) -> None:
+        assert await chunk_paper([]) == []
+
+    async def test_well_structured_input_stays_on_tier_1(self) -> None:
+        paragraphs = [
+            _p("Introduction", index=1, is_heading=True, heading_level=2),
+            _p("Intro body.", index=2),
+            _p("Methods", index=3, is_heading=True, heading_level=2),
+            _p("Methods body.", index=4),
+        ]
+        mock_embed_batch = AsyncMock()
+
+        with patch("pipeline.ingestion.chunking.embed_batch", mock_embed_batch):
+            chunks = await chunk_paper(paragraphs)
+
+        assert len(chunks) == 2
+        mock_embed_batch.assert_not_called()
+
+    async def test_sparse_heading_input_falls_back_to_tier_2(self) -> None:
+        paragraphs = [
+            _p("First.", index=1),
+            _p("Similar to first.", index=2),
+            _p("Unrelated topic.", index=3),
+        ]
+        vectors = [[1.0, 0.0], [1.0, 0.0], [0.0, 1.0]]
+
+        with patch("pipeline.ingestion.chunking.embed_batch", AsyncMock(return_value=vectors)):
+            chunks = await chunk_paper(paragraphs)
+
+        assert [p.text for p in chunks[0]] == ["First.", "Similar to first."]
+        assert [p.text for p in chunks[1]] == ["Unrelated topic."]
