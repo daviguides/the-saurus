@@ -15,6 +15,24 @@ class Paragraph(BaseModel):
     heading_level: int = 0  # 1 = title, 2 = section heading, 0 = body
 
 
+def render_annotated_markdown(paragraphs: list[Paragraph]) -> str:
+    """Render a list of paragraphs as Markdown with [p.X,§Y] position annotations.
+
+    Shared by IngestedPaper.to_annotated_markdown and the chunker, which needs
+    to render an arbitrary paragraph subset the same way.
+    """
+    lines: list[str] = []
+    for p in paragraphs:
+        tag = f"[p.{p.page},§{p.index}]"
+        if p.is_heading:
+            prefix = "#" * max(p.heading_level, 1)
+            lines.append(f"{prefix} {tag} {p.text}")
+        else:
+            lines.append(f"{tag} {p.text}")
+        lines.append("")  # blank line between paragraphs
+    return "\n".join(lines).rstrip("\n") + "\n"
+
+
 class IngestedPaper(BaseModel):
     """Structured output of PDF ingestion with paragraph-level metadata."""
 
@@ -37,13 +55,4 @@ class IngestedPaper(BaseModel):
 
     def to_annotated_markdown(self) -> str:
         """Render paragraphs as Markdown with [p.X,§Y] position annotations."""
-        lines: list[str] = []
-        for p in self.paragraphs:
-            tag = f"[p.{p.page},§{p.index}]"
-            if p.is_heading:
-                prefix = "#" * max(p.heading_level, 1)
-                lines.append(f"{prefix} {tag} {p.text}")
-            else:
-                lines.append(f"{tag} {p.text}")
-            lines.append("")  # blank line between paragraphs
-        return "\n".join(lines).rstrip("\n") + "\n"
+        return render_annotated_markdown(self.paragraphs)
