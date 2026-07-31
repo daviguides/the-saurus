@@ -9,9 +9,11 @@ from uuid import uuid4
 from agno.agent import Agent as AgnoAgent
 from pydantic import BaseModel, Field
 
+from pipeline.agents.gate import evaluate_topic_gate
 from pipeline.agents.models import create_model
 from pipeline.agents.parsing import normalize_theme_name, run_agent_with_retry
 from pipeline.agents.prompts.paper_analyzer import PAPER_ANALYZER_PROMPT
+from pipeline.core.exceptions import TopicGateRejectedError
 
 # --- Pydantic output models ---
 
@@ -77,6 +79,18 @@ class PaperAnalyzerAgent:
     ) -> dict[str, Any]:
         paper_id = data["paper_id"]
         content = data["content"]
+
+        gate_result = await evaluate_topic_gate(
+            content=content,
+            page_count=data.get("page_count", 0),
+            title=data.get("title", ""),
+            authors=data.get("authors", []),
+        )
+        if gate_result.verdict == "reject":
+            raise TopicGateRejectedError(
+                f"Paper {paper_id} rejected by topic gate: {gate_result.reason}",
+                reason=gate_result.reason or "topic gate rejected",
+            )
 
         analysis = await run_agent_with_retry(
             self._agent, content, PaperAnalysisResult,
