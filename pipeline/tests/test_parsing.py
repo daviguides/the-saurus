@@ -4,16 +4,14 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pydantic import BaseModel
-
 from agno.agent import RunCompletedEvent, RunErrorEvent
+from pydantic import BaseModel
 
 from pipeline.agents.parsing import (
     AgentResponseError,
     estimate_tokens,
     run_agent_with_retry,
 )
-
 
 # --- Constants ---
 
