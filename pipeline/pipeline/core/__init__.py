@@ -1,5 +1,6 @@
 """Pipeline core: persistence, events, models, vector indexing, and exceptions."""
 
+from .embedding import embed_batch, embed_text
 from .events import Event, EventEmitter, EventType
 from .exceptions import (
     AgentError,
@@ -33,6 +34,8 @@ __all__ = [
     "QdrantIndexer",
     "StageError",
     "create_job_dir",
+    "embed_batch",
+    "embed_text",
     "get_indexer",
     "read_events",
     "read_status",

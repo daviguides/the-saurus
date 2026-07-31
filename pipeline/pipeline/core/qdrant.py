@@ -7,11 +7,12 @@ import logging
 from typing import Any
 from uuid import UUID, uuid4
 
-from agno.knowledge.embedder.google import GeminiEmbedder
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, PointStruct, VectorParams
 
 from pipeline.config import settings
+
+from .embedding import EMBEDDING_DIMENSION, embed_batch, embed_text
 
 logger = logging.getLogger(__name__)
 
@@ -23,9 +24,6 @@ THEME_REVIEWS = "theme_reviews"
 LITERATURE_REVIEW = "literature_review"
 
 ALL_COLLECTIONS = [PAPER_THEMES, PAPER_CLAIMS, THEME_MAP, THEME_REVIEWS, LITERATURE_REVIEW]
-
-# gemini-embedding-001 default output: 1536 dimensions
-EMBEDDING_DIMENSION = 1536
 
 
 class QdrantIndexer:
@@ -40,10 +38,6 @@ class QdrantIndexer:
         self._client = QdrantClient(
             url=settings.qdrant_url,
             api_key=settings.qdrant_api_key,
-        )
-        self._embedder = GeminiEmbedder(
-            id=settings.qdrant_embedding_model,
-            api_key=settings.llm_api_key,
         )
         self._dimension = EMBEDDING_DIMENSION
 
@@ -72,13 +66,12 @@ class QdrantIndexer:
         await asyncio.to_thread(_sync)
 
     async def _embed(self, text: str) -> list[float]:
-        """Embed a single text via Agno GeminiEmbedder."""
-        return await self._embedder.async_get_embedding(text)
+        """Embed a single text via the shared embedding module."""
+        return await embed_text(text)
 
     async def _embed_batch(self, texts: list[str]) -> list[list[float]]:
-        """Embed multiple texts via Agno GeminiEmbedder."""
-        vectors, _usage = await self._embedder.async_get_embeddings_batch_and_usage(texts)
-        return vectors
+        """Embed multiple texts via the shared embedding module."""
+        return await embed_batch(texts)
 
     async def _upsert(self, collection: str, points: list[PointStruct]) -> None:
         """Upsert points to a collection in a thread."""
