@@ -481,7 +481,7 @@ def _make_section_batch_result() -> SectionBatchResult:
 
 def _make_title_abstract_result() -> TitleAbstractResult:
     return TitleAbstractResult(
-        title="Literature Review on Chronobiology and Gene Therapy",
+        title="A Systematic Review of Circadian Regulation and Delivery Vectors",
         abstract="This review synthesizes findings from multiple studies.",
     )
 
@@ -995,8 +995,8 @@ class TestOutputSidePiiScrub:
         assert '[1](cite:1 "p.2,§3")' in result["sections"][0]["content"]
         assert '[2](cite:2 "p.4,§1")' in result["sections"][0]["content"]
 
-    async def test_title_and_abstract_not_scrubbed(self) -> None:
-        """title/abstract are M6-T4's territory — not touched by this task's scrub."""
+    async def test_title_and_abstract_scrubbed(self) -> None:
+        """Reduce-pass title/abstract are re-scrubbed on the final assembled result."""
         section_result = SectionBatchResult(
             sections=[
                 ReviewSection(
@@ -1018,8 +1018,75 @@ class TestOutputSidePiiScrub:
             mock_retry.side_effect = _run_agent_side_effect(section_result, pii_title_result)
             result = await agent.run({"theme_reviews": [{"theme_id": "t1", "label": "Theme"}]})
 
-        assert result["title"] == "Robert Chen's Review"
-        assert result["abstract"] == "Contact j.rodriguez@example.edu for details."
+        assert "Robert Chen" not in result["title"]
+        assert "[PERSON]" in result["title"]
+        assert "j.rodriguez@example.edu" not in result["abstract"]
+        assert "[EMAIL]" in result["abstract"]
+
+    async def test_clean_title_abstract_unaffected(
+        self, title_result: TitleAbstractResult
+    ) -> None:
+        """No PII in title/abstract → they pass through unchanged."""
+        section_result = _make_section_batch_result()
+
+        with patch("pipeline.agents.aggregator.AgnoAgent"):
+            agent = AggregatorAgent()
+
+        with patch(
+            "pipeline.agents.aggregator.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
+            mock_retry.side_effect = _run_agent_side_effect(section_result, title_result)
+            result = await agent.run(
+                {
+                    "theme_reviews": _make_theme_reviews(),
+                    "claims": _make_claims(),
+                    "papers": _make_papers(),
+                }
+            )
+
+        assert result["title"] == title_result.title
+        assert result["abstract"] == title_result.abstract
+
+    async def test_title_abstract_redaction_logged_without_pii_value(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Title/abstract redaction logs entity type + field, never the raw PII value."""
+        section_result = SectionBatchResult(
+            sections=[
+                ReviewSection(
+                    theme_id="t1", label="Theme", content="Clean content.", citation_refs=[]
+                ),
+            ],
+            citations=[],
+        )
+        pii_title_result = TitleAbstractResult(
+            title="Robert Chen's Review", abstract="Contact j.rodriguez@example.edu for details."
+        )
+
+        with patch("pipeline.agents.aggregator.AgnoAgent"):
+            agent = AggregatorAgent()
+
+        with (
+            patch(
+                "pipeline.agents.aggregator.run_agent_with_retry", new_callable=AsyncMock
+            ) as mock_retry,
+            caplog.at_level("INFO", logger="pipeline.agents.aggregator"),
+        ):
+            mock_retry.side_effect = _run_agent_side_effect(section_result, pii_title_result)
+            await agent.run({"theme_reviews": [{"theme_id": "t1", "label": "Theme"}]})
+
+        reduce_logs = [
+            r
+            for r in caplog.records
+            if "PII redacted (output-side)" in r.message and "stage=aggregation_reduce" in r.message
+        ]
+        assert len(reduce_logs) >= 1
+        fields_logged = {r.message for r in reduce_logs}
+        assert any("field=title" in m for m in fields_logged)
+        assert any("field=abstract" in m for m in fields_logged)
+        for record in reduce_logs:
+            assert "Robert Chen" not in record.message
+            assert "j.rodriguez@example.edu" not in record.message
 
     async def test_clean_section_content_unaffected(
         self, title_result: TitleAbstractResult

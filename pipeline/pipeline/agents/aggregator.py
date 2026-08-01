@@ -194,6 +194,11 @@ class AggregatorAgent:
         # after citation resolution so [N] markers are never touched.
         resolved_sections = _scrub_sections(resolved_sections)
 
+        # M6 output-side re-scrub of the reduce-pass fields (title/abstract)
+        # that _scrub_sections leaves untouched. Runs on the final assembled
+        # result, after citation reconciliation, immediately before return.
+        scrubbed_title, scrubbed_abstract = _scrub_title_abstract(merged.title, merged.abstract)
+
         # Build per-paper reference table
         references = _build_references(merged.citations, claim_lookup, paper_lookup)
 
@@ -224,8 +229,8 @@ class AggregatorAgent:
         ]
 
         return {
-            "title": merged.title,
-            "abstract": merged.abstract,
+            "title": scrubbed_title,
+            "abstract": scrubbed_abstract,
             "sections": sections_out,
             "citations": citations_out,
             "references": references,
@@ -536,9 +541,8 @@ def _resolve_citations(
 def _scrub_sections(sections: list[ReviewSection]) -> list[ReviewSection]:
     """Broader (PERSON-inclusive) output-side PII scrub on resolved section content.
 
-    Only content is scrubbed — title/abstract are the milestone-6
-    "presidio-output-side-rescrub-section-content" task's territory (runs
-    later, post-RAIL-Guard, on the final assembled result).
+    Only content is scrubbed here — the reduce-pass fields (title/abstract)
+    are scrubbed by _scrub_title_abstract on the final assembled result.
     """
     scrubbed = []
     for section in sections:
@@ -553,6 +557,26 @@ def _scrub_sections(sections: list[ReviewSection]) -> list[ReviewSection]:
             section if not entity_types else section.model_copy(update={"content": content})
         )
     return scrubbed
+
+
+def _scrub_title_abstract(title: str, abstract: str) -> tuple[str, str]:
+    """Output-side PII scrub on the reduce-pass title/abstract.
+
+    Reuses the same shared engine and PERSON-inclusive entity scope as
+    _scrub_sections, applied to the final assembled result's title and
+    abstract — the reduce-pass fields that section scrubbing does not cover.
+    """
+    results: list[str] = []
+    for field, text in (("title", title), ("abstract", abstract)):
+        cleaned, entity_types = pii.scrub_text(text, entities=pii.OUTPUT_SIDE_ENTITIES)
+        for entity_type in dict.fromkeys(entity_types):
+            logger.info(
+                "PII redacted (output-side): type=%s stage=aggregation_reduce field=%s",
+                entity_type,
+                field,
+            )
+        results.append(cleaned)
+    return results[0], results[1]
 
 
 def _build_references(
