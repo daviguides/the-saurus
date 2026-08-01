@@ -45,14 +45,10 @@ NLI_DOWNGRADE_PREFIX = "Not verified as "
 def _find_latest_job(jobs_dir: Path) -> Path:
     """Return the most-recently-modified job subdirectory under jobs_dir."""
     if not jobs_dir.exists():
-        raise FileNotFoundError(
-            f"No jobs directory at {jobs_dir}. Run: make eval-run-pipeline"
-        )
+        raise FileNotFoundError(f"No jobs directory at {jobs_dir}. Run: make eval-run-pipeline")
     job_dirs = [p for p in jobs_dir.iterdir() if p.is_dir()]
     if not job_dirs:
-        raise FileNotFoundError(
-            f"No jobs found in {jobs_dir}. Run: make eval-run-pipeline"
-        )
+        raise FileNotFoundError(f"No jobs found in {jobs_dir}. Run: make eval-run-pipeline")
     return max(job_dirs, key=lambda p: p.stat().st_mtime)
 
 
@@ -89,13 +85,15 @@ def tabulate_residual_error(theme_reviews_dir: Path) -> dict[str, Any]:
         gaps = review.get("gaps") or []
         theme_downgrades = sum(1 for entry in gaps if entry.startswith(NLI_DOWNGRADE_PREFIX))
 
-        per_theme.append({
-            "theme_id": theme_id,
-            "sentences": len(grounding),
-            "grounded": theme_grounded,
-            "contradicted": theme_contradicted,
-            "nli_downgrades": theme_downgrades,
-        })
+        per_theme.append(
+            {
+                "theme_id": theme_id,
+                "sentences": len(grounding),
+                "grounded": theme_grounded,
+                "contradicted": theme_contradicted,
+                "nli_downgrades": theme_downgrades,
+            }
+        )
 
         total_sentences += len(grounding)
         total_grounded += theme_grounded
