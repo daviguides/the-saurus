@@ -31,6 +31,26 @@ def _mock_grounding_classifier():
         yield mock_cls
 
 
+@pytest.fixture(autouse=True)
+def _mock_nli_llm():
+    """Default: every verification echoes back the claimed label (no mismatch),
+    and entailment resolves ENTAILED — keeps existing tests' happy-path
+    assertions unaffected unless a test overrides these return values."""
+    with (
+        patch(
+            "pipeline.agents.theme_reviewer.verify_consensus_disagreement",
+            new_callable=AsyncMock,
+        ) as mock_consensus,
+        patch(
+            "pipeline.agents.theme_reviewer.verify_sentence_entailment",
+            new_callable=AsyncMock,
+        ) as mock_entailment,
+    ):
+        mock_consensus.side_effect = lambda agent, claims, entry, claimed_as, **kw: claimed_as
+        mock_entailment.return_value = "ENTAILED"
+        yield mock_consensus, mock_entailment
+
+
 # --- Pydantic model tests ---
 
 
@@ -873,7 +893,10 @@ class TestThemeReviewerReask:
     ) -> None:
         """Multiple mismatched theme_names in one batch trigger exactly one reask() call."""
         second_theme = {
-            **_make_theme(), "id": "canonical-2", "name": "Gene Therapy", "label": "Gene Therapy",
+            **_make_theme(),
+            "id": "canonical-2",
+            "name": "Gene Therapy",
+            "label": "Gene Therapy",
         }
         themes = [_make_theme(), second_theme]
         mismatched_result = BatchThemeReviewResult(
@@ -1109,6 +1132,7 @@ class TestSynthesisGrounding:
                 "verdict": "grounded",
                 "best_claim_id": "c1",
                 "scores": {"contradiction": 0.02, "entailment": 0.9, "neutral": 0.08},
+                "resolved_by": "deberta",
             }
         ]
         assert "flagged contradicted" not in caplog.text
@@ -1144,37 +1168,6 @@ class TestSynthesisGrounding:
         assert results[0]["synthesis_grounding"][0]["verdict"] == "contradicted"
         assert "flagged contradicted" in caplog.text
         assert "Chronobiology" in caplog.text
-
-    async def test_borderline_sentence_attaches_without_warning(
-        self,
-        theme: dict[str, Any],
-        claims: list[dict[str, Any]],
-        mock_batch_result: BatchThemeReviewResult,
-        _mock_grounding_classifier: Any,
-        caplog: pytest.LogCaptureFixture,
-    ) -> None:
-        """Borderline verdicts attach for M4-T6 to consume later; no warning fires."""
-        _mock_grounding_classifier.return_value.classify_synthesis.return_value = [
-            SentenceGroundingResult(
-                sentence="Circadian rhythms may relate to physiology.",
-                verdict="borderline",
-                best_claim_id="c1",
-                scores={"contradiction": 0.3, "entailment": 0.4, "neutral": 0.3},
-            ),
-        ]
-
-        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
-            agent = ThemeReviewerAgent()
-
-        with patch(
-            "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
-        ) as mock_retry:
-            mock_retry.return_value = mock_batch_result
-            with caplog.at_level("WARNING"):
-                results = await agent.run_batch([theme], claims)
-
-        assert results[0]["synthesis_grounding"][0]["verdict"] == "borderline"
-        assert "flagged contradicted" not in caplog.text
 
     async def test_classify_synthesis_called_with_theme_claims(
         self,
@@ -1224,3 +1217,278 @@ class TestSynthesisGrounding:
             results = await agent.run_batch([theme], [])
 
         assert results[0]["synthesis_grounding"] == []
+
+
+# --- LLM-as-NLI tests (M4-T6: §5.2 consensus/disagreement + §5.4 escalation) ---
+
+
+class TestConsensusDisagreementNLI:
+    """Test _process_batch's wiring into verify_consensus_disagreement (§5.2)."""
+
+    @pytest.fixture
+    def theme(self) -> dict[str, Any]:
+        return _make_theme()
+
+    @pytest.fixture
+    def claims(self) -> list[dict[str, Any]]:
+        return _make_claims()
+
+    @pytest.fixture
+    def mock_batch_result(self) -> BatchThemeReviewResult:
+        return _make_batch_review_result()
+
+    async def test_mismatched_consensus_downgrades_to_gaps(
+        self,
+        theme: dict[str, Any],
+        claims: list[dict[str, Any]],
+        mock_batch_result: BatchThemeReviewResult,
+        _mock_nli_llm: Any,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """A consensus entry the verifier says NEITHER moves to gaps, not silently kept."""
+        mock_consensus, _ = _mock_nli_llm
+        mock_consensus.side_effect = None
+        mock_consensus.return_value = "NEITHER"
+
+        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
+            agent = ThemeReviewerAgent()
+
+        with patch(
+            "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
+            mock_retry.return_value = mock_batch_result
+            with caplog.at_level("WARNING"):
+                results = await agent.run_batch([theme], claims)
+
+        original_entry = mock_batch_result.reviews[0].consensus[0]
+        assert original_entry not in results[0]["consensus"]
+        assert any(original_entry in g for g in results[0]["gaps"])
+        assert "failed NLI verification" in caplog.text
+        assert "Chronobiology" in caplog.text
+
+    async def test_mismatched_disagreement_downgrades_to_gaps(
+        self,
+        theme: dict[str, Any],
+        claims: list[dict[str, Any]],
+        mock_batch_result: BatchThemeReviewResult,
+        _mock_nli_llm: Any,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """A disagreement entry the verifier says NEITHER moves to gaps."""
+        mock_consensus, _ = _mock_nli_llm
+
+        def _side_effect(agent, claims, entry, claimed_as, **kw):
+            return "NEITHER" if claimed_as == "DISAGREEMENT" else claimed_as
+
+        mock_consensus.side_effect = _side_effect
+
+        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
+            agent = ThemeReviewerAgent()
+
+        with patch(
+            "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
+            mock_retry.return_value = mock_batch_result
+            with caplog.at_level("WARNING"):
+                results = await agent.run_batch([theme], claims)
+
+        original_entry = mock_batch_result.reviews[0].disagreements[0]
+        assert original_entry not in results[0]["disagreements"]
+        assert any(original_entry in g for g in results[0]["gaps"])
+        assert "failed NLI verification" in caplog.text
+
+    async def test_happy_path_no_mismatch_keeps_entries(
+        self,
+        theme: dict[str, Any],
+        claims: list[dict[str, Any]],
+        mock_batch_result: BatchThemeReviewResult,
+        _mock_nli_llm: Any,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """Default fixture echoes the claimed label back — nothing downgrades."""
+        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
+            agent = ThemeReviewerAgent()
+
+        with patch(
+            "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
+            mock_retry.return_value = mock_batch_result
+            with caplog.at_level("WARNING"):
+                results = await agent.run_batch([theme], claims)
+
+        assert results[0]["consensus"] == mock_batch_result.reviews[0].consensus
+        assert results[0]["disagreements"] == mock_batch_result.reviews[0].disagreements
+        assert results[0]["gaps"] == mock_batch_result.reviews[0].gaps
+        assert "failed NLI verification" not in caplog.text
+
+    async def test_empty_claims_skips_verification(
+        self,
+        theme: dict[str, Any],
+        mock_batch_result: BatchThemeReviewResult,
+        _mock_nli_llm: Any,
+    ) -> None:
+        """A theme with no claims skips consensus/disagreement verification entirely."""
+        mock_consensus, _ = _mock_nli_llm
+
+        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
+            agent = ThemeReviewerAgent()
+
+        with patch(
+            "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
+            mock_retry.return_value = mock_batch_result
+            results = await agent.run_batch([theme], [])
+
+        mock_consensus.assert_not_called()
+        assert results[0]["consensus"] == mock_batch_result.reviews[0].consensus
+        assert results[0]["disagreements"] == mock_batch_result.reviews[0].disagreements
+
+
+class TestBorderlineEscalation:
+    """Test _process_batch's wiring into verify_sentence_entailment (§5.4 escalation)."""
+
+    @pytest.fixture
+    def theme(self) -> dict[str, Any]:
+        return _make_theme()
+
+    @pytest.fixture
+    def claims(self) -> list[dict[str, Any]]:
+        return _make_claims()
+
+    @pytest.fixture
+    def mock_batch_result(self) -> BatchThemeReviewResult:
+        return _make_batch_review_result()
+
+    def _borderline_grounding(self) -> list[SentenceGroundingResult]:
+        return [
+            SentenceGroundingResult(
+                sentence="Circadian rhythms may relate to physiology.",
+                verdict="borderline",
+                best_claim_id="c1",
+                scores={"contradiction": 0.3, "entailment": 0.4, "neutral": 0.3},
+            ),
+        ]
+
+    async def test_entailed_resolves_to_grounded(
+        self,
+        theme: dict[str, Any],
+        claims: list[dict[str, Any]],
+        mock_batch_result: BatchThemeReviewResult,
+        _mock_grounding_classifier: Any,
+        _mock_nli_llm: Any,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """A borderline sentence the verifier says ENTAILED resolves to grounded."""
+        _mock_grounding_classifier.return_value.classify_synthesis.return_value = (
+            self._borderline_grounding()
+        )
+        _, mock_entailment = _mock_nli_llm
+        mock_entailment.return_value = "ENTAILED"
+
+        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
+            agent = ThemeReviewerAgent()
+
+        with patch(
+            "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
+            mock_retry.return_value = mock_batch_result
+            with caplog.at_level("WARNING"):
+                results = await agent.run_batch([theme], claims)
+
+        grounding = results[0]["synthesis_grounding"][0]
+        assert grounding["verdict"] == "grounded"
+        assert grounding["resolved_by"] == "llm_as_nli"
+        assert "flagged contradicted" not in caplog.text
+
+    async def test_contradicted_resolves_and_warns(
+        self,
+        theme: dict[str, Any],
+        claims: list[dict[str, Any]],
+        mock_batch_result: BatchThemeReviewResult,
+        _mock_grounding_classifier: Any,
+        _mock_nli_llm: Any,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """A borderline sentence the verifier says CONTRADICTED folds into the
+        existing contradicted-count warning."""
+        _mock_grounding_classifier.return_value.classify_synthesis.return_value = (
+            self._borderline_grounding()
+        )
+        _, mock_entailment = _mock_nli_llm
+        mock_entailment.return_value = "CONTRADICTED"
+
+        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
+            agent = ThemeReviewerAgent()
+
+        with patch(
+            "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
+            mock_retry.return_value = mock_batch_result
+            with caplog.at_level("WARNING"):
+                results = await agent.run_batch([theme], claims)
+
+        grounding = results[0]["synthesis_grounding"][0]
+        assert grounding["verdict"] == "contradicted"
+        assert grounding["resolved_by"] == "llm_as_nli"
+        assert "flagged contradicted" in caplog.text
+
+    async def test_neutral_resolves_to_contradicted(
+        self,
+        theme: dict[str, Any],
+        claims: list[dict[str, Any]],
+        mock_batch_result: BatchThemeReviewResult,
+        _mock_grounding_classifier: Any,
+        _mock_nli_llm: Any,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """NEUTRAL also flags — §5.4 flags any sentence that doesn't entail,
+        not only sentences a claim actively contradicts."""
+        _mock_grounding_classifier.return_value.classify_synthesis.return_value = (
+            self._borderline_grounding()
+        )
+        _, mock_entailment = _mock_nli_llm
+        mock_entailment.return_value = "NEUTRAL"
+
+        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
+            agent = ThemeReviewerAgent()
+
+        with patch(
+            "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
+            mock_retry.return_value = mock_batch_result
+            with caplog.at_level("WARNING"):
+                results = await agent.run_batch([theme], claims)
+
+        grounding = results[0]["synthesis_grounding"][0]
+        assert grounding["verdict"] == "contradicted"
+        assert "flagged contradicted" in caplog.text
+
+    async def test_no_borderline_skips_entailment_call(
+        self,
+        theme: dict[str, Any],
+        claims: list[dict[str, Any]],
+        mock_batch_result: BatchThemeReviewResult,
+        _mock_grounding_classifier: Any,
+        _mock_nli_llm: Any,
+    ) -> None:
+        """Cost-tiering: grounded/contradicted sentences never reach the LLM call."""
+        _mock_grounding_classifier.return_value.classify_synthesis.return_value = [
+            SentenceGroundingResult(
+                sentence="Two papers demonstrate circadian regulation.",
+                verdict="grounded",
+                best_claim_id="c1",
+                scores={"contradiction": 0.02, "entailment": 0.9, "neutral": 0.08},
+            ),
+        ]
+        _, mock_entailment = _mock_nli_llm
+
+        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
+            agent = ThemeReviewerAgent()
+
+        with patch(
+            "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
+            mock_retry.return_value = mock_batch_result
+            await agent.run_batch([theme], claims)
+
+        mock_entailment.assert_not_called()
