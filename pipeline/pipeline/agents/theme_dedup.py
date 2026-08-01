@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable
+from itertools import combinations
 from typing import Any
 from uuid import uuid4
 
@@ -10,6 +12,7 @@ from agno.agent import Agent as AgnoAgent
 from pydantic import BaseModel, Field
 
 from pipeline.agents.models import create_model
+from pipeline.agents.nli import GROUP_CONTRADICTION_THRESHOLD, GroupEquivalenceVerifier
 from pipeline.agents.parsing import reask, run_agent_with_retry
 from pipeline.agents.prompts.theme_dedup import THEME_DEDUP_PROMPT
 
@@ -52,6 +55,8 @@ class ThemeDedupAgent:
             structured_outputs=True,
             debug_mode=settings.llm_debug_mode,
         )
+        # Own DeBERTa instance, independent of theme_reviewer.py's (d-019).
+        self._verifier = GroupEquivalenceVerifier()
 
     async def run(
         self,
@@ -107,6 +112,51 @@ class ThemeDedupAgent:
                 },
                 on_event=on_event,
             )
+
+        # DeBERTa cross-encoder verification (§6.1): for each multi-member
+        # group, check every member-pair both directions. A group is flagged
+        # only when BOTH directions predict contradiction above threshold —
+        # see agents/nli.py's GROUP_CONTRADICTION_THRESHOLD comment for why
+        # this replaces the design doc's literal argmax rule.
+        pairs: list[tuple[str, str]] = []
+        pair_owners: list[tuple[ThemeGroup, int, int]] = []
+        for group in dedup.groups:
+            valid_indices = [i for i in group.member_indices if 0 <= i < len(all_themes)]
+            for a, b in combinations(valid_indices, 2):
+                text_a = f"{all_themes[a].get('name', '')}: {all_themes[a].get('description', '')}"
+                text_b = f"{all_themes[b].get('name', '')}: {all_themes[b].get('description', '')}"
+                pairs.append((text_a, text_b))
+                pairs.append((text_b, text_a))
+                pair_owners.append((group, a, b))
+
+        if pairs:
+            contradiction_probs = await asyncio.to_thread(self._verifier.contradiction_probs, pairs)
+            contradicted = [
+                (group, a, b)
+                for i, (group, a, b) in enumerate(pair_owners)
+                if contradiction_probs[2 * i] >= GROUP_CONTRADICTION_THRESHOLD
+                and contradiction_probs[2 * i + 1] >= GROUP_CONTRADICTION_THRESHOLD
+            ]
+            if contradicted:
+                offenders = "; ".join(
+                    f"themes at indices {a} and {b} were grouped as '{group.canonical_name}' "
+                    "but do not appear semantically equivalent"
+                    for group, a, b in contradicted
+                )
+                pre_verification_dedup = dedup
+                dedup = await reask(
+                    self._agent,
+                    message,
+                    f"{offenders}. Reconsider these groupings.",
+                    ThemeDedupResult,
+                    fallback=lambda: pre_verification_dedup,
+                    context={
+                        "stage": "theme_dedup",
+                        "theme_count": len(all_themes),
+                        "raw_theme_count": len(all_themes),
+                    },
+                    on_event=on_event,
+                )
 
         # Map LLM groups back to concrete theme data
         theme_map: dict[str, list[str]] = {}

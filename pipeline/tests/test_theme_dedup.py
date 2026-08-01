@@ -14,6 +14,17 @@ from pipeline.agents.theme_dedup import (
     ThemeGroup,
 )
 
+
+@pytest.fixture(autouse=True)
+def _mock_group_verifier():
+    """Prevent every ThemeDedupAgent() construction from loading the real
+    DeBERTa model — contradiction_probs defaults to all-zero (no groups
+    flagged) unless a test overrides it."""
+    with patch("pipeline.agents.theme_dedup.GroupEquivalenceVerifier") as mock_cls:
+        mock_cls.return_value.contradiction_probs.side_effect = lambda pairs: [0.0] * len(pairs)
+        yield mock_cls
+
+
 # --- Pydantic model tests ---
 
 
@@ -381,3 +392,112 @@ class TestThemeDedupReask:
 
         chrono = result["themes"][0]
         assert chrono["source_theme_ids"] == ["t1"]
+
+
+# --- DeBERTa group verification (§6.1) → reask() tests ---
+
+
+class TestThemeDedupEntailmentVerification:
+    """Test the DeBERTa contradiction-check → reask() path."""
+
+    @pytest.fixture
+    def input_themes(self) -> list[dict[str, Any]]:
+        return _make_input_themes()
+
+    async def test_run_no_reask_when_no_contradiction(
+        self, input_themes: list[dict[str, Any]]
+    ) -> None:
+        """Default mocked contradiction_probs (all zero): verification never
+        triggers reask()."""
+        mock_dedup = _make_dedup_result()
+
+        with patch("pipeline.agents.theme_dedup.AgnoAgent"):
+            agent = ThemeDedupAgent()
+
+        with (
+            patch(
+                "pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock
+            ) as mock_retry,
+            patch("pipeline.agents.theme_dedup.reask", new_callable=AsyncMock) as mock_reask,
+        ):
+            mock_retry.return_value = mock_dedup
+            await agent.run({"themes": input_themes})
+
+        mock_reask.assert_not_called()
+
+    async def test_run_reasks_when_both_directions_contradicted(
+        self, input_themes: list[dict[str, Any]]
+    ) -> None:
+        """A group whose pair contradicts in BOTH directions triggers reask()
+        naming the offending indices and canonical name."""
+        two_member_dedup = ThemeDedupResult(
+            groups=[
+                ThemeGroup(
+                    canonical_name="Chronobiology",
+                    description="Study of biological rhythms.",
+                    member_indices=[0, 2],
+                ),
+                ThemeGroup(
+                    canonical_name="Gene Therapy",
+                    description="Therapeutic delivery of genetic material.",
+                    member_indices=[1],
+                ),
+            ]
+        )
+        corrected_dedup = _make_dedup_result()
+
+        with patch("pipeline.agents.theme_dedup.AgnoAgent"):
+            agent = ThemeDedupAgent()
+        agent._verifier.contradiction_probs.side_effect = None
+        agent._verifier.contradiction_probs.return_value = [0.9, 0.9]
+
+        with (
+            patch(
+                "pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock
+            ) as mock_retry,
+            patch("pipeline.agents.theme_dedup.reask", new_callable=AsyncMock) as mock_reask,
+        ):
+            mock_retry.return_value = two_member_dedup
+            mock_reask.return_value = corrected_dedup
+            result = await agent.run({"themes": input_themes})
+
+        mock_reask.assert_called_once()
+        failure_description = mock_reask.call_args[0][2]
+        assert "indices 0 and 2" in failure_description
+        assert "Chronobiology" in failure_description
+
+        chrono = next(t for t in result["themes"] if t["name"] == "Chronobiology")
+        assert set(chrono["source_theme_ids"]) == {"t1", "t3", "t5"}
+
+    async def test_run_falls_back_to_pass_through_on_reask_exhaustion(
+        self, input_themes: list[dict[str, Any]]
+    ) -> None:
+        """reask() exhaustion (fallback returns pre-verification result) leaves
+        the flagged group's members in place, unmerged-but-unchanged."""
+        two_member_dedup = ThemeDedupResult(
+            groups=[
+                ThemeGroup(
+                    canonical_name="Chronobiology",
+                    description="Study of biological rhythms.",
+                    member_indices=[0, 2],
+                ),
+            ]
+        )
+
+        with patch("pipeline.agents.theme_dedup.AgnoAgent"):
+            agent = ThemeDedupAgent()
+        agent._verifier.contradiction_probs.side_effect = None
+        agent._verifier.contradiction_probs.return_value = [0.9, 0.9]
+
+        with (
+            patch(
+                "pipeline.agents.theme_dedup.run_agent_with_retry", new_callable=AsyncMock
+            ) as mock_retry,
+            patch("pipeline.agents.theme_dedup.reask", new_callable=AsyncMock) as mock_reask,
+        ):
+            mock_retry.return_value = two_member_dedup
+            mock_reask.return_value = two_member_dedup  # simulates reask's own fallback firing
+            result = await agent.run({"themes": input_themes})
+
+        chrono = result["themes"][0]
+        assert set(chrono["source_theme_ids"]) == {"t1", "t3"}
