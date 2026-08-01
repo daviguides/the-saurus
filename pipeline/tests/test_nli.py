@@ -7,7 +7,12 @@ import types
 from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
 
-from pipeline.agents.nli import GroundingClassifier, SentenceGroundingResult, split_sentences
+from pipeline.agents.nli import (
+    GroundingClassifier,
+    GroupEquivalenceVerifier,
+    SentenceGroundingResult,
+    split_sentences,
+)
 
 # --- split_sentences (pure function, no model) ---
 
@@ -224,3 +229,45 @@ class TestGroundingClassifier:
             GroundingClassifier()
 
         fake_torch.set_num_threads.assert_called_once_with(1)
+
+
+# --- GroupEquivalenceVerifier (mocked CrossEncoder — no real model load) ---
+
+
+class TestGroupEquivalenceVerifier:
+    """contradiction_probs: label-order lookup, batching, empty short-circuit."""
+
+    def test_empty_pairs_returns_empty_without_model_call(self) -> None:
+        mock_model = _mock_cross_encoder([])
+        with _patch_backends(mock_model):
+            verifier = GroupEquivalenceVerifier()
+            result = verifier.contradiction_probs([])
+
+        assert result == []
+        mock_model.predict.assert_not_called()
+
+    def test_extracts_contradiction_index_from_config_label_order(self) -> None:
+        mock_model = _mock_cross_encoder([[0.7, 0.2, 0.1], [0.05, 0.9, 0.05]])
+        with _patch_backends(mock_model):
+            verifier = GroupEquivalenceVerifier()
+            result = verifier.contradiction_probs(
+                [("theme a", "theme b"), ("theme b", "theme a")]
+            )
+
+        assert result == [0.7, 0.05]
+        mock_model.predict.assert_called_once_with(
+            [("theme a", "theme b"), ("theme b", "theme a")],
+            apply_softmax=True,
+        )
+
+    def test_label_order_not_hardcoded(self) -> None:
+        """Even if id2label order differs, contradiction is read from config."""
+        mock_model = MagicMock()
+        mock_model.config.id2label = {0: "entailment", 1: "neutral", 2: "contradiction"}
+        mock_model.predict.return_value = [[0.1, 0.2, 0.9]]
+
+        with _patch_backends(mock_model):
+            verifier = GroupEquivalenceVerifier()
+            result = verifier.contradiction_probs([("a", "b")])
+
+        assert result == [0.9]
