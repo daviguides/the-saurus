@@ -913,7 +913,11 @@ class TestAggregatorReask:
             mock_reask.side_effect = fake_reask
             await agent.run({"theme_reviews": reviews})
 
-        assert mock_reask.call_count == 1
+        # 1 orphan-batch reask (task-1 layer) + 1 citation-integrity Guard reask
+        # (this task's layer, post-merge): the batch reask's fallback leaves the
+        # ref [99] still orphaned, so the Guard's own parse also fails and fires
+        # its own reask via the same shared reask() helper.
+        assert mock_reask.call_count == 2
 
     async def test_reask_exhaustion_falls_back_and_terminal_pass_strips_clean(
         self,
@@ -938,7 +942,10 @@ class TestAggregatorReask:
             mock_reask.side_effect = fake_reask
             result = await agent.run(input_data)
 
-        mock_reask.assert_called_once()
+        # Same double-layer as above: orphan-batch reask exhausts (still orphaned),
+        # then the citation-integrity Guard's post-merge reask also exhausts,
+        # falling through to strip-clean.
+        assert mock_reask.call_count == 2
         content = result["sections"][0]["content"]
         assert "[2]" not in content
         assert '[1](cite:1 "p.2,§3")' in content
@@ -1176,8 +1183,11 @@ class TestCitationIntegrityGuard:
 
         with patch("pipeline.agents.aggregator.reask", new_callable=AsyncMock) as mock_reask:
             out = await _enforce_citation_integrity(
-                agent=None, llm_result=result, message="msg",
-                claim_lookup=claim_lookup, on_event=None,
+                agent=None,
+                llm_result=result,
+                message="msg",
+                claim_lookup=claim_lookup,
+                on_event=None,
             )
 
         mock_reask.assert_not_called()
@@ -1196,13 +1206,14 @@ class TestCitationIntegrityGuard:
         )
         corrected_result = _make_aggregator_result()
 
-        with patch(
-            "pipeline.agents.aggregator.reask", new_callable=AsyncMock
-        ) as mock_reask:
+        with patch("pipeline.agents.aggregator.reask", new_callable=AsyncMock) as mock_reask:
             mock_reask.return_value = corrected_result
             out = await _enforce_citation_integrity(
-                agent=None, llm_result=bad_result, message="msg",
-                claim_lookup=claim_lookup, on_event=None,
+                agent=None,
+                llm_result=bad_result,
+                message="msg",
+                claim_lookup=claim_lookup,
+                on_event=None,
             )
 
         mock_reask.assert_called_once()
@@ -1216,13 +1227,14 @@ class TestCitationIntegrityGuard:
         bad_result.sections[0].citation_refs.append(99)  # no citations[].ref_number == 99
         corrected_result = _make_aggregator_result()
 
-        with patch(
-            "pipeline.agents.aggregator.reask", new_callable=AsyncMock
-        ) as mock_reask:
+        with patch("pipeline.agents.aggregator.reask", new_callable=AsyncMock) as mock_reask:
             mock_reask.return_value = corrected_result
             out = await _enforce_citation_integrity(
-                agent=None, llm_result=bad_result, message="msg",
-                claim_lookup=claim_lookup, on_event=None,
+                agent=None,
+                llm_result=bad_result,
+                message="msg",
+                claim_lookup=claim_lookup,
+                on_event=None,
             )
 
         mock_reask.assert_called_once()
@@ -1242,14 +1254,15 @@ class TestCitationIntegrityGuard:
             }
         )
 
-        with patch(
-            "pipeline.agents.aggregator.reask", new_callable=AsyncMock
-        ) as mock_reask:
+        with patch("pipeline.agents.aggregator.reask", new_callable=AsyncMock) as mock_reask:
             # reask() itself falls back on exhaustion and returns the still-invalid result
             mock_reask.return_value = bad_result
             out = await _enforce_citation_integrity(
-                agent=None, llm_result=bad_result, message="msg",
-                claim_lookup=claim_lookup, on_event=None,
+                agent=None,
+                llm_result=bad_result,
+                message="msg",
+                claim_lookup=claim_lookup,
+                on_event=None,
             )
 
         assert [c.claim_id for c in out.citations] == ["c2", "c3"]

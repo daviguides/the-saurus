@@ -158,8 +158,12 @@ async def _enforce_citation_integrity(
     logger.warning("Citation integrity violation, reasking: %s", failure_description)
 
     llm_result = await reask(
-        agent, message, failure_description, AggregatorResult,
-        fallback=lambda: llm_result, on_event=on_event,
+        agent,
+        message,
+        failure_description,
+        AggregatorResult,
+        fallback=lambda: llm_result,
+        on_event=on_event,
     )
 
     outcome = _citation_guard.parse(
