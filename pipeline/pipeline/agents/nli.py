@@ -18,9 +18,6 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
-import torch
-from sentence_transformers import CrossEncoder
-
 MODEL_NAME = "cross-encoder/nli-deberta-v3-base"
 
 # Starting thresholds, not tuned against a labeled dev set — see plan.md.
@@ -55,6 +52,13 @@ class GroundingClassifier:
     """Wraps a DeBERTa-v3 MNLI cross-encoder for premise/hypothesis entailment scoring."""
 
     def __init__(self, model_name: str = MODEL_NAME) -> None:
+        # torch + sentence_transformers (transformers/huggingface) are imported
+        # here, not at module top level: `import pipeline.agents.*` must stay cheap
+        # for callers that never construct a classifier — a top-level import costs
+        # 130-300s wall-clock and blew the test budget.
+        import torch
+        from sentence_transformers import CrossEncoder
+
         torch.set_num_threads(1)  # match the pod's 1-CPU limit (spike methodology)
         self._model = CrossEncoder(model_name)
         id2label = self._model.config.id2label
