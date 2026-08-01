@@ -6,7 +6,7 @@ import asyncio
 import logging
 from collections import defaultdict
 from collections.abc import Awaitable, Callable
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from typing import Any
 
 from agno.agent import Agent as AgnoAgent
@@ -16,6 +16,14 @@ from pydantic import BaseModel, Field
 
 from pipeline.agents.models import create_model
 from pipeline.agents.nli import GroundingClassifier
+from pipeline.agents.nli_llm import (
+    CONSENSUS_NLI_PROMPT,
+    ENTAILMENT_NLI_PROMPT,
+    ConsensusDisagreementVerdict,
+    EntailmentVerdict,
+    verify_consensus_disagreement,
+    verify_sentence_entailment,
+)
 from pipeline.agents.parsing import normalize_theme_name, reask, run_agent_with_retry
 from pipeline.agents.prompts.theme_reviewer import THEME_REVIEWER_PROMPT
 from pipeline.core import pii
@@ -121,6 +129,24 @@ class ThemeReviewerAgent:
         self._batch_size = batch_size
         # Own DeBERTa instance, independent of theme_dedup.py's (d-019).
         self._grounding = GroundingClassifier()
+        # LLM-as-NLI escalation tier (§5.2, §5.4) — lightweight API-client
+        # wrappers, no memory-budget implication unlike self._grounding.
+        self._consensus_nli_agent = AgnoAgent(
+            name="ThemeReviewerConsensusNLI",
+            model=create_model(),
+            instructions=CONSENSUS_NLI_PROMPT,
+            output_schema=ConsensusDisagreementVerdict,
+            structured_outputs=True,
+            debug_mode=settings.llm_debug_mode,
+        )
+        self._entailment_nli_agent = AgnoAgent(
+            name="ThemeReviewerEntailmentNLI",
+            model=create_model(),
+            instructions=ENTAILMENT_NLI_PROMPT,
+            output_schema=EntailmentVerdict,
+            structured_outputs=True,
+            debug_mode=settings.llm_debug_mode,
+        )
 
     async def run_batch(
         self,
@@ -287,12 +313,86 @@ class ThemeReviewerAgent:
                         theme_id or review.theme_name,
                     )
 
+                # §5.2 LLM-as-NLI: verify consensus/disagreement entries against
+                # the theme's full claim set (no per-entry claim_id linkage
+                # exists to check against instead — f-009). A mismatch downgrades
+                # the entry into gaps rather than leaving an unverified assertion.
+                theme_claims = batch_claims.get(theme_id, [])
+                gaps = list(review.gaps)
+
+                async def _verify_section(entries: list[str], claimed_as: str) -> list[str]:
+                    if not theme_claims or not entries:
+                        return entries
+                    labels = await asyncio.gather(
+                        *(
+                            verify_consensus_disagreement(
+                                self._consensus_nli_agent,
+                                theme_claims,
+                                entry,
+                                claimed_as,
+                                context={
+                                    "stage": "theme_review",
+                                    "check": "consensus_nli",
+                                    "theme_id": theme_id,
+                                },
+                            )
+                            for entry in entries
+                        )
+                    )
+                    kept: list[str] = []
+                    for entry, label in zip(entries, labels, strict=True):
+                        if label == claimed_as:
+                            kept.append(entry)
+                        else:
+                            gaps.append(f"Not verified as {claimed_as.lower()}: {entry}")
+                            logger.warning(
+                                "ThemeReviewer batch %d theme '%s': %s entry failed NLI "
+                                "verification (verifier said %s)",
+                                batch_idx,
+                                theme_meta.get("name", review.theme_name),
+                                claimed_as,
+                                label,
+                            )
+                    return kept
+
+                consensus = await _verify_section(consensus, "CONSENSUS")
+                disagreements = await _verify_section(list(review.disagreements), "DISAGREEMENT")
+
                 # Tier 0.5 grounding pre-filter (M4-T5): synthesis sentences vs
-                # the theme's evidence claims. Borderline entries are left for
-                # M4-T6's LLM-as-NLI escalation to resolve — not acted on here.
-                grounding_results = self._grounding.classify_synthesis(
-                    synthesis, batch_claims.get(theme_id, [])
-                )
+                # the theme's evidence claims. Borderline entries escalate to
+                # §5.4's LLM-as-NLI resolution below.
+                grounding_results = self._grounding.classify_synthesis(synthesis, theme_claims)
+
+                borderline = [r for r in grounding_results if r.verdict == "borderline"]
+                if borderline and theme_claims:
+                    resolved_labels = await asyncio.gather(
+                        *(
+                            verify_sentence_entailment(
+                                self._entailment_nli_agent,
+                                theme_claims,
+                                r.sentence,
+                                context={
+                                    "stage": "theme_review",
+                                    "check": "entailment_nli",
+                                    "theme_id": theme_id,
+                                },
+                            )
+                            for r in borderline
+                        )
+                    )
+                    resolved_by_sentence = {
+                        r.sentence: ("grounded" if label == "ENTAILED" else "contradicted")
+                        for r, label in zip(borderline, resolved_labels, strict=True)
+                    }
+                    grounding_results = [
+                        replace(
+                            r, verdict=resolved_by_sentence[r.sentence], resolved_by="llm_as_nli"
+                        )
+                        if r.sentence in resolved_by_sentence
+                        else r
+                        for r in grounding_results
+                    ]
+
                 contradicted = [r for r in grounding_results if r.verdict == "contradicted"]
                 if contradicted:
                     logger.warning(
@@ -309,8 +409,8 @@ class ThemeReviewerAgent:
                         "label": theme_meta.get("name", review.theme_name),
                         "review": synthesis,
                         "consensus": consensus,
-                        "disagreements": review.disagreements,
-                        "gaps": review.gaps,
+                        "disagreements": disagreements,
+                        "gaps": gaps,
                         "claim_ids": [kc.claim_id for kc in validated_claims],
                         "key_claims": [kc.model_dump() for kc in validated_claims],
                         "synthesis_grounding": [asdict(r) for r in grounding_results],
