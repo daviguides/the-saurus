@@ -16,10 +16,12 @@ pipeline:
   resources:
     requests:
       cpu: 250m
-      memory: 512Mi
+      # 1Gi: fits this task's DeBERTa instance (~799MB RSS, M1-T5 spike)
+      # plus M5-T3's independent instance (d-019 — no shared/singleton load).
+      memory: 1Gi
     limits:
       cpu: "1"
-      memory: 1Gi
+      memory: 3Gi
   env:
     llmModel: gemini-2.5-flash
     llmMaxConcurrent: "2"

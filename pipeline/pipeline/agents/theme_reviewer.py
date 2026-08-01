@@ -6,6 +6,7 @@ import asyncio
 import logging
 from collections import defaultdict
 from collections.abc import Awaitable, Callable
+from dataclasses import asdict
 from typing import Any
 
 from agno.agent import Agent as AgnoAgent
@@ -14,6 +15,7 @@ from guardrails.validator_base import FailResult, PassResult, Validator, registe
 from pydantic import BaseModel, Field
 
 from pipeline.agents.models import create_model
+from pipeline.agents.nli import GroundingClassifier
 from pipeline.agents.parsing import normalize_theme_name, reask, run_agent_with_retry
 from pipeline.agents.prompts.theme_reviewer import THEME_REVIEWER_PROMPT
 from pipeline.core import pii
@@ -117,6 +119,8 @@ class ThemeReviewerAgent:
             debug_mode=settings.llm_debug_mode,
         )
         self._batch_size = batch_size
+        # Own DeBERTa instance, independent of theme_dedup.py's (d-019).
+        self._grounding = GroundingClassifier()
 
     async def run_batch(
         self,
@@ -283,6 +287,22 @@ class ThemeReviewerAgent:
                         theme_id or review.theme_name,
                     )
 
+                # Tier 0.5 grounding pre-filter (M4-T5): synthesis sentences vs
+                # the theme's evidence claims. Borderline entries are left for
+                # M4-T6's LLM-as-NLI escalation to resolve — not acted on here.
+                grounding_results = self._grounding.classify_synthesis(
+                    synthesis, batch_claims.get(theme_id, [])
+                )
+                contradicted = [r for r in grounding_results if r.verdict == "contradicted"]
+                if contradicted:
+                    logger.warning(
+                        "ThemeReviewer batch %d theme '%s': %d synthesis sentence(s) "
+                        "flagged contradicted",
+                        batch_idx,
+                        theme_meta.get("name", review.theme_name),
+                        len(contradicted),
+                    )
+
                 batch_reviews.append(
                     {
                         "theme_id": theme_id or review.theme_name,
@@ -293,6 +313,7 @@ class ThemeReviewerAgent:
                         "gaps": review.gaps,
                         "claim_ids": [kc.claim_id for kc in validated_claims],
                         "key_claims": [kc.model_dump() for kc in validated_claims],
+                        "synthesis_grounding": [asdict(r) for r in grounding_results],
                     }
                 )
             return batch_reviews

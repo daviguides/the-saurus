@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from guardrails.validator_base import FailResult, PassResult
 
+from pipeline.agents.nli import SentenceGroundingResult
 from pipeline.agents.theme_reviewer import (
     BatchThemeReviewResult,
     ClaimIdMembership,
@@ -18,6 +19,17 @@ from pipeline.agents.theme_reviewer import (
     _build_claim_id_failure_description,
     _claim_id_guard,
 )
+
+
+@pytest.fixture(autouse=True)
+def _mock_grounding_classifier():
+    """Prevent every ThemeReviewerAgent() construction from loading the real
+    DeBERTa model — classify_synthesis defaults to no findings unless a test
+    overrides the return value."""
+    with patch("pipeline.agents.theme_reviewer.GroundingClassifier") as mock_cls:
+        mock_cls.return_value.classify_synthesis.return_value = []
+        yield mock_cls
+
 
 # --- Pydantic model tests ---
 
@@ -1043,3 +1055,172 @@ class TestOutputSidePiiScrub:
             assert "Robert Chen" not in record.message
             assert "stage=theme_review" in record.message
             assert "theme_id=" in record.message
+
+
+# --- synthesis grounding tests (M4-T5: DeBERTa Tier 0.5 pre-filter) ---
+
+
+class TestSynthesisGrounding:
+    """Test _process_batch's wiring into GroundingClassifier.classify_synthesis."""
+
+    @pytest.fixture
+    def theme(self) -> dict[str, Any]:
+        return _make_theme()
+
+    @pytest.fixture
+    def claims(self) -> list[dict[str, Any]]:
+        return _make_claims()
+
+    @pytest.fixture
+    def mock_batch_result(self) -> BatchThemeReviewResult:
+        return _make_batch_review_result()
+
+    async def test_grounded_sentences_attach_no_warning(
+        self,
+        theme: dict[str, Any],
+        claims: list[dict[str, Any]],
+        mock_batch_result: BatchThemeReviewResult,
+        _mock_grounding_classifier: Any,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """Grounded verdicts attach to output; no contradiction warning logged."""
+        _mock_grounding_classifier.return_value.classify_synthesis.return_value = [
+            SentenceGroundingResult(
+                sentence="Two papers demonstrate circadian regulation.",
+                verdict="grounded",
+                best_claim_id="c1",
+                scores={"contradiction": 0.02, "entailment": 0.9, "neutral": 0.08},
+            ),
+        ]
+
+        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
+            agent = ThemeReviewerAgent()
+
+        with patch(
+            "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
+            mock_retry.return_value = mock_batch_result
+            with caplog.at_level("WARNING"):
+                results = await agent.run_batch([theme], claims)
+
+        assert results[0]["synthesis_grounding"] == [
+            {
+                "sentence": "Two papers demonstrate circadian regulation.",
+                "verdict": "grounded",
+                "best_claim_id": "c1",
+                "scores": {"contradiction": 0.02, "entailment": 0.9, "neutral": 0.08},
+            }
+        ]
+        assert "flagged contradicted" not in caplog.text
+
+    async def test_contradicted_sentence_logs_warning(
+        self,
+        theme: dict[str, Any],
+        claims: list[dict[str, Any]],
+        mock_batch_result: BatchThemeReviewResult,
+        _mock_grounding_classifier: Any,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """A contradicted verdict logs a warning naming the theme."""
+        _mock_grounding_classifier.return_value.classify_synthesis.return_value = [
+            SentenceGroundingResult(
+                sentence="Circadian rhythms have no effect on physiology.",
+                verdict="contradicted",
+                best_claim_id="c1",
+                scores={"contradiction": 0.92, "entailment": 0.03, "neutral": 0.05},
+            ),
+        ]
+
+        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
+            agent = ThemeReviewerAgent()
+
+        with patch(
+            "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
+            mock_retry.return_value = mock_batch_result
+            with caplog.at_level("WARNING"):
+                results = await agent.run_batch([theme], claims)
+
+        assert results[0]["synthesis_grounding"][0]["verdict"] == "contradicted"
+        assert "flagged contradicted" in caplog.text
+        assert "Chronobiology" in caplog.text
+
+    async def test_borderline_sentence_attaches_without_warning(
+        self,
+        theme: dict[str, Any],
+        claims: list[dict[str, Any]],
+        mock_batch_result: BatchThemeReviewResult,
+        _mock_grounding_classifier: Any,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """Borderline verdicts attach for M4-T6 to consume later; no warning fires."""
+        _mock_grounding_classifier.return_value.classify_synthesis.return_value = [
+            SentenceGroundingResult(
+                sentence="Circadian rhythms may relate to physiology.",
+                verdict="borderline",
+                best_claim_id="c1",
+                scores={"contradiction": 0.3, "entailment": 0.4, "neutral": 0.3},
+            ),
+        ]
+
+        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
+            agent = ThemeReviewerAgent()
+
+        with patch(
+            "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
+            mock_retry.return_value = mock_batch_result
+            with caplog.at_level("WARNING"):
+                results = await agent.run_batch([theme], claims)
+
+        assert results[0]["synthesis_grounding"][0]["verdict"] == "borderline"
+        assert "flagged contradicted" not in caplog.text
+
+    async def test_classify_synthesis_called_with_theme_claims(
+        self,
+        theme: dict[str, Any],
+        claims: list[dict[str, Any]],
+        mock_batch_result: BatchThemeReviewResult,
+        _mock_grounding_classifier: Any,
+    ) -> None:
+        """classify_synthesis is called with the review's synthesis and the
+        theme's claim set (not the raw agent-returned key_claims)."""
+        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
+            agent = ThemeReviewerAgent()
+
+        with patch(
+            "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
+            mock_retry.return_value = mock_batch_result
+            await agent.run_batch([theme], claims)
+
+        _mock_grounding_classifier.return_value.classify_synthesis.assert_called_once()
+        call_args = _mock_grounding_classifier.return_value.classify_synthesis.call_args
+        assert call_args[0][0] == mock_batch_result.reviews[0].synthesis
+        passed_claims = call_args[0][1]
+        assert {c["id"] for c in passed_claims} == {"c1", "c2"}
+
+    async def test_empty_claims_no_crash(
+        self, theme: dict[str, Any], _mock_grounding_classifier: Any
+    ) -> None:
+        """A theme with no claims still runs the grounding call without crashing."""
+        review_no_claims = BatchThemeReviewResult(
+            reviews=[
+                SingleThemeReview(
+                    theme_name="Chronobiology",
+                    synthesis="No claims available for analysis.",
+                    consensus=["Theme identified but no empirical claims found."],
+                ),
+            ],
+        )
+
+        with patch("pipeline.agents.theme_reviewer.AgnoAgent"):
+            agent = ThemeReviewerAgent()
+
+        with patch(
+            "pipeline.agents.theme_reviewer.run_agent_with_retry", new_callable=AsyncMock
+        ) as mock_retry:
+            mock_retry.return_value = review_no_claims
+            results = await agent.run_batch([theme], [])
+
+        assert results[0]["synthesis_grounding"] == []

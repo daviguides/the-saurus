@@ -8,10 +8,12 @@ pipeline:
   resources:
     requests:
       cpu: 500m
-      memory: 1Gi
+      # 2Gi/5Gi: this task's DeBERTa instance + M5-T3's independent instance
+      # (d-019 — no shared/singleton load), sized above values.yaml's dev limit.
+      memory: 2Gi
     limits:
       cpu: "2"
-      memory: 2Gi
+      memory: 5Gi
   env:
     llmMaxConcurrent: "10"
 
