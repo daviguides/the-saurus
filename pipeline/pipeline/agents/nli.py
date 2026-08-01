@@ -57,6 +57,7 @@ class SentenceGroundingResult:
     verdict: str  # "grounded" | "contradicted" | "borderline"
     best_claim_id: str | None
     scores: dict[str, float]  # {"contradiction": .., "entailment": .., "neutral": ..}
+    resolved_by: str = "deberta"  # "deberta" | "llm_as_nli" — which tier produced `verdict`
 
 
 def _load_cross_encoder(model_name: str) -> tuple[Any, list[str]]:
