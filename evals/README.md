@@ -37,6 +37,22 @@ make eval-pipeline
 make eval-update-baseline
 ```
 
+## Residual-Error Gate for the Theme Reviewer's Validator Agent
+
+Design doc §5.7's Validator Agent is evidence-gated (d-011): build it only if
+residual error survives theme_reviewer's Tiers 0-2 hallucination cascade
+(reask -> DeBERTa -> LLM-as-NLI escalation). After `make eval-run-pipeline`,
+run:
+
+```bash
+make eval-residual-error
+```
+
+This reads `pipeline/jobs/{job_id}/theme_reviews/*.yaml` (no LLM calls, no
+extra credentials beyond what generated that job) and prints a GO/NO-GO
+verdict — see `evals/pipeline/golden/residual_error.py`'s docstring for the
+exact threshold and reasoning.
+
 ## Services
 
 | Directory | Service | What it evaluates |

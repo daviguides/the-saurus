@@ -10,7 +10,7 @@ SHELL := /bin/bash
 	eval-generate-pipeline eval-generate-assistant eval-run-pipeline \
 	eval-pipeline eval-assistant eval-safety eval-all \
 	eval-score-pipeline eval-score-assistant eval-update-baseline \
-	eval-judge-concordance \
+	eval-judge-concordance eval-residual-error \
 	dev-restate register-restate stop-restate
 
 $(LOGS_DIR):
@@ -188,6 +188,9 @@ eval-update-baseline:
 
 eval-judge-concordance:
 	cd evals && uv run python -m pipeline.golden.judge_concordance
+
+eval-residual-error:
+	cd evals && uv run python -m pipeline.golden.residual_error
 
 # ─── Restate ──────────────────────────────────────────────────────
 
