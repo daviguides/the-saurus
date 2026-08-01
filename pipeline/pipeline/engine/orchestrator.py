@@ -28,8 +28,10 @@ from pipeline.core import (
     JobStatus,
     PaperEntry,
     TopicGateRejectedError,
+    cluster_themes,
     quarantine_job,
     read_yaml,
+    reconcile_canonical_themes,
     write_status,
     write_yaml,
 )
@@ -279,18 +281,41 @@ async def _run_paper_analysis(ctx: PipelineContext) -> AnalysisResults:
 async def _run_theme_dedup(
     ctx: PipelineContext, analysis_results: AnalysisResults,
 ) -> DedupResult:
-    """Stage 2: Theme Dedup — semantic deduplication across all papers (single pass)."""
+    """Stage 2: Theme Dedup — D&C: cluster, dedup per bucket (parallel), reconcile."""
     all_themes: list[dict[str, Any]] = []
     for _paper, result in analysis_results:
         all_themes.extend(result.get("themes", []))
 
+    buckets = await cluster_themes(all_themes)
     theme_dedup = ThemeDedupAgent()
-    await ctx.tracker.stage_start(Stage.THEME_DEDUP, 1)
-    dedup_cb = create_agent_event_callback(
-        ctx.emitter, "ThemeDedup", Stage.THEME_DEDUP,
-        context={"theme_count": len(all_themes)},
+    await ctx.tracker.stage_start(Stage.THEME_DEDUP, len(buckets))
+
+    async def _process_bucket(bucket_idx: int, indices: list[int]) -> dict[str, Any]:
+        bucket_themes = [all_themes[i] for i in indices]
+        dedup_cb = create_agent_event_callback(
+            ctx.emitter, "ThemeDedup", Stage.THEME_DEDUP,
+            context={
+                "bucket": f"{bucket_idx}/{len(buckets)}",
+                "theme_count": len(bucket_themes),
+            },
+        )
+        result = await theme_dedup.run({"themes": bucket_themes}, on_event=dedup_cb)
+        await ctx.tracker.stage_item_done(Stage.THEME_DEDUP, f"bucket-{bucket_idx}")
+        return result
+
+    bucket_results = await asyncio.gather(
+        *[_process_bucket(idx, indices) for idx, indices in enumerate(buckets, 1)]
     )
-    dedup_result = await theme_dedup.run({"themes": all_themes}, on_event=dedup_cb)
+
+    all_canonical: list[dict[str, Any]] = []
+    merged_map: dict[str, list[str]] = {}
+    for result in bucket_results:
+        all_canonical.extend(result.get("themes", []))
+        merged_map.update(result.get("theme_map", {}))
+
+    final_themes, final_map = await reconcile_canonical_themes(all_canonical, merged_map)
+    dedup_result: DedupResult = {"theme_map": final_map, "themes": final_themes}
+
     await write_yaml(ctx.job_path / "theme_map.yaml", dedup_result, job_id=ctx.job_id)
     if ctx.indexer:
         ctx.fire_qdrant(

@@ -6,7 +6,7 @@ import asyncio
 from datetime import UTC, datetime
 from io import BytesIO
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 import pytest
@@ -249,6 +249,22 @@ def _patch_theme_dedup():
     )
 
 
+def _patch_clustering():
+    """Bypass real embedding-based clustering — single bucket, no network call."""
+    return patch(
+        "pipeline.engine.orchestrator.cluster_themes",
+        new=AsyncMock(side_effect=lambda themes: [list(range(len(themes)))]),
+    )
+
+
+def _patch_reconcile():
+    """Bypass real embedding-based reconcile — pass canonical themes through unmerged."""
+    return patch(
+        "pipeline.engine.orchestrator.reconcile_canonical_themes",
+        new=AsyncMock(side_effect=lambda themes, theme_map: (themes, theme_map)),
+    )
+
+
 def _patch_theme_reviewer():
     return patch(
         "pipeline.engine.orchestrator.ThemeReviewerAgent",
@@ -275,6 +291,8 @@ class TestPipelineExecution:
             _patch_qdrant(),
             _patch_paper_analyzer(),
             _patch_theme_dedup(),
+            _patch_clustering(),
+            _patch_reconcile(),
             _patch_theme_reviewer(),
             _patch_aggregator(),
         ):
@@ -302,6 +320,8 @@ class TestPipelineExecution:
             _patch_qdrant(),
             _patch_paper_analyzer(),
             _patch_theme_dedup(),
+            _patch_clustering(),
+            _patch_reconcile(),
             _patch_theme_reviewer(),
             _patch_aggregator(),
         ):
@@ -331,6 +351,8 @@ class TestPipelineExecution:
             _patch_qdrant(),
             _patch_paper_analyzer(),
             _patch_theme_dedup(),
+            _patch_clustering(),
+            _patch_reconcile(),
             _patch_theme_reviewer(),
             _patch_aggregator(),
         ):
@@ -365,6 +387,8 @@ class TestPipelineExecution:
             _patch_qdrant(),
             _patch_paper_analyzer(),
             _patch_theme_dedup(),
+            _patch_clustering(),
+            _patch_reconcile(),
             _patch_theme_reviewer(),
             _patch_aggregator(),
         ):
@@ -408,6 +432,8 @@ class TestPipelineExecution:
             _patch_qdrant(),
             _patch_paper_analyzer(),
             _patch_theme_dedup(),
+            _patch_clustering(),
+            _patch_reconcile(),
             _patch_theme_reviewer(),
             _patch_aggregator(),
         ):
@@ -553,6 +579,8 @@ class TestPipelineExecution:
             _patch_qdrant(),
             _patch_paper_analyzer(),
             _patch_theme_dedup(),
+            _patch_clustering(),
+            _patch_reconcile(),
             _patch_theme_reviewer(),
             _patch_aggregator(),
             patch(
