@@ -241,13 +241,9 @@ SCREENS.forEach(s=>{
  const board=document.createElement('div');board.className='board';board.tabIndex=0;board.setAttribute('role','region');board.setAttribute('aria-label',s.title+' device comparison; scroll horizontally');
  BREAKPOINTS.forEach(bp=>{
   const prefix=s.id+'-'+bp.shell;const frame=document.createElement('div');frame.className='frame '+bp.cls;frame.id=prefix;
-  frame.innerHTML=`<div class="cap" id="${prefix}-cap"><b>${bp.label}</b><span>${bp.size}</span></div>
-<div class="dev"><div class="${bp.shell}"></div></div>`;
+  frame.innerHTML=`<div class="cap" id="${prefix}-cap"><b>${bp.label}</b><span>${bp.size}</span></div><div class="dev"><div class="${bp.shell}"></div></div>`;
   const shell=frame.querySelector('.'+bp.shell);const navigation=nav(s,bp);
-  if(bp.shell==='dsk')shell.innerHTML=`<aside class="side">${brand}<div class="project">${s.id==='empty'?'Your research workspace':'Hepatic gene correction'}<small>${s.id==='empty'?'Start a collection or reopen a draft':'40 papers · job_8f3a21'}</small></div>
-<nav class="shell-nav" aria-label="${s.title}, desktop navigation">${navigation}</nav>
-<div class="sp"></div>
-<div class="account">Your workspace<small>The researcher stays the author.</small></div></aside>`;
+  if(bp.shell==='dsk')shell.innerHTML=`<aside class="side">${brand}<div class="project">${s.id==='empty'?'Your research workspace':'Hepatic gene correction'}<small>${s.id==='empty'?'Start a collection or reopen a draft':'40 papers · job_8f3a21'}</small></div><nav class="shell-nav" aria-label="${s.title}, desktop navigation">${navigation}</nav><div class="sp"></div><div class="account">Your workspace<small>The researcher stays the author.</small></div></aside>`;
   else if(bp.shell==='tab')shell.innerHTML=`<nav class="topnav shell-nav" aria-label="${s.title}, tablet navigation">${brand}${navigation}</nav>`;
   else shell.innerHTML=`<div class="mtop">${brand}<small>${s.nav==='Assistant'?'Chat':s.nav}</small></div>`;
   const main=document.createElement('div');main.className='main';main.tabIndex=0;main.setAttribute('role','region');main.setAttribute('aria-label',s.title+', '+bp.label+' content');main.append(stamp('tmpl-'+s.id));
@@ -327,15 +323,10 @@ function initFrame(frame,s,bp){
   const append=(sender,text,html=false)=>{const message=document.createElement('div');message.className='message '+(sender==='You'?'user':'assistant');const label=document.createElement('div');label.className='sender';label.textContent=sender;const bubble=document.createElement('div');bubble.className='bubble';if(html)bubble.innerHTML=text;else bubble.textContent=text;message.append(label,bubble);$('chat-messages').append(message)};
   $('chat-form').onsubmit=e=>{e.preventDefault();const q=$('chat-input').value.trim();if(!q)return;append('You',q);
    let response='I cannot support that answer from the claims in this example corpus. I would leave it unresolved until a relevant source is added.';
-   if(/missing|thin|under.support|gap/i.test(q))response='<p>The LNP theme has two papers and six claims, both from the same group. I’d flag it as under-supported and seek independent replication.</p>
-<div class="sources">'+source(2,1,1)+source(8,1,1)+'</div>';
-   else if(/durab|1yr|year|52.week/i.test(q))response='<p>No paper in this corpus establishes durability beyond 52 weeks in a dividing-liver model. I would not extrapolate to durable correction beyond one year.</p>
-<div class="sources">'+source(10,11,5)+'</div>';
-   else if(/§\s*3|section\s*3|off.target|cleaner|safe|disagree/i.test(q))response='<p>§3 compares assay coverage. Genome-wide GUIDE-seq detected off-target activity; targeted sequencing of eight predicted sites did not.</p>
-<p>The corpus does not establish that base editors are cleaner; it establishes they were tested less exhaustively.</p>
-<div class="sources">'+source(5,15,4)+source(5,16,1)+source(4,9,2)+'</div>';
-   else if(/aav|lnp|deliver|base edit|trade/i.test(q))response='<p>AAV9 and LNP-delivered base editors show different delivery profiles in the example studies. Their outcomes do not establish a head-to-head winner.</p>
-<div class="sources">'+source(1,12,3)+source(2,8,2)+source(5,15,4)+'</div>';
+   if(/missing|thin|under.support|gap/i.test(q))response='<p>The LNP theme has two papers and six claims, both from the same group. I’d flag it as under-supported and seek independent replication.</p><div class="sources">'+source(2,1,1)+source(8,1,1)+'</div>';
+   else if(/durab|1yr|year|52.week/i.test(q))response='<p>No paper in this corpus establishes durability beyond 52 weeks in a dividing-liver model. I would not extrapolate to durable correction beyond one year.</p><div class="sources">'+source(10,11,5)+'</div>';
+   else if(/§\s*3|section\s*3|off.target|cleaner|safe|disagree/i.test(q))response='<p>§3 compares assay coverage. Genome-wide GUIDE-seq detected off-target activity; targeted sequencing of eight predicted sites did not.</p><p>The corpus does not establish that base editors are cleaner; it establishes they were tested less exhaustively.</p><div class="sources">'+source(5,15,4)+source(5,16,1)+source(4,9,2)+'</div>';
+   else if(/aav|lnp|deliver|base edit|trade/i.test(q))response='<p>AAV9 and LNP-delivered base editors show different delivery profiles in the example studies. Their outcomes do not establish a head-to-head winner.</p><div class="sources">'+source(1,12,3)+source(2,8,2)+source(5,15,4)+'</div>';
    append('The Saurus · Demo reply',response,true);$('chat-input').value='';$('chat-messages').scrollTop=$('chat-messages').scrollHeight;$('chat-input').focus();
   };
   $('chat-input').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();$('chat-form').requestSubmit()}};
