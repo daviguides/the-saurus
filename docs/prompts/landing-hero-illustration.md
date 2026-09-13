@@ -12,9 +12,9 @@ A hand-drawn scientific diagram showing the pipeline of a literature review tool
 - Horizontal layout (landscape, ~16:9 or 3:2 aspect ratio)
 - Three-act flow reading LEFT to RIGHT: **Input → Digestion → Synthesis**
 - The dinosaur mascot is the CENTRAL element — the "processor" in the pipeline
-- Background: faint horizontal ruled lines like a research notebook page (light gray, evenly spaced)
-- A dashed horizontal baseline/timeline runs across the bottom connecting the three stages
-- Below the baseline: small mono-spaced labels marking stages — "INPUT", "DIGESTION", "SYNTHESIS" (or numbered "01", "02", "03")
+- Background: clean cream (#FAFAF7), NO ruled notebook lines — the illustration carries itself without background texture. If any grid is needed, use only 2-3 VERY faint horizontal hairlines (opacity ~8-10%) as subtle reference, like a graph paper ghost — not visible notebook ruling
+- A single thin dashed horizontal baseline runs across the bottom — just one line, understated
+- Below the baseline: three small mono-spaced labels, muted gray, lightweight — just "INPUT", "DIGESTION", "SYNTHESIS" (or just numbers "01", "02", "03"). Pick ONE labeling style, not both. No extra "IN → PROCESSES → OUT" row. No chevrons or double arrows. Minimal.
 - The whole image feels like a figure from a biology textbook, annotated by a witty researcher
 
 ### LEFT: Input (Papers)
@@ -52,9 +52,9 @@ A hand-drawn scientific diagram showing the pipeline of a literature review tool
 - The book should feel like a FINISHED PRODUCT — polished, complete, in contrast to the messy papers on the left
 
 ### Connecting Elements
-- Dashed or dotted line connecting the three stages along the bottom (timeline)
-- Optional: small arrows or flow indicators between stages
-- The flow should be unmistakable: papers go IN (left), dinosaur PROCESSES (center), review comes OUT (right)
+- The single dashed baseline at the bottom is enough — do NOT add a second flow line above it
+- No chevrons (>>), no "IN → OUT" labels, no double-arrow connectors — the illustration itself tells the flow story (papers fly left, dino eats center, book appears right)
+- The labels below the baseline are the only text annotation. Keep them small and muted.
 
 ### Style
 - Hand-drawn ink illustration — like a field notebook sketch by a confident researcher
@@ -62,9 +62,9 @@ A hand-drawn scientific diagram showing the pipeline of a literature review tool
 - Monochrome dark academic green (#2D6A4F) for all lines and the dinosaur
 - Papers: light gray outlines with faint text lines
 - Gold (#D4AF37) accents ONLY on: monocle frame, bookmark ribbon, checkmark/sparkle on output book
-- Labels in a mono-spaced or technical font style, muted gray
+- Labels in a mono-spaced or technical font style, muted gray, small (much smaller than the illustration)
 - NO heavy shading, NO gradients, NO color fills on the dinosaur
-- The ruled notebook lines are very faint — background texture, not dominant
+- Background is CLEAN — no visible ruled lines. The illustration breathes in open space.
 
 ### Tone
 - Scientific illustration meets editorial cartoon
