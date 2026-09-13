@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Saurus — Feed The Saurus your papers.</title>
+<meta name="description" content="From a folder of PDFs to a literature review, with every claim traced to its page. A durable multi-agent pipeline with verified citation grounding.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;0,7..72,600;1,7..72,400;1,7..72,500&family=Inter:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ---------- Tokens ---------- */
+:root{
+  --saurus-paper:#FAFAF7; --saurus-surface:#F5F5F0; --saurus-sidebar:#F0F0EB;
+  --saurus-ink:#1C1C1E; --saurus-ink-secondary:#6B7280; --saurus-ink-muted:#9CA3AF;
+  --saurus-primary:#2D6A4F; --saurus-primary-hover:#40916C; --saurus-primary-bg:rgba(45,106,79,.08);
+  --saurus-accent:#D4AF37; --saurus-accent-bg:rgba(212,175,55,.10);
+  --saurus-success:#40916C; --saurus-active:#2D6A4F; --saurus-pending:#9CA3AF; --saurus-error:#DC2626;
+  --saurus-chip-1:#EDE9FE; --saurus-chip-2:#DBEAFE; --saurus-chip-3:#D1FAE5; --saurus-chip-4:#FEF3C7; --saurus-chip-5:#FCE7F3; --saurus-chip-6:#E0E7FF;
+  --color-border:#E8E5DE;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.04); --shadow-md:0 2px 8px rgba(0,0,0,.06);
+  --rule:rgba(28,28,30,.06);
+  --font-heading:'Literata',Georgia,serif; --font-body:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; --font-mono:'Fira Code','SF Mono',Consolas,monospace;
+  --radius-sm:4px; --radius-md:8px; --radius-lg:12px;
+  --sec-y:clamp(72px,12vw,176px);
+  color-scheme:light;
+}
+html.dark{
+  --saurus-paper:#1A1D1E; --saurus-surface:#242728; --saurus-sidebar:#161819;
+  --saurus-ink:#E8E4DD; --saurus-ink-secondary:#9CA3AF; --saurus-ink-muted:#6B7280;
+  --saurus-primary:#5BAB8A; --saurus-primary-hover:#7CC4A5; --saurus-primary-bg:rgba(91,171,138,.10);
+  --saurus-accent:#E5C349; --saurus-accent-bg:rgba(229,195,73,.10);
+  --saurus-success:#5BAB8A; --saurus-active:#5BAB8A; --saurus-pending:#6B7280; --saurus-error:#F87171;
+  --saurus-chip-1:#2D2640; --saurus-chip-2:#1E2D3D; --saurus-chip-3:#1A2E26; --saurus-chip-4:#2E2A1A; --saurus-chip-5:#2E1A24; --saurus-chip-6:#1E2240;
+  --color-border:#353838;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.2); --shadow-md:0 2px 8px rgba(0,0,0,.3);
+  --rule:rgba(232,228,221,.07);
+  color-scheme:dark;
+}
+
+/* ---------- Base ---------- */
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--saurus-paper);color:var(--saurus-ink);font-family:var(--font-body);font-size:18px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+h1,h2,h3,h4{font-family:var(--font-heading);font-weight:500;margin:0;letter-spacing:-.01em;color:var(--saurus-ink)}
+p{margin:0 0 1.2em}
+a{color:var(--saurus-primary);text-decoration:none}
+a:hover{color:var(--saurus-primary-hover)}
+.mono{font-family:var(--font-mono);font-size:13px;letter-spacing:.01em}
+.muted{color:var(--saurus-ink-muted)}
+.secondary{color:var(--saurus-ink-secondary)}
+.wrap{max-width:1360px;margin:0 auto;padding:0 clamp(20px,4vw,56px)}
+.narrow{max-width:66ch}
+section{padding:var(--sec-y) 0}
+.eyebrow{font-family:var(--font-mono);font-size:13px;color:var(--saurus-ink-secondary);letter-spacing:.06em;text-transform:uppercase;margin-bottom:22px;display:block}
+.h2{font-size:clamp(34px,4.4vw,56px);line-height:1.1;margin-bottom:28px;max-width:20ch}
+.lead{font-size:clamp(18px,1.4vw,20px);line-height:1.65;max-width:62ch}
+.closing{font-family:var(--font-heading);font-size:clamp(22px,2.2vw,28px);line-height:1.4;color:var(--saurus-ink);max-width:40ch;margin-top:56px}
+.rule-gradient{height:1px;background:linear-gradient(90deg,var(--saurus-primary),var(--saurus-accent));opacity:.7}
+
+/* citations */
+.cite{font-family:var(--font-mono);font-size:.62em;white-space:nowrap;vertical-align:baseline;position:relative;top:-.1em;margin:0 .06em}
+.cite b{font-weight:500;color:var(--saurus-primary)}
+.cite i{font-style:normal;color:var(--saurus-ink-muted)}
+.cite.on{border-bottom:2px solid var(--saurus-accent);position:relative;top:-.18em;padding-bottom:1px}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-body);font-weight:500;font-size:16px;padding:14px 26px;border-radius:var(--radius-md);border:1px solid transparent;cursor:pointer;transition:background .2s ease,color .2s ease,border-color .2s ease}
+.btn-gold{background:var(--saurus-accent);color:#1C1C1E;border-color:var(--saurus-accent)}
+.btn-gold:hover{background:#E0BC48;color:#1C1C1E}
+html.dark .btn-gold:hover{background:#EDD05E}
+.btn-quiet{background:transparent;color:var(--saurus-ink);border-color:var(--color-border);font-size:14px;padding:8px 14px}
+.btn-quiet:hover{border-color:var(--saurus-primary);color:var(--saurus-primary)}
+.link-arrow{font-weight:500;font-size:16px}
+.link-arrow:after{content:" →"}
+
+/* ---------- Nav ---------- */
+nav.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--saurus-paper) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--rule)}
+nav.top .wrap{display:flex;align-items:center;justify-content:space-between;height:64px;gap:24px}
+.wordmark{font-family:var(--font-heading);font-weight:600;font-size:20px;color:var(--saurus-ink);display:flex;align-items:center;gap:10px}
+.wordmark svg{width:28px;height:22px}
+nav .links{display:flex;gap:28px;align-items:center;font-size:14px}
+nav .links a{color:var(--saurus-ink-secondary)}
+nav .links a:hover{color:var(--saurus-primary)}
+.theme-toggle{background:none;border:1px solid var(--color-border);border-radius:99px;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--saurus-ink-secondary)}
+.theme-toggle:hover{color:var(--saurus-primary);border-color:var(--saurus-primary)}
+.theme-toggle svg{width:16px;height:16px}
+@media (max-width:820px){nav .links .anchor{display:none}}
+
+/* ---------- Hero ---------- */
+.hero{min-height:calc(100vh - 64px);display:flex;align-items:center;position:relative;padding:clamp(56px,8vh,96px) 0}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:clamp(32px,5vw,80px);align-items:center}
+.hero h1{font-size:clamp(46px,7.2vw,96px);line-height:1.02;letter-spacing:-.02em;margin:0 0 28px;max-width:11ch}
+.hero .sub{font-family:var(--font-heading);font-size:clamp(22px,2.4vw,31px);line-height:1.3;color:var(--saurus-ink);max-width:28ch;margin-bottom:28px;font-weight:400}
+.hero .body{font-size:18px;max-width:54ch;color:var(--saurus-ink-secondary);margin-bottom:36px}
+.cta-row{display:flex;flex-wrap:wrap;align-items:center;gap:28px;margin-bottom:18px}
+.micro{font-family:var(--font-mono);font-size:12.5px;color:var(--saurus-ink-muted);margin-bottom:44px}
+.shelf .mono{color:var(--saurus-ink-muted);display:block;margin-bottom:12px;font-size:12.5px}
+.pills{display:flex;flex-wrap:wrap;gap:12px}
+.pill{display:flex;flex-direction:column;gap:4px;background:var(--saurus-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:12px 16px;color:var(--saurus-ink);transition:border-color .2s ease;min-width:240px}
+.pill:hover{border-color:var(--saurus-primary);color:var(--saurus-ink)}
+.pill strong{font-family:var(--font-body);font-weight:500;font-size:15px}
+.pill span{font-family:var(--font-mono);font-size:12px;color:var(--saurus-ink-muted)}
+.mascot-wrap{position:relative;display:flex;justify-content:center;align-items:center}
+.mascot-wrap:before{content:"";position:absolute;inset:-6% -4%;background:repeating-linear-gradient(180deg,transparent 0 31px,var(--rule) 31px 32px);border-radius:var(--radius-lg);opacity:.9;pointer-events:none;mask-image:radial-gradient(ellipse at center,#000 40%,transparent 80%);-webkit-mask-image:radial-gradient(ellipse at center,#000 40%,transparent 80%)}
+.mascot-wrap svg{width:100%;max-width:560px;height:auto;position:relative}
+.mascot-caption{position:absolute;bottom:-8px;right:8px;font-family:var(--font-mono);font-size:11.5px;color:var(--saurus-ink-muted)}
+@media (max-width:900px){
+  .hero{min-height:auto}
+  .hero .wrap{grid-template-columns:1fr}
+  .mascot-wrap{order:2;max-width:420px;margin:12px auto 0}
+  .mascot-wrap svg{max-width:420px}
+}
+
+/* ---------- Problem ---------- */
+.problem{background:var(--saurus-surface);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.problem .wrap{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:clamp(40px,6vw,120px);align-items:start}
+.failures{margin-top:48px;border-top:1px solid var(--color-border)}
+.failure{padding:30px 0;border-bottom:1px solid var(--color-border)}
+.failure h3{font-size:23px;margin-bottom:8px}
+.failure p{margin:0;color:var(--saurus-ink-secondary);max-width:60ch}
+.pullquote{position:sticky;top:120px;padding-top:28px;border-top:1px solid var(--saurus-accent)}
+.pullquote p{font-family:var(--font-heading);font-style:italic;font-size:clamp(30px,3.4vw,46px);line-height:1.2;color:var(--saurus-primary);margin:0;max-width:14ch}
+@media (max-width:900px){.problem .wrap{grid-template-columns:1fr}.pullquote{position:static;margin-top:48px}}
+
+/* ---------- Synthesis ---------- */
+.contrast{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:56px 0 0}
+.card{background:var(--saurus-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:28px;box-shadow:var(--shadow-sm)}
+.card .label{font-family:var(--font-mono);font-size:12.5px;color:var(--saurus-ink-secondary);letter-spacing:.04em}
+.card .subline{font-family:var(--font-heading);font-size:20px;margin:8px 0 20px}
+.card.matrix{border-top:3px solid var(--saurus-primary)}
+.stack-rows{display:flex;flex-direction:column;gap:8px}
+.stack-row{border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:10px 14px;font-family:var(--font-mono);font-size:13px;color:var(--saurus-ink-secondary);background:var(--saurus-paper)}
+.stack-row.more{border-style:dashed;color:var(--saurus-ink-muted)}
+.verdict{margin-top:20px;font-size:15px;color:var(--saurus-ink-muted)}
+.verdict.green{color:var(--saurus-primary)}
+.theme-row{background:var(--saurus-paper);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:16px 18px;margin-bottom:10px;transition:border-color .2s ease}
+.theme-row:hover{border-color:var(--saurus-primary)}
+.theme-row h4{font-size:18px;margin-bottom:4px}
+.theme-row .draws{font-size:14px;color:var(--saurus-ink-secondary);margin:0 0 6px}
+.theme-row .draws .cite b{transition:background .2s ease}
+.theme-row:hover .cite b{background:var(--saurus-primary-bg);border-radius:3px}
+.theme-row .note{font-size:14px;color:var(--saurus-ink-muted);margin:0}
+.loop{margin-top:96px;position:relative}
+.loop-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:32px;position:relative;padding-top:36px}
+.loop-grid:before{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,var(--saurus-primary),var(--saurus-accent));opacity:.6}
+.step .glyph{width:32px;height:32px;color:var(--saurus-primary);margin-bottom:14px;position:relative}
+.step .glyph svg{width:100%;height:100%}
+.step .glyph .tiny{position:absolute;left:34px;top:4px;width:30px;height:22px;color:var(--saurus-ink-muted)}
+.step h3{font-size:24px;margin-bottom:10px}
+.step p{font-size:15.5px;color:var(--saurus-ink-secondary);margin:0}
+.loop-caption{margin-top:40px;font-family:var(--font-mono);font-size:13px;color:var(--saurus-ink-muted)}
+@media (max-width:900px){.contrast{grid-template-columns:1fr}.loop-grid{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.loop-grid{grid-template-columns:1fr}}
+
+/* ---------- Act break ---------- */
+.act{background:#1A1D1E;color:#E8E4DD;padding:clamp(112px,34vh,320px) 0;text-align:center}
+.act h2{color:#E8E4DD;font-size:clamp(38px,5.4vw,72px);line-height:1.1;max-width:22ch;margin:0 auto 28px}
+.act p{color:#9CA3AF;max-width:52ch;margin:0 auto;font-size:18px}
+.act .em{color:#5BAB8A}
+
+/* ---------- Two-column proof layout ---------- */
+.proof .wrap{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(40px,6vw,96px);align-items:start}
+.proof .copy{position:sticky;top:110px}
+.proof .caption{font-family:var(--font-mono);font-size:13px;color:var(--saurus-ink-muted);line-height:1.6;max-width:44ch;margin-top:28px}
+@media (max-width:960px){.proof .wrap{grid-template-columns:1fr}.proof .copy{position:static}}
+
+/* ---------- Dedup specimen ---------- */
+.specimen{display:flex;flex-direction:column;gap:0}
+.spec-label{font-family:var(--font-mono);font-size:12.5px;color:var(--saurus-ink-secondary);margin-bottom:12px;display:block}
+.papers{display:flex;flex-direction:column;gap:10px}
+.paper{background:var(--saurus-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:16px;box-shadow:var(--shadow-sm)}
+.paper .who{font-size:16px}
+.paper .who .mono{color:var(--saurus-ink-muted);margin-right:8px}
+.chip{display:inline-block;font-family:var(--font-body);font-size:13.5px;font-weight:500;padding:5px 12px;border-radius:var(--radius-sm);border:1px solid rgba(28,28,30,.12);color:var(--saurus-ink);white-space:nowrap}
+html.dark .chip{border-color:rgba(232,228,221,.14)}
+.chip.c1{background:var(--saurus-chip-1)}.chip.c2{background:var(--saurus-chip-2)}.chip.c3{background:var(--saurus-chip-3)}
+.connector{display:flex;flex-direction:column;align-items:center;padding:8px 0}
+.connector .stroke{width:2px;height:44px;background:var(--saurus-primary)}
+.connector .lbl{font-family:var(--font-mono);font-size:12px;color:var(--saurus-primary);padding:4px 10px;border:1px solid var(--saurus-primary);border-radius:99px;background:var(--saurus-paper);white-space:nowrap}
+.merged{background:var(--saurus-surface);border:1px solid var(--color-border);border-left:3px solid var(--saurus-primary);border-radius:var(--radius-lg);padding:24px 28px;box-shadow:var(--shadow-md)}
+.merged .badge{font-family:var(--font-mono);font-size:12px;color:var(--saurus-primary);background:var(--saurus-primary-bg);padding:3px 8px;border-radius:var(--radius-sm)}
+.merged h3{font-size:30px;margin:12px 0 6px}
+.merged .meta{font-size:15px;color:var(--saurus-ink-secondary);margin:0 0 14px}
+.merged .alias{font-family:var(--font-mono);font-size:12.5px;color:var(--saurus-ink-muted);line-height:1.6}
+@media (max-width:560px){.paper{flex-direction:column;align-items:flex-start}.connector .lbl{white-space:normal;text-align:center}}
+
+/* ---------- Citation centerpiece ---------- */
+.citation .h2{max-width:14ch}
+.citation .intro{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;align-items:end;margin-bottom:64px}
+.citation .lead{margin:0}
+.cite-composition{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:40px;align-items:start;position:relative}
+.manuscript{background:var(--saurus-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:clamp(28px,4vw,56px);box-shadow:var(--shadow-sm);position:relative}
+.manuscript .spec-label{margin-bottom:24px}
+.manuscript p{font-family:var(--font-heading);font-size:clamp(19px,1.7vw,24px);line-height:1.75;margin:0;color:var(--saurus-ink)}
+.receipt{background:var(--saurus-surface);border:1px solid var(--color-border);border-left:3px solid var(--saurus-accent);border-radius:var(--radius-lg);padding:28px;box-shadow:var(--shadow-md);position:relative;margin-top:24px}
+.receipt .head{font-family:var(--font-mono);font-size:12.5px;color:var(--saurus-primary);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.receipt .addr{font-family:var(--font-mono);font-size:13.5px;color:var(--saurus-ink);margin-bottom:18px}
+.receipt blockquote{margin:0 0 22px;padding:0 0 0 16px;border-left:1px solid var(--color-border);font-family:var(--font-heading);font-style:italic;font-size:17px;line-height:1.6;color:var(--saurus-ink)}
+.receipt blockquote u{text-decoration:none;background:linear-gradient(transparent 68%,var(--saurus-accent-bg) 68%);border-bottom:2px solid var(--saurus-accent)}
+.audit{display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;padding-top:18px;border-top:1px solid var(--color-border)}
+.audit dt{font-family:var(--font-mono);font-size:11.5px;color:var(--saurus-ink-muted);margin-bottom:2px}
+.audit dd{margin:0;font-size:15px}
+.audit dd.mono{font-size:14px}
+.audit dd strong{color:var(--saurus-primary);font-weight:500}
+.receipt .foot{margin-top:18px;font-family:var(--font-mono);font-size:11.5px;color:var(--saurus-ink-muted)}
+.tether{position:absolute;left:-40px;top:52px;width:40px;height:1px;background:var(--saurus-accent);opacity:.8}
+.tether:before{content:"";position:absolute;left:-4px;top:-3px;width:7px;height:7px;border-radius:50%;background:var(--saurus-accent)}
+.citation .caption{margin-top:32px;font-family:var(--font-mono);font-size:13px;color:var(--saurus-ink-muted);max-width:60ch}
+@media (max-width:960px){.citation .intro{grid-template-columns:1fr;gap:12px}.cite-composition{grid-template-columns:1fr}.tether{display:none}.receipt{margin-top:0}}
+
+/* ---------- Grounding ---------- */
+.grounding{background:var(--saurus-surface);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.grounding .h2{max-width:16ch}
+.nodes{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;margin:64px 0 40px;position:relative}
+.nodes:before{content:"";position:absolute;top:28px;left:56px;right:56px;height:1px;background:var(--color-border)}
+.node{position:relative;padding-right:8px}
+.node .num{width:56px;height:56px;border-radius:50%;border:1px solid var(--saurus-ink);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-size:22px;background:var(--saurus-surface);position:relative;margin-bottom:20px}
+.node h3{font-size:24px;margin-bottom:4px}
+.node .sub{font-family:var(--font-mono);font-size:12.5px;color:var(--saurus-ink-muted);margin-bottom:12px;display:block}
+.node p{font-size:15.5px;color:var(--saurus-ink-secondary);margin:0}
+.loopback{margin-top:18px;font-family:var(--font-mono);font-size:12px;color:var(--saurus-ink-muted);display:inline-flex;align-items:center;gap:8px}
+.loopback svg{width:34px;height:18px;color:var(--saurus-ink-muted)}
+.trace-line{display:inline-flex;align-items:center;gap:12px;font-family:var(--font-mono);font-size:13px;color:var(--saurus-ink-secondary);background:var(--saurus-paper);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:12px 18px;margin-top:8px;max-width:100%;overflow-x:auto;white-space:nowrap}
+.spin{display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid var(--saurus-primary);border-right-color:transparent;animation:spin 1s linear infinite;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.limit{margin-top:56px;padding-top:24px;border-top:1px solid var(--color-border);max-width:62ch;font-size:16.5px;color:var(--saurus-ink-secondary)}
+@media (max-width:900px){.nodes{grid-template-columns:1fr;gap:36px}.nodes:before{display:none}}
+
+/* ---------- Trace panel ---------- */
+.panel{background:var(--saurus-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);overflow:hidden}
+.panel-head{padding:24px 28px 20px;border-bottom:1px solid var(--color-border)}
+.panel-head .badge{font-family:var(--font-mono);font-size:12px;color:var(--saurus-primary);background:var(--saurus-primary-bg);padding:3px 8px;border-radius:var(--radius-sm)}
+.panel-head .title{font-size:16px;margin:12px 0 20px;color:var(--saurus-ink)}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.metric .v{font-family:var(--font-heading);font-size:32px;line-height:1;color:var(--saurus-ink)}
+.metric .l{font-family:var(--font-mono);font-size:11.5px;color:var(--saurus-ink-muted);margin-top:6px}
+.stages{padding:12px 0;overflow-x:auto}
+.stage{display:grid;grid-template-columns:28px 160px 1fr auto;gap:12px;align-items:center;padding:11px 28px;font-size:15px;min-width:560px}
+.stage .ic{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center}
+.stage .ic svg{width:16px;height:16px}
+.stage.done .ic{color:var(--saurus-success)}
+.stage.active .ic{color:var(--saurus-active)}
+.stage.pending{color:var(--saurus-ink-muted)}
+.stage.pending .ic{color:var(--saurus-pending)}
+.stage .name{font-weight:500}
+.stage .detail{color:var(--saurus-ink-secondary);font-size:14.5px}
+.stage .time{font-family:var(--font-mono);font-size:12.5px;color:var(--saurus-ink-muted);text-align:right}
+.stage.active .time{color:var(--saurus-primary)}
+.sub{display:grid;grid-template-columns:28px 160px 1fr;gap:12px;padding:2px 28px 10px;font-size:13.5px;color:var(--saurus-ink-secondary);min-width:560px}
+.sub .tree{grid-column:2;font-family:var(--font-mono);font-size:12.5px;color:var(--saurus-ink-muted);padding-left:12px}
+.sub .txt{grid-column:3}
+.resume{text-align:right;padding:4px 28px 12px;font-family:var(--font-mono);font-size:12px;color:var(--saurus-ink-muted);min-width:560px}
+.log{border-top:1px solid var(--color-border);background:var(--saurus-sidebar);padding:16px 28px 20px;overflow-x:auto}
+.log .spec-label{margin-bottom:10px}
+.log pre{margin:0;font-family:var(--font-mono);font-size:12.5px;line-height:1.7;color:var(--saurus-ink-secondary)}
+.log pre .t{color:var(--saurus-ink-muted)}
+.log pre .k{color:var(--saurus-primary)}
+@media (max-width:600px){.metrics{grid-template-columns:1fr 1fr}}
+
+/* ---------- Positioning table ---------- */
+.sits .h2{max-width:18ch}
+.sits table{width:100%;border-collapse:collapse;font-size:15px;margin-top:48px}
+.sits th,.sits td{text-align:left;padding:16px 18px 16px 0;border-bottom:1px solid var(--color-border);vertical-align:top}
+.sits th{font-weight:500;font-family:var(--font-mono);font-size:12.5px;color:var(--saurus-ink-muted);letter-spacing:.04em;text-transform:uppercase;padding-bottom:12px}
+.sits th.us{color:var(--saurus-primary)}
+.sits td:first-child{font-family:var(--font-heading);font-size:17px;width:22%}
+.sits td:nth-child(2){color:var(--saurus-ink-secondary);width:32%}
+.sits td.us{color:var(--saurus-ink)}
+.table-scroll{overflow-x:auto}
+@media (max-width:640px){.sits table{min-width:620px}}
+
+/* ---------- Author ---------- */
+.author .h2{max-width:16ch}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:56px 0 72px}
+.two .card h3{font-size:22px;margin-bottom:16px}
+.two ul{list-style:none;padding:0;margin:0}
+.two li{display:flex;gap:12px;font-size:15.5px;color:var(--saurus-ink-secondary);padding:9px 0;border-top:1px solid var(--color-border)}
+.two li:first-child{border-top:none}
+.two li .m{flex:none;width:16px;font-family:var(--font-mono);color:var(--saurus-primary);margin-top:1px}
+.two li .m.d{color:var(--saurus-ink-muted)}
+.export{display:inline-flex;align-items:center;gap:10px;font-family:var(--font-mono);font-size:12.5px;color:var(--saurus-ink-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:8px 14px;margin-top:8px}
+.export span{color:var(--saurus-ink-muted)}
+.assistant{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,7fr);gap:48px;align-items:start}
+.assistant h3{font-size:24px;margin-bottom:12px}
+.assistant .caption{font-family:var(--font-mono);font-size:13px;color:var(--saurus-ink-muted);line-height:1.6;max-width:40ch}
+.msgs{display:flex;flex-direction:column;gap:12px}
+.msg{background:var(--saurus-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:18px 22px;font-size:15.5px;line-height:1.65}
+.msg .who{font-family:var(--font-mono);font-size:11.5px;color:var(--saurus-ink-muted);display:block;margin-bottom:6px}
+.msg.you{margin-right:12%}
+.msg.bot{margin-left:12%;border-left:2px solid var(--saurus-primary)}
+.msg p{margin:0}
+@media (max-width:900px){.two{grid-template-columns:1fr}.assistant{grid-template-columns:1fr}.msg.you,.msg.bot{margin:0}}
+
+/* ---------- Close ---------- */
+.close{text-align:center;padding-top:clamp(96px,14vw,200px);position:relative}
+.close .rule-gradient{width:min(520px,60%);margin:0 auto 64px}
+.close h2{font-size:clamp(46px,7.2vw,96px);line-height:1.02;letter-spacing:-.02em;margin:0 auto 24px;max-width:12ch}
+.close .sub{font-family:var(--font-heading);font-size:clamp(20px,2.2vw,28px);color:var(--saurus-ink-secondary);margin:0 auto 40px;max-width:32ch}
+.close .cta-row{justify-content:center}
+.close .shelf{margin-top:72px}
+.close .pills{justify-content:center}
+.close .pill{min-width:300px;text-align:left;padding:18px 22px}
+.close .pill .go{font-family:var(--font-body);font-size:14px;color:var(--saurus-primary);margin-top:8px;font-weight:500}
+.signoff{display:flex;align-items:center;justify-content:flex-end;gap:14px;margin-top:96px;font-family:var(--font-heading);font-style:italic;font-size:16px;color:var(--saurus-ink-secondary)}
+.signoff svg{width:96px;height:64px}
+@media (max-width:640px){.signoff{justify-content:center}}
+
+/* ---------- Footer ---------- */
+footer{background:var(--saurus-sidebar);border-top:1px solid var(--color-border);padding:64px 0 40px;color:var(--saurus-ink-secondary);font-size:14px}
+footer .top{display:grid;grid-template-columns:minmax(0,5fr) repeat(3,minmax(0,2fr));gap:40px;margin-bottom:48px}
+footer .wordmark{margin-bottom:8px}
+footer .tag{font-family:var(--font-heading);font-style:italic;font-size:15px;color:var(--saurus-ink-secondary);margin-bottom:16px}
+footer .boiler{font-size:13.5px;line-height:1.6;color:var(--saurus-ink-muted);max-width:52ch;margin:0}
+footer h4{font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--saurus-ink-muted);margin-bottom:14px;font-weight:500}
+footer ul{list-style:none;margin:0;padding:0}
+footer li{margin-bottom:8px}
+footer li a{color:var(--saurus-ink-secondary)}
+footer li a:hover{color:var(--saurus-primary)}
+footer .bottom{border-top:1px solid var(--color-border);padding-top:20px;font-size:13px;color:var(--saurus-ink-muted);display:flex;flex-wrap:wrap;gap:8px 0}
+footer .bottom a{color:var(--saurus-ink-muted)}
+footer .bottom a:hover{color:var(--saurus-primary)}
+@media (max-width:900px){footer .top{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){footer .top{grid-template-columns:1fr}}
+
+/* ---------- Motion ---------- */
+.reveal{opacity:0;transform:translateY(10px);transition:opacity .6s ease,transform .6s ease}
+.reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .reveal{opacity:1;transform:none;transition:none}
+  .spin{animation:none;border-right-color:var(--saurus-primary)}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<nav class="top" aria-label="Page">
+  <div class="wrap">
+    <a class="wordmark" href="#top" aria-label="The Saurus">
+      <svg viewBox="0 0 56 44" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 36c4-2 6-6 6-12 0-8 5-14 13-14h8c6 0 10 3 12 8l5 2-5 3c-2 5-7 8-12 8h-5l-2 8"/><path d="M14 36l-1-6"/><circle cx="35" cy="17" r="1.2" fill="currentColor"/></svg>
+      The Saurus
+    </a>
+    <div class="links">
+      <a class="anchor" href="#synthesis">The synthesis</a>
+      <a class="anchor" href="#evidence">The evidence</a>
+      <a class="anchor" href="#method">The method</a>
+      <a class="btn btn-quiet" href="#feed">Feed it a corpus</a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9c0-.5 0-1-.1-1.4A7 7 0 0 1 12 3z"/></svg>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ============ 1. HERO ============ -->
+<section class="hero" id="top">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">A literature review pipeline</span>
+      <h1>Feed The&nbsp;Saurus your papers.</h1>
+      <p class="sub">From a folder of PDFs to a literature review, with every claim traced to its page.</p>
+      <p class="body">Upload the corpus you already curated. A multi-agent pipeline analyzes each paper, extracts themes and claims, deduplicates themes across papers, and writes a cohesive review where every citation resolves to paper, page, and paragraph. You watch every stage. You keep the judgment.</p>
+      <div class="cta-row">
+        <a class="btn btn-gold" href="#feed" id="feed">Feed it a corpus</a>
+        <a class="link-arrow" href="#evidence">Inspect a sample synthesis</a>
+      </div>
+      <div class="micro">Open source · Runs locally · 20 to 100 PDFs per job</div>
+      <div class="shelf">
+        <span class="mono">Or inspect a pre-digested sample corpus:</span>
+        <div class="pills">
+          <a class="pill" href="#evidence"><strong>Circadian Misalignment in Shift Work</strong><span>40 papers · 380 pages · 14 themes</span></a>
+          <a class="pill" href="#close"><strong>Neural Organoid Morphogenesis</strong><span>28 papers · 295 pages · 11 themes</span></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mascot-wrap" aria-hidden="true">
+      <!-- Hero mascot: line-art dinosaur, papers in, bound review out -->
+      <svg viewBox="0 0 560 440" fill="none" stroke="var(--saurus-primary)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <!-- ground line -->
+        <path d="M40 398 H520" stroke="var(--saurus-ink-muted)" stroke-width="1" stroke-dasharray="2 6"/>
+        <!-- tail -->
+        <path d="M78 300 C40 292 26 256 58 236 C82 222 118 246 126 276"/>
+        <!-- body -->
+        <path d="M126 276 C120 232 150 196 200 190 C258 184 300 208 322 238"/>
+        <path d="M126 276 C130 320 160 356 214 362 C250 366 288 348 306 316"/>
+        <!-- belly to hind leg -->
+        <path d="M214 362 C214 380 210 392 206 398"/>
+        <path d="M232 362 C236 380 236 392 240 398"/>
+        <path d="M198 398 H248" />
+        <!-- fore leg -->
+        <path d="M292 330 C296 350 292 366 286 374"/>
+        <path d="M304 322 C314 342 312 362 308 374"/>
+        <path d="M280 374 H316"/>
+        <!-- neck -->
+        <path d="M306 316 C330 300 340 270 336 244"/>
+        <path d="M322 238 C348 226 372 210 388 190"/>
+        <!-- head, upper jaw -->
+        <path d="M336 244 C360 224 384 210 412 200 C430 194 452 188 466 170 C480 152 470 132 446 134 C420 136 398 148 380 160"/>
+        <!-- lower jaw, open -->
+        <path d="M380 160 C372 178 368 196 372 214 C376 232 404 236 432 226"/>
+        <path d="M432 226 C448 220 462 212 470 202"/>
+        <!-- teeth -->
+        <path d="M418 200 l4 8 M432 196 l4 8 M446 190 l3 8"/>
+        <!-- eye -->
+        <circle cx="440" cy="152" r="3.2" fill="var(--saurus-primary)"/>
+        <path d="M428 142 c6 -6 14 -8 22 -6" stroke-width="1.6"/>
+        <!-- back plates -->
+        <path d="M186 192 l8 -18 l10 16 M212 186 l8 -20 l10 18 M240 190 l8 -18 l10 18" stroke-width="1.8"/>
+        <!-- PDF sheets flying into the mouth -->
+        <g stroke="var(--saurus-ink)" stroke-width="1.6">
+          <g transform="translate(470 96) rotate(-24)"><rect x="0" y="0" width="52" height="66" rx="2" fill="var(--saurus-paper)"/><path d="M8 14h36M8 24h36M8 34h28M8 44h30"/><text x="8" y="60" font-family="Fira Code, monospace" font-size="8" fill="var(--saurus-ink-muted)" stroke="none">PDF</text></g>
+          <g transform="translate(512 168) rotate(-58)" opacity=".85"><rect x="0" y="0" width="48" height="60" rx="2" fill="var(--saurus-paper)"/><path d="M8 14h32M8 24h32M8 34h24"/></g>
+          <g transform="translate(496 40) rotate(-8)" opacity=".7"><rect x="0" y="0" width="44" height="56" rx="2" fill="var(--saurus-paper)"/><path d="M8 14h28M8 24h28M8 34h20"/></g>
+        </g>
+        <!-- bound review coming out under the tail -->
+        <g transform="translate(60 320)">
+          <rect x="0" y="0" width="60" height="76" rx="3" fill="var(--saurus-primary)" stroke="var(--saurus-primary)"/>
+          <path d="M6 0 v76" stroke="var(--saurus-paper)" stroke-width="1.4" opacity=".7"/>
+          <rect x="14" y="14" width="34" height="1.6" fill="var(--saurus-paper)" stroke="none"/>
+          <rect x="14" y="20" width="24" height="1.6" fill="var(--saurus-paper)" stroke="none"/>
+          <text x="14" y="60" font-family="Literata, serif" font-size="9" fill="var(--saurus-paper)" stroke="none">Review</text>
+        </g>
+        <!-- motion hints -->
+        <path d="M456 84 c-8 8 -12 18 -12 30" stroke="var(--saurus-ink-muted)" stroke-width="1" stroke-dasharray="3 5"/>
+        <path d="M116 300 c-10 4 -20 6 -30 8" stroke="var(--saurus-accent)" stroke-width="1.6"/>
+      </svg>
+      <span class="mascot-caption">fig. 1 — digestion, schematic</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. THE PROBLEM ============ -->
+<section class="problem">
+  <div class="wrap">
+    <div class="reveal">
+      <span class="eyebrow">The bookkeeping barrier</span>
+      <h2 class="h2">Literature reviews take weeks because of bookkeeping, not reading.</h2>
+      <p class="lead">You have already done the hard part. The folder has forty papers in it, chosen by you, for a reason. What remains is the part nobody enjoys: reading each one, noting which themes it touches, tracking which papers agree and which do not, finding the page and the paragraph for every claim, and then writing prose that holds all of it together without losing a single citation.</p>
+      <p class="lead">That is not thinking. It is accounting. It fails in three predictable ways.</p>
+
+      <div class="failures">
+        <div class="failure">
+          <h3>The Context Cliff.</h3>
+          <p>Working memory collapses around paper twelve. By paper thirty-eight you are no longer synthesizing a corpus; you are surviving a reading list, and the last paper is read in isolation from the first.</p>
+        </div>
+        <div class="failure">
+          <h3>The Lexical Disconnect.</h3>
+          <p>Authors describing the same mechanism use different words for it. One paper says "circadian disruption," another "chronobiological misalignment." A keyword search treats them as two unrelated inquiries, and so does a tired reader.</p>
+        </div>
+        <div class="failure">
+          <h3>The Provenance Drift.</h3>
+          <p>Notes detach from page numbers. Spreadsheets lose paragraph locations. By the time you write, an assertion has no verifiable address, and finding it again costs an afternoon.</p>
+        </div>
+      </div>
+    </div>
+    <aside class="pullquote reveal">
+      <p>The Saurus does the digestion. You stay the author.</p>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ 3. SYNTHESIS VS SUMMARY ============ -->
+<section id="synthesis">
+  <div class="wrap">
+    <div class="reveal">
+      <span class="eyebrow">Corpus, not document</span>
+      <h2 class="h2">Synthesis by theme, not summary by paper.</h2>
+      <p class="lead" style="max-width:68ch">Document chatbots operate on one paper at a time. Handed a folder, they produce a stack of isolated summaries: paper A studied this, paper B studied that. That is not a literature review. A review is a horizontal cross-section of a field, organized by the concepts running through the literature, not by the bibliographies of the authors who wrote it.</p>
+    </div>
+
+    <div class="contrast reveal">
+      <div class="card stack">
+        <span class="label">The summary stack</span>
+        <p class="subline">Forty papers processed as forty silos.</p>
+        <div class="stack-rows">
+          <div class="stack-row">Paper 01 · summary of methods, summary of results</div>
+          <div class="stack-row">Paper 02 · summary of methods, summary of results</div>
+          <div class="stack-row">Paper 03 · summary of methods, summary of results</div>
+          <div class="stack-row more">… 37 more summaries</div>
+        </div>
+        <p class="verdict">A list. No cross-paper agreement, no tension, no synthesis.</p>
+      </div>
+      <div class="card matrix">
+        <span class="label">The theme matrix</span>
+        <p class="subline">One theme, every paper that touches it.</p>
+        <div class="theme-row">
+          <h4>Circadian misalignment</h4>
+          <p class="draws">Draws on Roenneberg <span class="cite"><b>[4]</b></span>, Kalsbeek <span class="cite"><b>[11]</b></span>, Vetter <span class="cite"><b>[23]</b></span>.</p>
+          <p class="note">Contrasts persistent melatonin delay with partial re-entrainment between rotations.</p>
+        </div>
+        <div class="theme-row">
+          <h4>Sleep debt and metabolic markers</h4>
+          <p class="draws">Draws on Scheer <span class="cite"><b>[2]</b></span>, Buxton <span class="cite"><b>[9]</b></span>, Morris <span class="cite"><b>[17]</b></span>.</p>
+          <p class="note">Maps agreement on glucose tolerance, disagreement on cortisol timing.</p>
+        </div>
+        <p class="verdict green">A draft woven around ideas, with the sources still attached.</p>
+      </div>
+    </div>
+
+    <div class="loop reveal">
+      <div class="loop-grid">
+        <div class="step">
+          <div class="glyph">
+            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h11l7 7v19H8z"/><path d="M19 3v7h7"/><path d="M12 16h10M12 21h10M12 26h6"/></svg>
+            <svg class="tiny" viewBox="0 0 56 44" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 36c4-2 6-6 6-12 0-8 5-14 13-14h8c6 0 10 3 12 8l5 2-5 3c-2 5-7 8-12 8h-5l-2 8"/><circle cx="35" cy="17" r="1.2" fill="currentColor"/></svg>
+          </div>
+          <h3>Feed</h3>
+          <p>Drop your PDFs. The Saurus accepts the corpus as it is: no reformatting, no reference manager export, no per-paper setup.</p>
+        </div>
+        <div class="step">
+          <div class="glyph"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="16" r="8"/><circle cx="20" cy="16" r="8"/></svg></div>
+          <h3>Digest</h3>
+          <p>Each paper is analyzed independently and in parallel. Themes and claims are extracted, then themes are matched across the corpus by semantic similarity so that two papers naming the same idea differently end up in the same place.</p>
+        </div>
+        <div class="step">
+          <div class="glyph"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7c4-2 8-2 13 1 5-3 9-3 13-1v19c-4-2-8-2-13 1-5-3-9-3-13-1z"/><path d="M16 8v20"/></svg></div>
+          <h3>Review</h3>
+          <p>Each theme is reviewed against every paper that touches it. The pipeline then writes a cohesive literature review, structured by theme, with inline citations resolved to paper, page, and paragraph.</p>
+        </div>
+        <div class="step">
+          <div class="glyph"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="13" cy="13" r="8"/><path d="M19 19l9 9"/></svg></div>
+          <h3>Explore</h3>
+          <p>Browse per-paper findings, inspect the full trace of every stage, and ask the assistant questions about the corpus. It answers with the same citation discipline as the review.</p>
+        </div>
+      </div>
+      <div class="loop-caption">Paper Analysis → Theme Dedup → Theme Review → Aggregation</div>
+      <p class="closing">Shared vocabulary does not settle a disagreement. The claims and their sources remain there for you to compare.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4. ACT BREAK ============ -->
+<section class="act" id="evidence">
+  <div class="wrap">
+    <h2>Any tool can summarize a paper. <span class="em">Here is what happens after that.</span></h2>
+    <p>Four things The Saurus does that a chat window over your PDFs does not. Each one is shown, not asserted.</p>
+  </div>
+</section>
+
+<!-- ============ 5. PROOF: DEDUP ============ -->
+<section class="proof dedup">
+  <div class="wrap">
+    <div class="copy reveal">
+      <span class="eyebrow">Stage 2 · Theme Dedup</span>
+      <h2 class="h2">Part thesaurus. It connects what authors said differently.</h2>
+      <p class="lead">A thesaurus groups words that share a meaning. The Saurus groups themes that share a phenomenon.</p>
+      <p class="lead">Extraction is easy. The hard part is recognizing that paper 4 calls it "circadian disruption," paper 11 calls it "chronobiological misalignment," and paper 23 calls it "shift-work phase shift" while spending three pages on the same thing. The dedup stage matches themes across the corpus by embedding similarity and merges them, so the review is organized around what the literature discusses, not around the order you uploaded the files.</p>
+      <p class="caption">Themes are matched by embedding similarity, then confirmed pairwise before merging. Members that fail the check are kept separate.</p>
+    </div>
+
+    <div class="specimen reveal" aria-label="Dedup specimen, recorded sample run">
+      <span class="spec-label">Raw theme labels · extracted from 40 papers</span>
+      <div class="papers">
+        <div class="paper"><span class="who"><span class="mono">[4]</span>Roenneberg et al. 2023</span><span class="chip c1">circadian disruption</span></div>
+        <div class="paper"><span class="who"><span class="mono">[11]</span>Kalsbeek et al. 2024</span><span class="chip c2">chronobiological misalignment</span></div>
+        <div class="paper"><span class="who"><span class="mono">[23]</span>Vetter et al. 2022</span><span class="chip c3">shift-work phase shift</span></div>
+      </div>
+      <div class="connector">
+        <div class="stroke"></div>
+        <span class="lbl">Theme Dedup · embedding match → pairwise confirm</span>
+        <div class="stroke"></div>
+      </div>
+      <span class="spec-label">Merged theme · in the review</span>
+      <div class="merged">
+        <span class="badge">Theme 03</span>
+        <h3>Circadian misalignment</h3>
+        <p class="meta">3 papers · 11 claims · 1 observed tension</p>
+        <div class="alias">Merged from: circadian disruption · chronobiological misalignment · shift-work phase shift</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 6. PROOF: CITATION ============ -->
+<section class="citation">
+  <div class="wrap">
+    <div class="intro reveal">
+      <div>
+        <span class="eyebrow">Stage 4 · Aggregation</span>
+        <h2 class="h2" style="margin-bottom:0">Every citation has an address.</h2>
+      </div>
+      <p class="lead">Not a paper title. Not "according to the literature." A paper, a page, and a paragraph. Every claim in the review resolves to a location you can open and read, which means every sentence is one you can defend in a committee meeting, or delete because you disagree with it.</p>
+    </div>
+
+    <div class="cite-composition reveal">
+      <div class="manuscript">
+        <span class="spec-label">Generated review · §2.3 Recovery dynamics</span>
+        <p>Night-shift schedules are consistently associated with delayed melatonin onset relative to day workers <span class="cite"><b>[4]</b><i>(p.7,§2)</i></span>, an effect that persists for at least three consecutive rest days <span class="cite on"><b>[11]</b><i>(p.12,§3)</i></span>. Vetter and colleagues report a smaller but measurable shift in rotating-shift cohorts <span class="cite"><b>[23]</b><i>(p.4,§1)</i></span>, which they attribute to partial re-entrainment between rotations <span class="cite"><b>[23]</b><i>(p.5,§2)</i></span>.</p>
+      </div>
+      <div class="receipt" aria-label="Grounded citation receipt">
+        <div class="tether" aria-hidden="true"></div>
+        <div class="head"><span>✓</span> Grounded citation</div>
+        <div class="addr">[11] Kalsbeek et al. 2024 · p.12 · §3</div>
+        <blockquote>"<u>Dim-light melatonin onset remained delayed by a mean of 2.1 h on the third consecutive rest day</u>, indicating that re-entrainment to a day-active schedule was incomplete within the recovery window studied."</blockquote>
+        <dl class="audit">
+          <div><dt>Entailment status</dt><dd><strong>Entailed</strong></dd></div>
+          <div><dt>NLI score</dt><dd class="mono">0.94</dd></div>
+          <div><dt>Claim ID</dt><dd class="mono">kalsbeek-2024-c07</dd></div>
+          <div><dt>Cited in</dt><dd class="mono">§2.3, §4.1</dd></div>
+        </dl>
+        <div class="foot">Checked by NLI cross-encoder · citation guard passed</div>
+      </div>
+    </div>
+    <p class="caption reveal"><span style="color:var(--saurus-primary)">[n]</span> resolves to the reference entry. (p.12,§3) resolves to the paragraph. Both are checked before the review is returned.</p>
+  </div>
+</section>
+
+<!-- ============ 7. PROOF: GROUNDING ============ -->
+<section class="grounding" id="method">
+  <div class="wrap">
+    <div class="reveal">
+      <span class="eyebrow">Verification</span>
+      <h2 class="h2">The model asserts. Something else checks.</h2>
+      <p class="lead">Language models produce citations that read correctly and are not. The Saurus does not ask you to trust that this did not happen. It checks, mechanically, at two points, and sends failures back rather than through.</p>
+    </div>
+
+    <div class="nodes reveal">
+      <div class="node">
+        <div class="num">1</div>
+        <h3>Entailment.</h3>
+        <span class="sub">NLI cross-encoder</span>
+        <p>A natural-language-inference cross-encoder reads each cited claim against the cited passage and scores whether the passage actually entails the claim. It has one job, and it is not the model that wrote the review.</p>
+      </div>
+      <div class="node">
+        <div class="num">2</div>
+        <h3>Citation integrity.</h3>
+        <span class="sub">citation guard</span>
+        <p>A guard verifies that every <code class="mono">[n](p.x,§y)</code> in the review resolves to a real claim extracted in stage one. A citation to a claim that does not exist is rejected before you see it.</p>
+      </div>
+      <div class="node">
+        <div class="num">3</div>
+        <h3>Reask, not shrug.</h3>
+        <span class="sub">reask</span>
+        <p>When entailment is borderline or a citation fails to resolve, the offending passage is sent back to the writing agent with the failure attached. Borderline cases are escalated to a stricter check rather than waved through. Failures that survive are shown in the trace, not smoothed over.</p>
+        <div class="loopback"><svg viewBox="0 0 34 18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M32 4H10a6 6 0 0 0 0 12h4"/><path d="M11 12l3 4-3 4" transform="translate(0 -4)"/></svg> writing agent</div>
+      </div>
+    </div>
+
+    <div class="reveal">
+      <div class="trace-line"><span class="spin" aria-hidden="true"></span>Theme Review · batch 3 · reask · entailment 0.41 &lt; 0.60 · retry 1/2</div>
+      <p class="closing">This reduces fabrication risk by mechanism. The mechanism is the message.</p>
+      <p class="limit">The check tests support in a passage. It does not establish that a study is sound or that your corpus covers the field. You still assess the evidence and the draft's interpretation.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 8. PROOF: TRACE ============ -->
+<section class="proof trace">
+  <div class="wrap">
+    <div class="copy reveal">
+      <span class="eyebrow">Pipeline Trace</span>
+      <h2 class="h2">Watch every stage. Nothing is hidden.</h2>
+      <p class="lead">A single prompt over a context window is not a process you can inspect, resume, or reproduce. The Saurus runs as a durable pipeline: each paper analyzed independently, each stage recorded as it happens, each agent's events visible in real time. If a paper cannot be parsed, the review says so and continues. If the job crashes, it resumes from the last completed stage, and the trace shows the resume honestly.</p>
+      <p class="caption">Every event is persisted as it occurs. The trace you see during the run is the trace you can open afterward.</p>
+    </div>
+
+    <div class="panel reveal" aria-label="Pipeline trace, recorded sample run">
+      <div class="panel-head">
+        <span class="badge">JOB circadian-2026-09 · Recorded sample run</span>
+        <p class="title">Corpus: Circadian Misalignment in Shift Work (40 papers · 380 pages)</p>
+        <div class="metrics">
+          <div class="metric"><div class="v">39/40</div><div class="l">Parsed</div></div>
+          <div class="metric"><div class="v">187</div><div class="l">Themes raw</div></div>
+          <div class="metric"><div class="v">41</div><div class="l">Themes merged</div></div>
+          <div class="metric"><div class="v">312</div><div class="l">Claims traced</div></div>
+        </div>
+      </div>
+      <div class="stages">
+        <div class="stage done"><span class="ic"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3 3 7-7"/></svg></span><span class="name">Ingestion</span><span class="detail">40/40 converted</span><span class="time">12.4s</span></div>
+        <div class="stage done"><span class="ic"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3 3 7-7"/></svg></span><span class="name">Paper Analysis</span><span class="detail">39/40 · 312 claims · 187 themes</span><span class="time">4m 02s</span></div>
+        <div class="sub"><span class="tree">└ [7] Sørensen et al.</span><span class="txt">could not be parsed · skipped</span></div>
+        <div class="stage done"><span class="ic"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3 3 7-7"/></svg></span><span class="name">Theme Dedup</span><span class="detail">187 → 41 themes</span><span class="time">38s</span></div>
+        <div class="stage active"><span class="ic"><span class="spin"></span></span><span class="name">Theme Review</span><span class="detail">batch 6/9 · 5 themes per batch</span><span class="time">running</span></div>
+        <div class="sub"><span class="tree">└ batch 3</span><span class="txt">reask · entailment 0.41 &lt; 0.60 · retry 1/2</span></div>
+        <div class="stage pending"><span class="ic"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="5.5"/></svg></span><span class="name">Aggregation</span><span class="detail"></span><span class="time">pending</span></div>
+        <div class="resume">resumed from journal</div>
+      </div>
+      <div class="log">
+        <span class="spec-label">Event log · append-only NDJSON</span>
+<pre><span class="t">[14:32:01]</span> paper_analysis/[7]   parse failed · skipped · review continues
+<span class="t">[14:32:03]</span> theme_dedup          merged "circadian disruption" + "chronobiological misalignment" → <span class="k">"Circadian misalignment"</span>
+<span class="t">[14:32:08]</span> theme_review/batch-3 reask · entailment 0.41 &lt; 0.60 · retry 1/2
+<span class="t">[14:32:11]</span> theme_review/batch-3 retry passed · entailment <span class="k">0.87</span>
+<span class="t">[14:32:14]</span> workflow             resumed from journal · 3 stages replayed, 0 re-executed</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 9. WHERE IT SITS ============ -->
+<section class="sits">
+  <div class="wrap">
+    <div class="reveal">
+      <h2 class="h2">Downstream of the tools you already use.</h2>
+      <p class="lead">Use Semantic Scholar or Research Rabbit to find the papers. Use Elicit or Consensus to pull claims from them. Use a writing assistant to polish your own argument. The Saurus is the step in between: it takes the folder and produces the review those tools do not write.</p>
+    </div>
+    <div class="table-scroll reveal">
+      <table>
+        <thead><tr><th></th><th>They give you</th><th class="us">The Saurus gives you</th></tr></thead>
+        <tbody>
+          <tr><td>Discovery tools</td><td>Papers to read</td><td class="us">Synthesis of papers you already have</td></tr>
+          <tr><td>Extraction tools</td><td>Claims per paper, side by side</td><td class="us">Themes deduplicated across papers, written into a review</td></tr>
+          <tr><td>General LLMs</td><td>An answer, unverified</td><td class="us">A review, traced to page and paragraph, grounding-checked</td></tr>
+          <tr><td>Writing assistants</td><td>Faster prose for your argument</td><td class="us">The literature-review draft your argument sits on</td></tr>
+          <tr><td>Manual review</td><td>Total control, days of work</td><td class="us">Same control, minutes of bookkeeping</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 10. THE AUTHOR STAYS THE AUTHOR ============ -->
+<section class="author">
+  <div class="wrap">
+    <div class="reveal">
+      <span class="eyebrow">The division of labor</span>
+      <h2 class="h2">A draft to argue with, not a verdict to accept.</h2>
+      <p class="lead">The Saurus produces a draft and the evidence behind it. It does not rank your papers by importance, does not decide what the field has concluded, and does not claim to have understood anything. It produces the map. Reading is still yours, and so is the argument.</p>
+      <p class="lead">The review is editable and exportable. The per-paper findings are browsable. And the assistant, when you ask it something, answers with citations rather than verdicts.</p>
+      <div class="export"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v9M4.5 7.5L8 11l3.5-3.5M3 13h10"/></svg>Export <span>· Markdown / PDF</span></div>
+    </div>
+
+    <div class="two reveal">
+      <div class="card">
+        <h3>What The Saurus does</h3>
+        <ul>
+          <li><span class="m">✓</span>Extracts themes and claims in parallel across your PDFs</li>
+          <li><span class="m">✓</span>Reconciles diverging author terminology through semantic deduplication</li>
+          <li><span class="m">✓</span>Verifies every cited claim against its source passage with an NLI check</li>
+          <li><span class="m">✓</span>Delivers an editable review with citations resolved to page and paragraph</li>
+          <li><span class="m">✓</span>Keeps a persistent, inspectable trace for every stage</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>What The Saurus will not do</h3>
+        <ul>
+          <li><span class="m d">–</span>Assert that a review is complete without your reading it</li>
+          <li><span class="m d">–</span>Fabricate a citation or smooth over a broken reference</li>
+          <li><span class="m d">–</span>Claim to have understood the implications of your field</li>
+          <li><span class="m d">–</span>Produce your thesis contribution or original argument</li>
+          <li><span class="m d">–</span>Train on your unreleased manuscripts</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="assistant reveal">
+      <div>
+        <h3>Keep asking questions of the corpus.</h3>
+        <p class="caption">Answers cite the same claim set as the review. If the corpus does not contain it, the assistant says so.</p>
+      </div>
+      <div class="msgs">
+        <div class="msg you"><span class="who">You</span><p>Which papers disagree about whether the melatonin delay recovers within a week?</p></div>
+        <div class="msg bot"><span class="who">Assistant</span><p>Two positions appear in the corpus. Kalsbeek et al. report persistence beyond three rest days <span class="cite"><b>[11]</b><i>(p.12,§3)</i></span>, while Vetter et al. observe partial re-entrainment between rotations <span class="cite"><b>[23]</b><i>(p.5,§2)</i></span>. Roenneberg et al. do not address recovery timing directly <span class="cite"><b>[4]</b></span>. The corpus does not contain a study extending beyond seven days, so it cannot settle the question as posed. The review discusses this under §2.3, <em>Recovery dynamics</em>.</p></div>
+      </div>
+    </div>
+
+    <p class="closing reveal">The Saurus does the digestion. You decide what the literature supports.</p>
+  </div>
+</section>
+
+<!-- ============ 11. CLOSE ============ -->
+<section class="close" id="close">
+  <div class="wrap">
+    <div class="rule-gradient"></div>
+    <div class="reveal">
+      <h2>Feed The&nbsp;Saurus your papers.</h2>
+      <p class="sub">Forty papers in. One review out. Every claim traced to a paragraph.</p>
+      <div class="cta-row">
+        <a class="btn btn-gold" href="#feed">Feed it a corpus</a>
+        <a class="link-arrow" href="#docs">Read the docs</a>
+      </div>
+      <div class="shelf">
+        <span class="mono">Or inspect a finished review right now:</span>
+        <div class="pills">
+          <a class="pill" href="#evidence"><strong>Circadian Misalignment in Shift Work</strong><span>40 papers · 380 pages · 14 themes · 312 traced claims</span><span class="go">Inspect the review →</span></a>
+          <a class="pill" href="#evidence"><strong>Neural Organoid Morphogenesis</strong><span>28 papers · 295 pages · 11 themes · 89 traced claims</span><span class="go">Inspect the review →</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="signoff">
+      <!-- small, satisfied mascot -->
+      <svg viewBox="0 0 140 92" fill="none" stroke="var(--saurus-primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M14 66c-9-2-12-12-4-18 6-4 14 2 16 10"/>
+        <path d="M26 58c-2-12 6-22 20-24 14-2 26 4 32 14"/>
+        <path d="M26 58c0 12 10 20 22 20 10 0 18-4 22-12"/>
+        <path d="M46 78l-1 8M56 78l1 8M42 86h18M66 66l-2 12M74 64l2 14M62 78h16"/>
+        <path d="M70 66c8-6 10-14 8-18"/>
+        <path d="M78 48c8-4 16-10 22-16 6-6 16-8 22-2 4 4 2 10-4 12-8 3-16 4-24 8"/>
+        <path d="M94 52c6 0 12-2 16-6"/>
+        <circle cx="116" cy="36" r="2" fill="var(--saurus-primary)"/>
+        <path d="M110 30c4-3 8-3 12-1" stroke-width="1.4"/>
+        <path d="M108 44c2 2 6 3 10 2" stroke-width="1.4"/>
+        <path d="M40 34l4-8 4 8M52 32l4-9 4 9" stroke-width="1.4"/>
+        <path d="M126 20c3-3 6-4 10-4" stroke="var(--saurus-accent)" stroke-width="1.4"/>
+        <path d="M2 82h136" stroke="var(--saurus-ink-muted)" stroke-width="1" stroke-dasharray="2 5"/>
+      </svg>
+      <span>Hungry for papers since the Cretaceous!</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 12. FOOTER ============ -->
+<footer id="docs">
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <div class="wordmark">The Saurus</div>
+        <p class="tag">Part thesaurus. Part dinosaur. Here to devour papers.</p>
+        <p class="boiler">The Saurus is a literature review pipeline. Upload a corpus of scientific PDFs and a multi-agent pipeline analyzes each paper in parallel, extracts themes and claims, deduplicates themes semantically across the corpus, and writes a cohesive literature review where every claim is cited to paper, page, and paragraph. Citation grounding is verified mechanically, and every pipeline stage is visible in real time. The Saurus produces the draft and the evidence; the researcher keeps the judgment.</p>
+      </div>
+      <div>
+        <h4>Architecture</h4>
+        <ul>
+          <li><a href="#synthesis">Pipeline stages</a></li>
+          <li><a href="#method">Grounding verification</a></li>
+          <li><a href="#evidence">Semantic deduplication</a></li>
+          <li><a href="#evidence">Event trace and recovery</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Integration</h4>
+        <ul>
+          <li><a href="#docs">Python pipeline API</a></li>
+          <li><a href="#docs">Papers MCP server</a></li>
+          <li><a href="#docs">Qdrant vector store</a></li>
+          <li><a href="#docs">Command-line clients</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Exports</h4>
+        <ul>
+          <li><a href="#docs">Markdown</a></li>
+          <li><a href="#docs">PDF</a></li>
+          <li><a href="#docs">YAML / NDJSON job data</a></li>
+          <li><a href="#docs">BibTeX</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="bottom">
+      <span>Open source · Runs locally · No papers retained for training · <a href="#docs">GitHub</a> · <a href="#docs">Documentation</a> · <a href="#docs">License</a></span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var root=document.documentElement;
+  var key='saurus-theme';
+  try{
+    var saved=localStorage.getItem(key);
+    if(saved==='dark'||(!saved&&window.matchMedia('(prefers-color-scheme: dark)').matches)) root.classList.add('dark');
+  }catch(e){}
+  var btn=document.getElementById('themeToggle');
+  if(btn) btn.addEventListener('click',function(){
+    var dark=root.classList.toggle('dark');
+    try{localStorage.setItem(key,dark?'dark':'light');}catch(e){}
+  });
+
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var els=document.querySelectorAll('.reveal');
+  if(reduce||!('IntersectionObserver' in window)){
+    els.forEach(function(el){el.classList.add('in');});
+    return;
+  }
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target);}
+    });
+  },{rootMargin:'0px 0px -8% 0px',threshold:.08});
+  els.forEach(function(el){io.observe(el);});
+})();
+</script>
+</body>
+</html>
