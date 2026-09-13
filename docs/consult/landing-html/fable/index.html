@@ -851,7 +851,7 @@ footer .bottom a:hover{color:var(--saurus-primary)}
   var key='saurus-theme';
   try{
     var saved=localStorage.getItem(key);
-    if(saved==='dark'||(!saved&&window.matchMedia('(prefers-color-scheme: dark)').matches)) root.classList.add('dark');
+    if(saved==='dark'||(saved===null&&window.matchMedia('(prefers-color-scheme: dark)').matches)) root.classList.add('dark');
   }catch(e){}
   var btn=document.getElementById('themeToggle');
   if(btn) btn.addEventListener('click',function(){
@@ -861,7 +861,7 @@ footer .bottom a:hover{color:var(--saurus-primary)}
 
   var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var els=document.querySelectorAll('.reveal');
-  if(reduce||!('IntersectionObserver' in window)){
+  if(reduce||typeof window.IntersectionObserver==='undefined'){
     els.forEach(function(el){el.classList.add('in');});
     return;
   }
