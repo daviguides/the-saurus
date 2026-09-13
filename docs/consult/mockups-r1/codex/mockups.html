@@ -278,6 +278,7 @@ function initFrame(frame,s,bp){
   let stage=2;
   const log=(tag,content)=>{const el=document.createElement('div');el.className='log-line';const time=document.createElement('time');time.textContent=['14:05:21','14:05:49','14:06:36'][stage-3]||'14:06:36';const b=document.createElement('b');b.textContent='['+tag+'] ';el.append(time,b,document.createTextNode(content));$('event-log').append(el);if($('autoscroll').checked)$('event-log').scrollTop=$('event-log').scrollHeight};
   $('autoscroll').onchange=()=>{if($('autoscroll').checked)$('event-log').scrollTop=$('event-log').scrollHeight};
+  requestAnimationFrame(()=>{if($('autoscroll').checked)$('event-log').scrollTop=$('event-log').scrollHeight});
   $('advance-pipeline').onclick=()=>{
    if(stage===5){go('review');return}stage++;
    frame.querySelectorAll('[data-stage]').forEach(el=>{const n=Number(el.dataset.stage),done=n<stage,active=n===stage;el.className='stage-box'+(done?' complete':active?' active':'');el.querySelector('.stage-badge').textContent=done?'✓ DONE':active?'● RUNNING':'PENDING';el.querySelector('.dot').className='dot'+(active?' pulse':done?'':' pending');if(done&&n>1)el.querySelector('.stage-dur').textContent=n===2?'0:55':n===3?'0:28':'0:47'});
