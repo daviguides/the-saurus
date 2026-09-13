@@ -9,19 +9,22 @@
 An EXTREMELY minimal logo icon — just the silhouette of a baby brontosaurus head and neck. Almost a glyph. Think of it as a letterform, not an illustration.
 
 ### What to draw
-- ONLY: neck curve + head shape + one dot eye + small open mouth line
-- That's it. Nothing else. 5-6 strokes maximum.
-- The neck rises from bottom-left in a gentle S-curve
-- The head is a small rounded bump at the top-right of the curve
+- ONLY: the VERY END of the neck (short stub) + head + one dot eye + small open mouth line
+- That's it. Nothing else. 4-5 strokes maximum.
+- Show MINIMAL neck — just enough to suggest "this is attached to a body below" (about 30% of total height is neck, 70% is head)
+- The head is the DOMINANT element — big, round, baby proportions
 - One solid dot for the eye
 - A tiny line or gap suggesting an open mouth (smile)
+- Optional: one nostril dot near the nose tip
 - NO monocle, NO paper, NO dorsal bumps, NO details — those belong in the full mascot, not here
+- NO long neck — crop it SHORT. This is a HEAD icon, not a neck icon.
 
 ### Shape
-- The SILHOUETTE alone must read as "baby dinosaur head" at 16px
-- Think of it like a cursive lowercase letter — fluid, single-gesture feeling
-- The negative space inside the neck curve is as important as the stroke
-- Total footprint: could fit inside a 1em square
+- The HEAD alone must read as "baby dinosaur" at 16px
+- The short neck stub is just the base/anchor — the eye-catcher is the round head
+- Think of it like a LETTER or EMOJI — compact, mostly head
+- Proportions: imagine cropping the approved hero mascot's head, keeping just a tiny bit of neck below the jaw
+- Total footprint: could fit inside a 1em square, roughly circular
 
 ### Style
 - Single-weight stroke, dark academic green (#2D6A4F)
