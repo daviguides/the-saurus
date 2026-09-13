@@ -6,53 +6,53 @@
 
 ## Prompt
 
-A minimal logo icon showing ONLY the head and neck of a baby brontosaurus, in profile, facing RIGHT.
+An EXTREMELY minimal logo icon — just the silhouette of a baby brontosaurus head and neck. Almost a glyph. Think of it as a letterform, not an illustration.
 
-### Anatomy
-- BABY BRONTOSAURUS proportions — head is proportionally LARGE relative to neck (baby animal ratio), round and soft
-- Curved neck rising from bottom-left, ending in the oversized rounded head at top-right
-- Big round expressive eye — the key to recognizability at small sizes
-- Small monocle on the eye (thin gold circular frame, with a short chain draping down the neck) — the academic signature
-- Mouth slightly open with a gentle smile — friendly, curious
-- 2-3 tiny rounded dorsal bumps where neck meets the cropped edge (hint of body below)
-- A single small paper corner sticking out of the mouth — subtle, like it just grabbed a snack. NOT a full page, just a triangular corner with one faint text line
+### What to draw
+- ONLY: neck curve + head shape + one dot eye + small open mouth line
+- That's it. Nothing else. 5-6 strokes maximum.
+- The neck rises from bottom-left in a gentle S-curve
+- The head is a small rounded bump at the top-right of the curve
+- One solid dot for the eye
+- A tiny line or gap suggesting an open mouth (smile)
+- NO monocle, NO paper, NO dorsal bumps, NO details — those belong in the full mascot, not here
 
-### Shape Language
-- The neck curve is the dominant shape — a gentle S-curve, baby-proportioned (shorter and thicker than adult brontosaurus)
-- The head is the visual anchor — big, round, expressive
-- Silhouette must be recognizable at 16px (favicon) and 200px (header)
-- Negative space inside the neck curve is part of the design — keep it open
+### Shape
+- The SILHOUETTE alone must read as "baby dinosaur head" at 16px
+- Think of it like a cursive lowercase letter — fluid, single-gesture feeling
+- The negative space inside the neck curve is as important as the stroke
+- Total footprint: could fit inside a 1em square
 
 ### Style
-- Hand-drawn ink line art, single consistent stroke weight
-- Monochrome dark academic green (#2D6A4F)
-- NO fill on the dinosaur — just the outline/stroke
-- Gold (#D4AF37) ONLY on the monocle frame
-- Lines slightly organic — not vector-perfect, like a confident single-pass pen drawing
-- Minimal — as few strokes as possible while remaining recognizable
-- MUST match the style of the approved hero illustration (baby brontosaurus with monocle, ink line art)
+- Single-weight stroke, dark academic green (#2D6A4F)
+- NO fill — outline only
+- Clean, confident, minimal — like a logo you'd see on a university press imprint
+- Closer to a SYMBOL or GLYPH than an illustration
+- Should look hand-drawn but extremely refined — like it took 100 drafts to get this simple
 
-### Usage as Logo
-- This icon sits to the LEFT of the text "The Saurus" in Literata serif
-- At brand sizes (header, ~40px height): icon + text side by side
-- At favicon size (16-32px): icon only, monocle may not be visible — the head+neck silhouette alone must read as "baby dinosaur"
-- The icon should feel like it belongs next to a serif typeface — scholarly with a touch of warmth
+### Reference vibe
+- Think: the Twitter bird (few strokes, instantly recognizable silhouette)
+- Think: a publisher's colophon (small, elegant, works at 8pt)
+- Think: a single-line doodle by a calligrapher — one breath, one gesture
+- NOT an illustration. NOT a cartoon. NOT detailed.
 
 ### What to AVOID
-- Do NOT include the full body — CUT at the base of the neck (or fade/crop naturally)
-- Do NOT make the head small/adult-proportioned — baby proportions: BIG head, shorter neck
-- Do NOT face LEFT — logo faces RIGHT (opposite of the hero illustration)
-- Do NOT make it look like a T-Rex, stegosaurus, or lizard — baby brontosaurus only
-- Do NOT add details that disappear at small sizes
-- Do NOT use thick cartoon outlines
-- Do NOT add a background shape (circle, square, shield) — the silhouette IS the logo
-- Do NOT make the monocle look like an earring — proper monocle (lens on eye, chain down neck)
+- Do NOT add monocle — too much detail for this size
+- Do NOT add paper in mouth — too much detail
+- Do NOT add dorsal plates/bumps — too much detail
+- Do NOT add body — head and neck ONLY
+- Do NOT use thick strokes — thin, elegant line
+- Do NOT add a background shape (circle, shield)
+- Do NOT fill any area with color
+- Do NOT face LEFT — logo faces RIGHT
+- Do NOT add any detail that would be invisible at 16px
 
 ### Format
-- Square canvas (1:1), icon centered
-- SVG preferred (for web), also PNG at 512x512 and 1024x1024
+- Square canvas (1:1)
+- SVG preferred (for web), also PNG at 512x512
 - Transparent background
-- The head+neck should use approximately 70% of the vertical space
+- The icon should occupy ~70% of the canvas
+- Must be LEGIBLE and RECOGNIZABLE at 16px (favicon size)
 
 ---
 
@@ -61,7 +61,8 @@ A minimal logo icon showing ONLY the head and neck of a baby brontosaurus, in pr
 ```
 [icon]  The Saurus
   ↑        ↑
- 40px   Literata, 23px, weight 500, letter-spacing -0.7px, color #1C1C1E
+ 40px   Literata, 23px, weight 500, letter-spacing -0.7px, color #2D6A4F
 ```
 
-Icon and text vertically centered. Gap between icon and text: ~12px.
+Icon and text vertically centered. Gap: ~12px.
+The icon and text should feel like they're the SAME weight — the icon is as light as the serif typeface.
