@@ -42,14 +42,14 @@ A hand-drawn scientific diagram showing the pipeline of a literature review tool
 - Do NOT add speech bubbles, thought bubbles, heart symbols, or emoji-like elements. The humor comes from the diagram format itself, not from cartoon expressions
 
 ### RIGHT: Output (Review)
-- A bound notebook/book, standing upright ON THE GROUND/BASELINE — not floating in the air
-- The book rests on the same baseline as the dinosaur's feet, slightly to the right of the tail
+- A bound notebook/book, FLOATING in the air to the right of the dinosaur — elevated, like a finished product being presented
+- The book hovers at roughly the same height as the dinosaur's head or slightly above — mirroring the papers on the left (input floats in, output floats out)
+- Place it with GENEROUS horizontal distance from the dinosaur's body — clearly separated, NOT near the tail or rear end
 - Dark green cover with "Review" written on it in cream/light text
 - A gold bookmark ribbon hanging from the bottom
 - Small checkmark or verification symbol near the book (gold)
 - Small sparkle/radiance lines around the book suggesting "freshly produced"
 - The book should feel like a FINISHED PRODUCT — polished, complete, in contrast to the messy papers on the left
-- IMPORTANT: the book must NOT appear to come out of the tail or rear end — place it clearly beside the dinosaur, on the ground, with some horizontal distance from the tail
 
 ### Connecting Elements
 - Dashed or dotted line connecting the three stages along the bottom (timeline)
@@ -78,7 +78,7 @@ A hand-drawn scientific diagram showing the pipeline of a literature review tool
 - Do NOT make the dinosaur FACE RIGHT — it MUST face LEFT. Head on the left, tail on the right. This is the most common error.
 - Do NOT make the dinosaur look like a lizard, gecko, or crocodile — clearly a dinosaur (round body, dorsal plates, thick tail)
 - Do NOT make it muscular or fierce — round, soft, scholarly
-- Do NOT place the review book near the tail/rear end (reads as defecation) — place it on the ground to the right with clear separation
+- Do NOT place the review book near the tail/rear end (reads as defecation) — float it high and far to the right, with generous separation from the body
 - Do NOT use thick cartoon outlines or bubble style
 - Do NOT add a landscape background (trees, sky, etc.) — this is a DIAGRAM, not a scene
 - Do NOT fill the dinosaur body with color — line art only
