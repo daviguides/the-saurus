@@ -1,0 +1,1694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Saurus — Design System & Component Library</title>
+  
+  <!-- Google Fonts CDN -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;0,7..72,600;0,7..72,700;1,7..72,400;1,7..72,500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       THE SAURUS — DESIGN SYSTEM TOKENS
+       Exact SSOT tokens specified for light and dark modes
+       ========================================================================== */
+    :root {
+      /* Base & Surfaces */
+      --saurus-paper: #FAFAF7;
+      --saurus-surface: #F5F5F0;
+      --saurus-sidebar: #F0F0EB;
+      --saurus-border: #E8E5DE;
+
+      /* Ink & Typography */
+      --saurus-ink: #1C1C1E;
+      --saurus-ink-secondary: #6B7280;
+      --saurus-ink-muted: #9CA3AF;
+
+      /* Primary Brand (Academic Green) */
+      --saurus-primary: #2D6A4F;
+      --saurus-primary-hover: #40916C;
+      --saurus-primary-bg: rgba(45, 106, 79, 0.08);
+
+      /* Accent (Gold / Candlelight) */
+      --saurus-accent: #D4AF37;
+      --saurus-accent-bg: rgba(212, 175, 55, 0.10);
+
+      /* Status */
+      --saurus-success: #40916C;
+      --saurus-error: #DC2626;
+      --saurus-pending: #9CA3AF;
+
+      /* Thematic Taxonomy Chips */
+      --saurus-chip-1: #EDE9FE;
+      --saurus-chip-2: #DBEAFE;
+      --saurus-chip-3: #D1FAE5;
+      --saurus-chip-4: #FEF3C7;
+      --saurus-chip-5: #FCE7F3;
+      --saurus-chip-6: #E0E7FF;
+
+      /* Typography */
+      --font-heading: 'Literata', Georgia, serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+
+      /* Geometry & Radii */
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+
+      /* Shadows */
+      --saurus-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+      --saurus-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
+      --saurus-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+
+      /* Atmospheric Accents */
+      --glow-ambient: radial-gradient(1200px 800px at 80% -5%, rgba(212, 175, 55, 0.04), transparent 70%);
+      --card-bg: #FFFFFF;
+    }
+
+    html.dark {
+      /* Base & Surfaces */
+      --saurus-paper: #1A1D1E;
+      --saurus-surface: #242728;
+      --saurus-sidebar: #161819;
+      --saurus-border: #353838;
+
+      /* Ink & Typography */
+      --saurus-ink: #E8E4DD;
+      --saurus-ink-secondary: #9CA3AF;
+      --saurus-ink-muted: #6B7280;
+
+      /* Primary Brand (Lighter Green for Dark Mode) */
+      --saurus-primary: #5BAB8A;
+      --saurus-primary-hover: #7CC4A5;
+      --saurus-primary-bg: rgba(91, 171, 138, 0.10);
+
+      /* Accent (Bright Gold) */
+      --saurus-accent: #E5C349;
+      --saurus-accent-bg: rgba(229, 195, 73, 0.10);
+
+      /* Status */
+      --saurus-success: #5BAB8A;
+      --saurus-error: #F87171;
+      --saurus-pending: #6B7280;
+
+      /* Thematic Taxonomy Chips (Dark variants) */
+      --saurus-chip-1: #2D2640;
+      --saurus-chip-2: #1E2D3D;
+      --saurus-chip-3: #1A2E26;
+      --saurus-chip-4: #2E2A1A;
+      --saurus-chip-5: #2E1A24;
+      --saurus-chip-6: #1E2240;
+
+      /* Shadows */
+      --saurus-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.20);
+      --saurus-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.30);
+      --saurus-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.40);
+
+      /* Candlelight Glow */
+      --glow-ambient: radial-gradient(1000px 600px at 70% -5%, rgba(229, 195, 73, 0.07), transparent 75%);
+      --card-bg: #202324;
+    }
+
+    /* Global Reset & Base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 15px;
+    }
+
+    body {
+      background-color: var(--saurus-paper);
+      background-image: var(--glow-ambient);
+      background-attachment: fixed;
+      color: var(--saurus-ink);
+      font-family: var(--font-body);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+      min-height: 100vh;
+    }
+
+    /* Typography */
+    h1, h2, h3, h4, h5 {
+      font-family: var(--font-heading);
+      font-weight: 600;
+      letter-spacing: -0.015em;
+      color: var(--saurus-ink);
+      line-height: 1.25;
+    }
+
+    h1 { font-size: 2.5rem; }
+    h2 { font-size: 1.75rem; margin-bottom: 0.5rem; }
+    h3 { font-size: 1.25rem; margin-bottom: 0.35rem; }
+    h4 { font-size: 1.05rem; }
+
+    p {
+      margin-bottom: 1rem;
+      color: var(--saurus-ink);
+    }
+
+    .text-secondary { color: var(--saurus-ink-secondary); }
+    .text-muted { color: var(--saurus-ink-muted); }
+    .mono { font-family: var(--font-mono); }
+
+    /* Layout Structure */
+    .layout-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2.5rem 2rem 6rem;
+    }
+
+    /* Header & Navigation */
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.2rem 1.75rem;
+      margin-bottom: 3rem;
+      background: var(--saurus-surface);
+      border: 1px solid var(--saurus-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--saurus-shadow-sm);
+    }
+
+    .brand-mark {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .brand-logo-svg {
+      width: 38px;
+      height: 38px;
+      color: var(--saurus-primary);
+    }
+
+    .brand-title {
+      font-family: var(--font-heading);
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--saurus-ink);
+    }
+
+    .brand-subtitle {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--saurus-ink-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--saurus-ink-secondary);
+      text-decoration: none;
+      transition: color 0.15s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--saurus-primary);
+    }
+
+    /* Theme Toggle Button */
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.9rem;
+      background: var(--saurus-paper);
+      border: 1px solid var(--saurus-border);
+      border-radius: 9999px;
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--saurus-ink);
+      cursor: pointer;
+      box-shadow: var(--saurus-shadow-sm);
+      transition: all 0.15s ease;
+    }
+
+    .theme-toggle-btn:hover {
+      border-color: var(--saurus-primary);
+      color: var(--saurus-primary);
+    }
+
+    .theme-toggle-btn svg {
+      width: 16px;
+      height: 16px;
+      stroke-width: 2;
+    }
+
+    .theme-toggle-btn .sun-icon { display: none; }
+    html.dark .theme-toggle-btn .sun-icon { display: block; }
+    html.dark .theme-toggle-btn .moon-icon { display: none; }
+
+    /* Hero Section */
+    .hero-banner {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 2.5rem;
+      align-items: center;
+      padding: 3rem 2.5rem;
+      background: var(--saurus-surface);
+      border: 1px solid var(--saurus-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--saurus-shadow-sm);
+      margin-bottom: 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-banner::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 40%;
+      background: linear-gradient(90deg, transparent, var(--saurus-accent-bg));
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--saurus-primary);
+      background: var(--saurus-primary-bg);
+      padding: 0.25rem 0.65rem;
+      border-radius: var(--radius-sm);
+      margin-bottom: 1rem;
+    }
+
+    .hero-title {
+      font-size: 2.6rem;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+    }
+
+    .hero-description {
+      font-size: 1.1rem;
+      color: var(--saurus-ink-secondary);
+      max-width: 65ch;
+      line-height: 1.65;
+      margin-bottom: 1.5rem;
+    }
+
+    .manifesto-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+
+    .manifesto-pill {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      padding: 0.35rem 0.75rem;
+      background: var(--saurus-paper);
+      border: 1px solid var(--saurus-border);
+      border-radius: 9999px;
+      color: var(--saurus-ink-secondary);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .manifesto-pill b {
+      color: var(--saurus-primary);
+    }
+
+    .hero-illustration {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero-dino-svg {
+      width: 100%;
+      max-width: 240px;
+      height: auto;
+      color: var(--saurus-ink);
+    }
+
+    /* Section Styling */
+    .system-section {
+      margin-bottom: 4.5rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--saurus-border);
+    }
+
+    .section-header {
+      margin-bottom: 2rem;
+    }
+
+    .section-num {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--saurus-primary);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 0.35rem;
+      display: block;
+    }
+
+    .section-desc {
+      color: var(--saurus-ink-secondary);
+      font-size: 0.95rem;
+      max-width: 70ch;
+      margin-top: 0.35rem;
+    }
+
+    /* Color Swatch Grid */
+    .swatch-group-title {
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--saurus-ink-secondary);
+      margin: 1.75rem 0 0.85rem;
+    }
+
+    .swatch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .swatch-card {
+      background: var(--saurus-surface);
+      border: 1px solid var(--saurus-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: var(--saurus-shadow-sm);
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+
+    .swatch-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--saurus-primary);
+    }
+
+    .swatch-color {
+      height: 72px;
+      width: 100%;
+      border-bottom: 1px solid var(--saurus-border);
+      display: flex;
+      align-items: flex-end;
+      padding: 0.5rem;
+    }
+
+    .swatch-info {
+      padding: 0.75rem 0.85rem;
+    }
+
+    .swatch-name {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--saurus-ink);
+      margin-bottom: 0.2rem;
+    }
+
+    .swatch-var {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--saurus-ink-muted);
+      word-break: break-all;
+    }
+
+    .swatch-hex {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--saurus-ink-secondary);
+      margin-top: 0.3rem;
+      font-weight: 500;
+    }
+
+    /* Taxonomy Chips Showcase */
+    .chip-sample-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      padding: 1.25rem;
+      background: var(--saurus-surface);
+      border: 1px solid var(--saurus-border);
+      border-radius: var(--radius-md);
+      margin-top: 1rem;
+    }
+
+    .saurus-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.3rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--saurus-ink);
+      line-height: 1.4;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+    }
+
+    .saurus-chip::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.65;
+    }
+
+    .saurus-chip .chip-count {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      opacity: 0.75;
+      margin-left: 0.2rem;
+    }
+
+    .c-1 { background-color: var(--saurus-chip-1); }
+    .c-2 { background-color: var(--saurus-chip-2); }
+    .c-3 { background-color: var(--saurus-chip-3); }
+    .c-4 { background-color: var(--saurus-chip-4); }
+    .c-5 { background-color: var(--saurus-chip-5); }
+    .c-6 { background-color: var(--saurus-chip-6); }
+
+    /* Typography Showcase */
+    .type-specimen-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1.5rem;
+    }
+
+    .type-specimen-table tr {
+      border-bottom: 1px dashed var(--saurus-border);
+    }
+
+    .type-specimen-table td {
+      padding: 1.5rem 1rem;
+      vertical-align: baseline;
+    }
+
+    .type-specimen-meta {
+      width: 220px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--saurus-ink-muted);
+      line-height: 1.5;
+    }
+
+    .type-specimen-meta strong {
+      color: var(--saurus-primary);
+      display: block;
+      font-size: 0.8rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .reading-passage-demo {
+      font-family: var(--font-heading);
+      font-size: 1.12rem;
+      line-height: 1.8;
+      color: var(--saurus-ink);
+      max-width: 65ch;
+      margin-top: 1.5rem;
+      padding: 2rem;
+      background: var(--saurus-surface);
+      border: 1px solid var(--saurus-border);
+      border-radius: var(--radius-md);
+      position: relative;
+    }
+
+    .reading-passage-demo::before {
+      content: "§ 1.1 · Literata Academic Body Specimen";
+      position: absolute;
+      top: -0.65rem;
+      left: 1.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      background: var(--saurus-paper);
+      padding: 0 0.5rem;
+      color: var(--saurus-primary);
+      border: 1px solid var(--saurus-border);
+      border-radius: var(--radius-sm);
+    }
+
+    /* Citation Tag Anatomy */
+    .citation-anatomy-card {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      padding: 2rem;
+      background: var(--saurus-surface);
+      border: 1px solid var(--saurus-border);
+      border-radius: var(--radius-lg);
+      margin-top: 1.5rem;
+    }
+
+    .saurus-cite {
+      color: var(--saurus-primary);
+      font-weight: 500;
+      font-family: var(--font-body);
+      font-size: 0.9em;
+      border-bottom: 1px dotted currentColor;
+      text-decoration: none;
+      cursor: pointer;
+      padding: 0 2px;
+      border-radius: 2px;
+      transition: all 0.15s ease;
+    }
+
+    .saurus-cite:hover {
+      background: var(--saurus-primary-bg);
+      border-bottom-style: solid;
+      color: var(--saurus-primary-hover);
+    }
+
+    .saurus-loc {
+      font-family: var(--font-mono);
+      font-size: 0.78em;
+      color: var(--saurus-ink-muted);
+      margin-left: 0.15em;
+      letter-spacing: -0.01em;
+    }
+
+    .citation-popover-demo {
+      background: var(--card-bg);
+      border: 1px solid var(--saurus-border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      box-shadow: var(--saurus-shadow-md);
+      position: relative;
+    }
+
+    .citation-popover-demo::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--saurus-primary), var(--saurus-accent));
+      border-radius: var(--radius-md) var(--radius-md) 0 0;
+    }
+
+    .popover-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+    }
+
+    .popover-badge {
+      background: var(--saurus-primary-bg);
+      color: var(--saurus-primary);
+      padding: 0.2rem 0.5rem;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+    }
+
+    .popover-nli {
+      color: var(--saurus-success);
+      font-weight: 500;
+    }
+
+    .popover-claim {
+      font-family: var(--font-heading);
+      font-size: 0.95rem;
+      font-style: italic;
+      color: var(--saurus-ink);
+      line-height: 1.5;
+      margin-bottom: 0.75rem;
+      border-left: 2px solid var(--saurus-accent);
+      padding-left: 0.75rem;
+    }
+
+    .popover-source {
+      font-size: 0.78rem;
+      color: var(--saurus-ink-secondary);
+      line-height: 1.4;
+    }
+
+    /* Mascot Gallery */
+    .mascot-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .mascot-card {
+      background: var(--saurus-surface);
+      border: 1px solid var(--saurus-border);
+      border-radius: var(--radius-md);
+      padding: 1.75rem 1.5rem;
+      text-align: center;
+      box-shadow: var(--saurus-shadow-sm);
+    }
+
+    .mascot-card svg {
+      width: 140px;
+      height: 100px;
+      margin-bottom: 1rem;
+      color: var(--saurus-ink-secondary);
+      transition: color 0.2s ease;
+    }
+
+    .mascot-card:hover svg {
+      color: var(--saurus-primary);
+    }
+
+    .mascot-title {
+      font-family: var(--font-heading);
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+    }
+
+    .mascot-desc {
+      font-size: 0.8rem;
+      color: var(--saurus-ink-secondary);
+    }
+
+    /* Component Showcase Sections */
+    .components-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 2rem;
+      margin-top: 1.5rem;
+    }
+
+    .component-box {
+      background: var(--saurus-surface);
+      border: 1px solid var(--saurus-border);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      box-shadow: var(--saurus-shadow-sm);
+    }
+
+    .component-box-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--saurus-ink-muted);
+      margin-bottom: 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Buttons */
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.55rem 1.1rem;
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      border: 1px solid transparent;
+      line-height: 1.3;
+    }
+
+    .btn svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    .btn-primary {
+      background: var(--saurus-primary);
+      color: #FFFFFF;
+    }
+
+    .btn-primary:hover {
+      background: var(--saurus-primary-hover);
+    }
+
+    .btn-secondary {
+      background: var(--saurus-paper);
+      color: var(--saurus-ink);
+      border-color: var(--saurus-border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--saurus-primary);
+      color: var(--saurus-primary);
+    }
+
+    .btn-accent {
+      background: var(--saurus-accent-bg);
+      color: var(--saurus-ink);
+      border-color: var(--saurus-accent);
+    }
+
+    .btn-accent:hover {
+      background: var(--saurus-accent);
+      color: #1A1D1E;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--saurus-ink-secondary);
+    }
+
+    .btn-ghost:hover {
+      background: var(--saurus-primary-bg);
+      color: var(--saurus-primary);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    /* Inputs */
+    .input-field {
+      width: 100%;
+      padding: 0.65rem 0.9rem;
+      background: var(--saurus-paper);
+      border: 1px solid var(--saurus-border);
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 0.88rem;
+      color: var(--saurus-ink);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .input-field:focus {
+      border-color: var(--saurus-primary);
+      box-shadow: 0 0 0 3px var(--saurus-primary-bg);
+    }
+
+    .input-field::placeholder {
+      color: var(--saurus-ink-muted);
+    }
+
+    /* Pipeline Elements */
+    .pipeline-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 1rem;
+      background: var(--saurus-paper);
+      border: 1px solid var(--saurus-border);
+      border-radius: var(--radius-md);
+      margin-bottom: 0.75rem;
+    }
+
+    .step-indicator {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 0.15rem;
+    }
+
+    .step-indicator.done {
+      background: var(--saurus-primary-bg);
+      color: var(--saurus-success);
+    }
+
+    .step-indicator.active {
+      background: var(--saurus-accent-bg);
+      color: var(--saurus-accent);
+      animation: pulse-ring 2s infinite ease-in-out;
+    }
+
+    .step-indicator.pending {
+      background: var(--saurus-surface);
+      border: 1px solid var(--saurus-pending);
+      color: var(--saurus-pending);
+    }
+
+    @keyframes pulse-ring {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+      50% { box-shadow: 0 0 0 6px rgba(212, 175, 55, 0); }
+    }
+
+    .step-content {
+      flex: 1;
+    }
+
+    .step-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--saurus-ink);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .step-meta {
+      font-size: 0.75rem;
+      color: var(--saurus-ink-secondary);
+      margin-top: 0.2rem;
+    }
+
+    /* Progress bar */
+    .saurus-progress-bar {
+      height: 6px;
+      width: 100%;
+      background: var(--saurus-border);
+      border-radius: 9999px;
+      overflow: hidden;
+      margin: 1rem 0;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--saurus-primary) 0%, var(--saurus-success) 65%, var(--saurus-accent) 100%);
+      border-radius: 9999px;
+    }
+
+    /* Scientific Alert / Pullquote */
+    .scientific-callout {
+      border-left: 3px solid var(--saurus-accent);
+      background: var(--saurus-accent-bg);
+      padding: 1rem 1.25rem;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin: 1.5rem 0;
+    }
+
+    .scientific-callout-title {
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--saurus-accent);
+      margin-bottom: 0.35rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .scientific-callout p {
+      font-size: 0.88rem;
+      color: var(--saurus-ink);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* Toast Notification for Clipboard */
+    #copy-toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--saurus-ink);
+      color: var(--saurus-paper);
+      padding: 0.65rem 1.2rem;
+      border-radius: var(--radius-md);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      box-shadow: var(--saurus-shadow-lg);
+      display: none;
+      z-index: 1000;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Footer */
+    .system-footer {
+      margin-top: 6rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--saurus-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.82rem;
+      color: var(--saurus-ink-muted);
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .system-footer a {
+      color: var(--saurus-primary);
+      text-decoration: none;
+    }
+
+    @media (max-width: 840px) {
+      .hero-banner {
+        grid-template-columns: 1fr;
+      }
+      .citation-anatomy-card {
+        grid-template-columns: 1fr;
+      }
+      .nav-links {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="layout-container">
+    <!-- Top Navigation Bar -->
+    <header class="nav-bar">
+      <div class="brand-mark">
+        <svg class="brand-logo-svg" viewBox="0 0 160 120" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <!-- Scientific Line Art Dinosaur Mascot -->
+          <path d="M22 96c10-2 18-10 22-22 3-9 2-20 8-28 7-9 20-10 30-6 8 3 14 10 18 18 3 6 4 12 9 16 6 5 16 6 24 4"/>
+          <path d="M52 46c-4-6-2-14 4-18 6-4 14-2 18 4M82 40c6-1 11 3 12 9"/>
+          <path d="M40 92c-2-6 0-14 4-18M64 96c0-6 2-12 6-16M24 96h60"/>
+          <circle cx="94" cy="36" r="2.2" fill="currentColor"/>
+          <path d="M100 42l4 2M104 38l4 1" stroke-width="1.4"/>
+        </svg>
+        <div>
+          <div class="brand-title">The Saurus</div>
+          <div class="brand-subtitle">Design System · Tokens & Components · v1.0</div>
+        </div>
+      </div>
+
+      <nav>
+        <ul class="nav-links">
+          <li><a href="#colors">Colors</a></li>
+          <li><a href="#typography">Typography</a></li>
+          <li><a href="#citations">Citations</a></li>
+          <li><a href="#mascot">Mascot</a></li>
+          <li><a href="#components">Components</a></li>
+          <li><a href="mockups.html" style="color:var(--saurus-primary);font-weight:600;">View Mockups →</a></li>
+        </ul>
+      </nav>
+
+      <button id="themeToggle" class="theme-toggle-btn" aria-label="Toggle dark/light theme">
+        <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <span id="themeLabel">Dark Mode</span>
+      </button>
+    </header>
+
+    <!-- Hero / Positioning Banner -->
+    <section class="hero-banner">
+      <div>
+        <span class="hero-eyebrow">Academic Research Identity</span>
+        <h1 class="hero-title">Warm paper. Crisp ink. Unwavering provenance.</h1>
+        <p class="hero-description">
+          The Saurus is not another SaaS dashboard. It is a digital reading desk tailored for scholarly literature synthesis. In light mode, it evokes archival research papers; in dark mode, aged parchment under soft candlelight.
+        </p>
+        <div class="manifesto-pills">
+          <span class="manifesto-pill"><b>Core Axiom:</b> Synthesis, not summary</span>
+          <span class="manifesto-pill"><b>Traceability:</b> Every claim has an address</span>
+          <span class="manifesto-pill"><b>Transparency:</b> You can watch it think</span>
+          <span class="manifesto-pill"><b>Agency:</b> The researcher stays the author</span>
+        </div>
+      </div>
+
+      <div class="hero-illustration">
+        <svg class="hero-dino-svg" viewBox="0 0 200 150" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <!-- Detailed Scientific Plate Dinosaur (The Saurus Scholar) -->
+          <!-- Cranium and jaw -->
+          <path d="M120 45 c8 -8 24 -6 32 4 c6 8 4 16 -2 22 c-8 8 -22 6 -28 -2 Z" stroke-dasharray="0"/>
+          <circle cx="140" cy="48" r="2.2" fill="currentColor"/>
+          <path d="M148 54 l6 3 M142 60 l6 -1" stroke-width="1.2"/>
+          <!-- Reading Spectacles on snout -->
+          <circle cx="146" cy="51" r="5" stroke="var(--saurus-accent)" stroke-width="1.5"/>
+          <line x1="141" y1="51" x2="135" y2="50" stroke="var(--saurus-accent)" stroke-width="1.5"/>
+          <!-- Spine curvature -->
+          <path d="M122 52 c-15 4 -32 15 -42 32 c-12 20 -15 42 -38 48 c-14 4 -28 -2 -34 -10" stroke-width="2"/>
+          <!-- Dorsal Osteoderms / Plates (Thematic spikes) -->
+          <path d="M112 42 l-6 -10 l-4 12 M96 52 l-8 -12 l-4 14 M78 68 l-9 -12 l-3 15 M60 88 l-9 -10 l-2 13" stroke="var(--saurus-primary)" stroke-width="1.5"/>
+          <!-- Forelimbs holding manuscript folio -->
+          <path d="M98 78 c6 8 16 12 24 10 l4 -2"/>
+          <path d="M106 82 l8 14"/>
+          <!-- Manuscript Folio / Paper -->
+          <rect x="122" y="74" width="34" height="44" rx="2" stroke="var(--saurus-accent)" stroke-width="1.6" fill="var(--saurus-surface)"/>
+          <line x1="128" y1="84" x2="150" y2="84" stroke="currentColor" stroke-width="1"/>
+          <line x1="128" y1="92" x2="146" y2="92" stroke="currentColor" stroke-width="1"/>
+          <line x1="128" y1="100" x2="142" y2="100" stroke="currentColor" stroke-width="1"/>
+          <line x1="128" y1="108" x2="136" y2="108" stroke="currentColor" stroke-width="1"/>
+          <!-- Robust Hindlimbs -->
+          <path d="M68 105 c4 15 12 28 20 35 l12 -2"/>
+          <path d="M46 118 c2 10 6 18 12 22"/>
+          <!-- Ground baseline plate -->
+          <line x1="10" y1="140" x2="190" y2="140" stroke="var(--saurus-border)" stroke-width="1.5" stroke-dasharray="3 6"/>
+        </svg>
+      </div>
+    </section>
+
+    <!-- SECTION 1: COLOR PALETTE & TOKENS -->
+    <section id="colors" class="system-section">
+      <div class="section-header">
+        <span class="section-num">Token Section 01</span>
+        <h2>Chromatic Architecture</h2>
+        <p class="section-desc">
+          Strict token system with zero arbitrary hex values. Click any swatch below to copy its CSS variable name to your clipboard.
+        </p>
+      </div>
+
+      <!-- Backgrounds & Surfaces -->
+      <div class="swatch-group-title">Base &amp; Surfaces (The Research Grounds)</div>
+      <div class="swatch-grid">
+        <div class="swatch-card" onclick="copyToken('--saurus-paper', '#FAFAF7')">
+          <div class="swatch-color" style="background: var(--saurus-paper);"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Paper Canvas</div>
+            <div class="swatch-var">--saurus-paper</div>
+            <div class="swatch-hex">L: #FAFAF7 / D: #1A1D1E</div>
+          </div>
+        </div>
+
+        <div class="swatch-card" onclick="copyToken('--saurus-surface', '#F5F5F0')">
+          <div class="swatch-color" style="background: var(--saurus-surface);"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Surface Container</div>
+            <div class="swatch-var">--saurus-surface</div>
+            <div class="swatch-hex">L: #F5F5F0 / D: #242728</div>
+          </div>
+        </div>
+
+        <div class="swatch-card" onclick="copyToken('--saurus-sidebar', '#F0F0EB')">
+          <div class="swatch-color" style="background: var(--saurus-sidebar);"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Sidebar / Gutter</div>
+            <div class="swatch-var">--saurus-sidebar</div>
+            <div class="swatch-hex">L: #F0F0EB / D: #161819</div>
+          </div>
+        </div>
+
+        <div class="swatch-card" onclick="copyToken('--saurus-border', '#E8E5DE')">
+          <div class="swatch-color" style="background: var(--saurus-border);"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Border Rule</div>
+            <div class="swatch-var">--saurus-border</div>
+            <div class="swatch-hex">L: #E8E5DE / D: #353838</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ink & Typography -->
+      <div class="swatch-group-title">Inks (Legibility &amp; Contrast)</div>
+      <div class="swatch-grid">
+        <div class="swatch-card" onclick="copyToken('--saurus-ink', '#1C1C1E')">
+          <div class="swatch-color" style="background: var(--saurus-ink);"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Primary Ink</div>
+            <div class="swatch-var">--saurus-ink</div>
+            <div class="swatch-hex">L: #1C1C1E / D: #E8E4DD</div>
+          </div>
+        </div>
+
+        <div class="swatch-card" onclick="copyToken('--saurus-ink-secondary', '#6B7280')">
+          <div class="swatch-color" style="background: var(--saurus-ink-secondary);"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Secondary Ink</div>
+            <div class="swatch-var">--saurus-ink-secondary</div>
+            <div class="swatch-hex">L: #6B7280 / D: #9CA3AF</div>
+          </div>
+        </div>
+
+        <div class="swatch-card" onclick="copyToken('--saurus-ink-muted', '#9CA3AF')">
+          <div class="swatch-color" style="background: var(--saurus-ink-muted);"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Muted Inscriptions</div>
+            <div class="swatch-var">--saurus-ink-muted</div>
+            <div class="swatch-hex">L: #9CA3AF / D: #6B7280</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Semantic Brand & Highlights -->
+      <div class="swatch-group-title">Semantic &amp; Action Tokens</div>
+      <div class="swatch-grid">
+        <div class="swatch-card" onclick="copyToken('--saurus-primary', '#2D6A4F')">
+          <div class="swatch-color" style="background: var(--saurus-primary);"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Academic Green</div>
+            <div class="swatch-var">--saurus-primary</div>
+            <div class="swatch-hex">L: #2D6A4F / D: #5BAB8A</div>
+          </div>
+        </div>
+
+        <div class="swatch-card" onclick="copyToken('--saurus-primary-hover', '#40916C')">
+          <div class="swatch-color" style="background: var(--saurus-primary-hover);"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Primary Hover</div>
+            <div class="swatch-var">--saurus-primary-hover</div>
+            <div class="swatch-hex">L: #40916C / D: #7CC4A5</div>
+          </div>
+        </div>
+
+        <div class="swatch-card" onclick="copyToken('--saurus-accent', '#D4AF37')">
+          <div class="swatch-color" style="background: var(--saurus-accent);"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Candlelight Gold</div>
+            <div class="swatch-var">--saurus-accent</div>
+            <div class="swatch-hex">L: #D4AF37 / D: #E5C349</div>
+          </div>
+        </div>
+
+        <div class="swatch-card" onclick="copyToken('--saurus-success', '#40916C')">
+          <div class="swatch-color" style="background: var(--saurus-success);"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Verified / Success</div>
+            <div class="swatch-var">--saurus-success</div>
+            <div class="swatch-hex">L: #40916C / D: #5BAB8A</div>
+          </div>
+        </div>
+
+        <div class="swatch-card" onclick="copyToken('--saurus-error', '#DC2626')">
+          <div class="swatch-color" style="background: var(--saurus-error);"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Error / Discrepancy</div>
+            <div class="swatch-var">--saurus-error</div>
+            <div class="swatch-hex">L: #DC2626 / D: #F87171</div>
+          </div>
+        </div>
+
+        <div class="swatch-card" onclick="copyToken('--saurus-pending', '#9CA3AF')">
+          <div class="swatch-color" style="background: var(--saurus-pending);"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Pending Queue</div>
+            <div class="swatch-var">--saurus-pending</div>
+            <div class="swatch-hex">L: #9CA3AF / D: #6B7280</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Thematic Taxonomy Chips -->
+      <div class="swatch-group-title">Thematic Chips (Corpus Clustering Colors)</div>
+      <div class="swatch-grid">
+        <div class="swatch-card" onclick="copyToken('--saurus-chip-1', '#EDE9FE')">
+          <div class="swatch-color" style="background: var(--saurus-chip-1);"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Theme Chip 1 (Lilac)</div>
+            <div class="swatch-var">--saurus-chip-1</div>
+            <div class="swatch-hex">#EDE9FE / #2D2640</div>
+          </div>
+        </div>
+
+        <div class="swatch-card" onclick="copyToken('--saurus-chip-2', '#DBEAFE')">
+          <div class="swatch-color" style="background: var(--saurus-chip-2);"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Theme Chip 2 (Azure)</div>
+            <div class="swatch-var">--saurus-chip-2</div>
+            <div class="swatch-hex">#DBEAFE / #1E2D3D</div>
+          </div>
+        </div>
+
+        <div class="swatch-card" onclick="copyToken('--saurus-chip-3', '#D1FAE5')">
+          <div class="swatch-color" style="background: var(--saurus-chip-3);"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Theme Chip 3 (Sage)</div>
+            <div class="swatch-var">--saurus-chip-3</div>
+            <div class="swatch-hex">#D1FAE5 / #1A2E26</div>
+          </div>
+        </div>
+
+        <div class="swatch-card" onclick="copyToken('--saurus-chip-4', '#FEF3C7')">
+          <div class="swatch-color" style="background: var(--saurus-chip-4);"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Theme Chip 4 (Ochre)</div>
+            <div class="swatch-var">--saurus-chip-4</div>
+            <div class="swatch-hex">#FEF3C7 / #2E2A1A</div>
+          </div>
+        </div>
+
+        <div class="swatch-card" onclick="copyToken('--saurus-chip-5', '#FCE7F3')">
+          <div class="swatch-color" style="background: var(--saurus-chip-5);"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Theme Chip 5 (Rose)</div>
+            <div class="swatch-var">--saurus-chip-5</div>
+            <div class="swatch-hex">#FCE7F3 / #2E1A24</div>
+          </div>
+        </div>
+
+        <div class="swatch-card" onclick="copyToken('--saurus-chip-6', '#E0E7FF')">
+          <div class="swatch-color" style="background: var(--saurus-chip-6);"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Theme Chip 6 (Indigo)</div>
+            <div class="swatch-var">--saurus-chip-6</div>
+            <div class="swatch-hex">#E0E7FF / #1E2240</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Chips Demonstration with Real Sample Data -->
+      <div class="chip-sample-row">
+        <span class="saurus-chip c-1">AAV Delivery Vectors <span class="chip-count">4 papers</span></span>
+        <span class="saurus-chip c-2">Base Editing vs Nuclease <span class="chip-count">3 papers</span></span>
+        <span class="saurus-chip c-3">Liver-Targeted Therapies <span class="chip-count">5 papers</span></span>
+        <span class="saurus-chip c-4">Off-Target Effects <span class="chip-count">3 papers</span></span>
+        <span class="saurus-chip c-5">Clinical Translation Barriers <span class="chip-count">4 papers</span></span>
+        <span class="saurus-chip c-6">Lipid Nanoparticle Delivery <span class="chip-count">2 papers</span></span>
+      </div>
+    </section>
+
+    <!-- SECTION 2: TYPOGRAPHY -->
+    <section id="typography" class="system-section">
+      <div class="section-header">
+        <span class="section-num">Token Section 02</span>
+        <h2>Scholarly Typography</h2>
+        <p class="section-desc">
+          Tri-font hierarchy: <strong>Literata</strong> for synthesized prose, <strong>Inter</strong> for UI chrome and structure, and <strong>Fira Code</strong> for verified citation receipts and NLI hashes.
+        </p>
+      </div>
+
+      <table class="type-specimen-table">
+        <tbody>
+          <tr>
+            <td class="type-specimen-meta">
+              <strong>Display H1</strong>
+              Literata 700<br>2.5rem (37.5px) / 1.15
+            </td>
+            <td>
+              <h1 style="margin:0;">Synthesis of Hepatic Gene Correction</h1>
+            </td>
+          </tr>
+          <tr>
+            <td class="type-specimen-meta">
+              <strong>Section Heading H2</strong>
+              Literata 600<br>1.75rem (26px) / 1.25
+            </td>
+            <td>
+              <h2 style="margin:0;">1 · Delivery Platforms &amp; In Vivo Tropism</h2>
+            </td>
+          </tr>
+          <tr>
+            <td class="type-specimen-meta">
+              <strong>Subsection H3</strong>
+              Literata 600<br>1.25rem (18.75px) / 1.3
+            </td>
+            <td>
+              <h3 style="margin:0;color:var(--saurus-primary);">1.1 Recombinant AAV9 Persistence in Murine Models</h3>
+            </td>
+          </tr>
+          <tr>
+            <td class="type-specimen-meta">
+              <strong>Scholarly Review Prose</strong>
+              Literata 400<br>1.12rem (16.8px) / 1.8
+            </td>
+            <td>
+              <p style="font-family:var(--font-heading);font-size:1.12rem;line-height:1.8;margin:0;max-width:65ch;">
+                Recent advances in hepatic gene correction have converged on two primary delivery modalities: adeno-associated virus (AAV) vectors and lipid nanoparticles (LNPs). AAV9-mediated delivery has demonstrated sustained therapeutic expression in murine models of metabolic liver disease <a class="saurus-cite" href="#ref1">[1]</a><span class="saurus-loc">(p.12,§3)</span>, while LNP-encapsulated base editors achieved transient but high-efficiency editing in hereditary tyrosinemia <a class="saurus-cite" href="#ref2">[2]</a><span class="saurus-loc">(p.8,§2)</span>.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td class="type-specimen-meta">
+              <strong>UI Body &amp; Controls</strong>
+              Inter 400 / 500<br>0.95rem (14.25px) / 1.6
+            </td>
+            <td>
+              <p style="font-family:var(--font-body);font-size:0.95rem;margin:0;">
+                All 40 papers in this corpus were indexed using semantic embeddings and cross-verified via natural language inference (NLI) with a confidence threshold of &tau; &ge; 0.82.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td class="type-specimen-meta">
+              <strong>Citation Address</strong>
+              Fira Code 500<br>0.85rem (12.75px)
+            </td>
+            <td>
+              <span class="mono" style="background:var(--saurus-surface);padding:0.3rem 0.6rem;border-radius:var(--radius-sm);border:1px solid var(--saurus-border);color:var(--saurus-primary);">
+                c_0142 &rarr; [1](p.12,§3) &middot; nli_score: 0.942
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Live Interactive Passage Demo -->
+      <div class="reading-passage-demo">
+        The choice between delivery platforms involves fundamental trade-offs between durability and immunogenicity <a class="saurus-cite" href="#ref5">[5]</a><span class="saurus-loc">(p.15,§4)</span>. Episomal AAV vectors persist stably in quiescent post-mitotic hepatocytes, yet undergo rapid dilution during compensatory liver regeneration. Conversely, synthetic LNPs confer zero viral capsid pre-immunity and allow repeated systemic administrations <a class="saurus-cite" href="#ref2">[2]</a><span class="saurus-loc">(p.14,§1)</span>, presenting the preferred vehicle for transiently expressed mRNA base editors.
+      </div>
+    </section>
+
+    <!-- SECTION 3: THE ANATOMY OF A RECEIPT -->
+    <section id="citations" class="system-section">
+      <div class="section-header">
+        <span class="section-num">Token Section 03</span>
+        <h2>Citation &amp; Receipt Anatomy</h2>
+        <p class="section-desc">
+          "A chatbot gives you an answer. The Saurus gives you the receipts." Citations are first-class interactive instruments pinpointed to paper, page, and paragraph.
+        </p>
+      </div>
+
+      <div class="citation-anatomy-card">
+        <div>
+          <h4 style="margin-bottom:0.75rem;">1. Inline Address Syntax</h4>
+          <p class="text-secondary" style="font-size:0.9rem;">
+            Citations are composed of an index anchor in scholarly brackets followed by a monospace coordinate tag specifying page and paragraph offset.
+          </p>
+
+          <div style="margin:1.5rem 0;padding:1rem;background:var(--saurus-paper);border:1px solid var(--saurus-border);border-radius:var(--radius-md);">
+            <div style="font-size:1.1rem;font-family:var(--font-heading);">
+              "...demonstrated sustained expression in mice <a class="saurus-cite" style="background:var(--saurus-primary-bg);border-bottom:1.5px solid var(--saurus-primary);">[1]</a><span class="saurus-loc" style="color:var(--saurus-primary);font-weight:600;">(p.12,§3)</span>."
+            </div>
+          </div>
+
+          <ul style="padding-left:1.25rem;font-size:0.85rem;color:var(--saurus-ink-secondary);line-height:1.7;">
+            <li><strong>Bracket Index:</strong> Numeric reference mapping to corpus bibliography.</li>
+            <li><strong>Coordinate Suffix:</strong> <span class="mono">(p.12,§3)</span> — Verified exact location in the original PDF source.</li>
+            <li><strong>Hover Interaction:</strong> Unveils verbatim claim sentence and NLI entailment score.</li>
+            <li><strong>Click Action:</strong> Opens PDF viewer overlay pre-scrolled to highlighted paragraph.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style="margin-bottom:0.75rem;">2. Active Receipt Card (Hovercard)</h4>
+          <div class="citation-popover-demo">
+            <div class="popover-header">
+              <span class="popover-badge">Receipt: Claim #c_0142</span>
+              <span class="popover-nli">&check; Entailment: 0.94 (Verified)</span>
+            </div>
+            <div class="popover-claim">
+              "AAV9 achieved 60% hepatocyte transduction efficiency at 1&times;10¹² vg/kg in adult C57BL/6 mice without detectable hepatotoxicity."
+            </div>
+            <div class="popover-source">
+              <strong>Source:</strong> Liu, W. et al. (2024)<br>
+              <strong>Publication:</strong> <em>Nature Gene Therapy</em> &middot; Section 3.2, Page 12, Paragraph 3<br>
+              <strong>Thematic Anchor:</strong> <span class="saurus-chip c-1" style="font-size:0.68rem;padding:0.1rem 0.5rem;margin-top:0.3rem;">AAV Delivery Vectors</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: THE SCIENTIFIC MASCOT -->
+    <section id="mascot" class="system-section">
+      <div class="section-header">
+        <span class="section-num">Token Section 04</span>
+        <h2>The Saurus — Mascot &amp; Plates</h2>
+        <p class="section-desc">
+          Single-weight line art inspired by 19th-century naturalist zoological plates. Never a bouncing cartoon; always composed, observant, and scholarly.
+        </p>
+      </div>
+
+      <div class="mascot-grid">
+        <!-- Variant A: Ingestion State -->
+        <div class="mascot-card">
+          <svg viewBox="0 0 160 120" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M24 96c10-2 18-10 22-22 3-9 2-20 8-28 7-9 20-10 30-6 8 3 14 10 18 18 3 6 4 12 9 16 6 5 16 6 24 4"/>
+            <path d="M52 46c-4-6-2-14 4-18 6-4 14-2 18 4M82 40c6-1 11 3 12 9"/>
+            <path d="M40 92c-2-6 0-14 4-18M64 96c0-6 2-12 6-16M24 96h60"/>
+            <circle cx="94" cy="36" r="1.8" fill="currentColor"/>
+            <!-- Feeding Papers / Leafing through docs -->
+            <rect x="98" y="48" width="26" height="32" rx="2" stroke="var(--saurus-primary)" stroke-width="1.4"/>
+            <line x1="103" y1="56" x2="119" y2="56" stroke="var(--saurus-primary)" stroke-width="1"/>
+            <line x1="103" y1="62" x2="117" y2="62" stroke="var(--saurus-primary)" stroke-width="1"/>
+            <line x1="103" y1="68" x2="114" y2="68" stroke="var(--saurus-primary)" stroke-width="1"/>
+          </svg>
+          <div class="mascot-title">1. The Ingestion State</div>
+          <div class="mascot-desc">Used on dropzones &amp; upload screens. "Feed The Saurus your papers."</div>
+        </div>
+
+        <!-- Variant B: Deduplicating & Tracing -->
+        <div class="mascot-card">
+          <svg viewBox="0 0 160 120" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M24 96c10-2 18-10 22-22 3-9 2-20 8-28 7-9 20-10 30-6 8 3 14 10 18 18 3 6 4 12 9 16 6 5 16 6 24 4"/>
+            <circle cx="94" cy="36" r="1.8" fill="currentColor"/>
+            <path d="M40 92c-2-6 0-14 4-18M64 96c0-6 2-12 6-16"/>
+            <!-- Network constellation connecting thoughts -->
+            <circle cx="115" cy="35" r="3" stroke="var(--saurus-accent)" stroke-width="1.5"/>
+            <circle cx="135" cy="48" r="3" stroke="var(--saurus-accent)" stroke-width="1.5"/>
+            <circle cx="120" cy="65" r="3" stroke="var(--saurus-accent)" stroke-width="1.5"/>
+            <line x1="94" y1="36" x2="112" y2="35" stroke="var(--saurus-accent)" stroke-dasharray="2 2"/>
+            <line x1="118" y1="36" x2="132" y2="46" stroke="var(--saurus-accent)" stroke-dasharray="2 2"/>
+            <line x1="133" y1="50" x2="122" y2="62" stroke="var(--saurus-accent)" stroke-dasharray="2 2"/>
+          </svg>
+          <div class="mascot-title">2. The Pipeline Trace</div>
+          <div class="mascot-desc">Clustering claims, checking NLI entailment pairs, synthesizing themes.</div>
+        </div>
+
+        <!-- Variant C: The Conversational Desk -->
+        <div class="mascot-card">
+          <svg viewBox="0 0 160 120" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M24 96c10-2 18-10 22-22 3-9 2-20 8-28 7-9 20-10 30-6 8 3 14 10 18 18 3 6 4 12 9 16 6 5 16 6 24 4"/>
+            <circle cx="94" cy="36" r="1.8" fill="currentColor"/>
+            <!-- Scholarly monocle & ink quill -->
+            <circle cx="98" cy="36" r="5" stroke="var(--saurus-primary)" stroke-width="1.2"/>
+            <path d="M102 39 l8 12" stroke="var(--saurus-primary)" stroke-width="1.2"/>
+            <path d="M110 51 c4 -8 10 -12 16 -14" stroke="var(--saurus-primary)" stroke-width="1.2"/>
+          </svg>
+          <div class="mascot-title">3. The Assistant Badge</div>
+          <div class="mascot-desc">Quiet presence in the chat drawer. Always answers with citations.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 5: COMPONENT LIBRARY -->
+    <section id="components" class="system-section">
+      <div class="section-header">
+        <span class="section-num">Token Section 05</span>
+        <h2>UI Component Library</h2>
+        <p class="section-desc">
+          Modular building blocks designed for scholarly rigor, minimal cognitive friction, and robust light/dark adaptation.
+        </p>
+      </div>
+
+      <div class="components-grid">
+        <!-- Interactive Buttons -->
+        <div class="component-box">
+          <div class="component-box-title">
+            <span>Action Buttons</span>
+            <span class="mono">button.btn</span>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+              Feed Papers
+            </button>
+            <button class="btn btn-secondary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              Export Review
+            </button>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-accent">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              Audit Receipts
+            </button>
+            <button class="btn btn-ghost">Cancel Trace</button>
+            <button class="btn btn-secondary" disabled>Disabled State</button>
+          </div>
+        </div>
+
+        <!-- Form Controls -->
+        <div class="component-box">
+          <div class="component-box-title">
+            <span>Form Controls</span>
+            <span class="mono">input.input-field</span>
+          </div>
+
+          <div style="margin-bottom: 1rem;">
+            <label style="display:block;font-size:0.78rem;font-weight:600;margin-bottom:0.35rem;color:var(--saurus-ink-secondary);">
+              Filter Corpus by Gene or Vector
+            </label>
+            <input type="text" class="input-field" placeholder="e.g. AAV9, ABE8e, tyrosinemia, SpCas9..." value="AAV9-mediated">
+          </div>
+
+          <div>
+            <label style="display:block;font-size:0.78rem;font-weight:600;margin-bottom:0.35rem;color:var(--saurus-ink-secondary);">
+              Assistant Chat Input
+            </label>
+            <input type="text" class="input-field" placeholder="Ask across all 40 indexed papers...">
+          </div>
+        </div>
+
+        <!-- Pipeline Progress Tracking -->
+        <div class="component-box" style="grid-column: span 2;">
+          <div class="component-box-title">
+            <span>Pipeline Execution Stepper</span>
+            <span class="mono">.pipeline-step</span>
+          </div>
+
+          <div class="saurus-progress-bar">
+            <div class="progress-fill" style="width: 62%;"></div>
+          </div>
+
+          <div class="pipeline-step">
+            <div class="step-indicator done">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <div class="step-content">
+              <div class="step-title">
+                <span>Stage 1: Paper Analysis &amp; Claim Ingestion</span>
+                <span class="mono text-muted" style="font-size:0.75rem;">Completed (40/40) &middot; 2m 14s</span>
+              </div>
+              <div class="step-meta">Extracted 187 verifiable claims and 63 initial candidate theme propositions.</div>
+            </div>
+          </div>
+
+          <div class="pipeline-step" style="border-color: var(--saurus-accent); background: var(--saurus-accent-bg);">
+            <div class="step-indicator active">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>
+            </div>
+            <div class="step-content">
+              <div class="step-title">
+                <span style="color:var(--saurus-ink);font-weight:700;">Stage 2: Thematic Clustering &amp; Cross-Paper Dedup</span>
+                <span class="mono" style="font-size:0.75rem;color:var(--saurus-accent);font-weight:600;">ACTIVE NOW (42/58 NLI pairs)</span>
+              </div>
+              <div class="step-meta">Deduplicating 63 raw statements into 6 cohesive themes. Pairwise entailment check running.</div>
+            </div>
+          </div>
+
+          <div class="pipeline-step">
+            <div class="step-indicator pending">
+              <span style="font-size:10px;font-weight:bold;">3</span>
+            </div>
+            <div class="step-content">
+              <div class="step-title">
+                <span class="text-secondary">Stage 3: Thematic Synthesis &amp; Dispute Identification</span>
+                <span class="mono text-muted" style="font-size:0.75rem;">Pending Queue</span>
+              </div>
+              <div class="step-meta">Batched synthesis calls across resolved thematic clusters.</div>
+            </div>
+          </div>
+
+          <div class="pipeline-step">
+            <div class="step-indicator pending">
+              <span style="font-size:10px;font-weight:bold;">4</span>
+            </div>
+            <div class="step-content">
+              <div class="step-title">
+                <span class="text-secondary">Stage 4: Corpus-Level Review Aggregation</span>
+                <span class="mono text-muted" style="font-size:0.75rem;">Pending Queue</span>
+              </div>
+              <div class="step-meta">Final cohesive prose assembly with citation addresses locked to page/paragraph.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 6: SCIENTIFIC CALLOUTS & ELEVATION -->
+    <section class="system-section">
+      <div class="section-header">
+        <span class="section-num">Token Section 06</span>
+        <h2>Scientific Callouts &amp; Discrepancy Alerts</h2>
+        <p class="section-desc">
+          When research papers conflict or methodology limits claims, The Saurus highlights it rather than glossing over it.
+        </p>
+      </div>
+
+      <div class="scientific-callout">
+        <div class="scientific-callout-title">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          Methodological Disagreement Detected &middot; Off-Target Profiling
+        </div>
+        <p>
+          <strong>Rodriguez &amp; Singh [5] (p.15,§4)</strong> observed detectable off-target insertions via unbiased genome-wide GUIDE-seq, whereas <strong>Okafor et al. [4] (p.9,§2)</strong> reported no detectable mutations. The discrepancy is attributable to detection assay sensitivity: [4] screened only the top 8 computationally predicted loci, while [5] surveyed genome-wide double-strand breaks.
+        </p>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="system-footer">
+      <div>
+        <strong>The Saurus Design System</strong> &middot; Round 1 AGY Deliverable &middot; Academic Warmth
+      </div>
+      <div>
+        "A chatbot gives you an answer. The Saurus gives you the receipts."
+      </div>
+    </footer>
+  </div>
+
+  <!-- Clipboard Toast Notification -->
+  <div id="copy-toast">Token copied to clipboard</div>
+
+  <!-- Vanilla JS Theme Toggle and Interactive Logic -->
+  <script>
+    (function() {
+      const themeToggle = document.getElementById('themeToggle');
+      const themeLabel = document.getElementById('themeLabel');
+      const toast = document.getElementById('copy-toast');
+
+      // Initialize theme from localStorage or system preference
+      const savedTheme = localStorage.getItem('saurus-theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+        themeLabel.textContent = 'Light Mode';
+      } else {
+        document.documentElement.classList.remove('dark');
+        themeLabel.textContent = 'Dark Mode';
+      }
+
+      themeToggle.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('saurus-theme', isDark ? 'dark' : 'light');
+        themeLabel.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+      });
+
+      // Swatch copy helper
+      window.copyToken = function(varName, hexVal) {
+        const textToCopy = `var(${varName})`;
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          toast.textContent = `Copied ${textToCopy}`;
+          toast.style.display = 'block';
+          setTimeout(() => {
+            toast.style.display = 'none';
+          }, 2000);
+        }).catch(() => {
+          toast.textContent = `Token: ${varName}`;
+          toast.style.display = 'block';
+          setTimeout(() => {
+            toast.style.display = 'none';
+          }, 2000);
+        });
+      };
+    })();
+  </script>
+</body>
+</html>

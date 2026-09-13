@@ -1,0 +1,2706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Saurus — App Mockups · 3 Breakpoints</title>
+
+  <!-- Google Fonts CDN -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;0,7..72,600;0,7..72,700;1,7..72,400;1,7..72,500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       THE SAURUS — EXACT DESIGN TOKENS (LIGHT & DARK)
+       ========================================================================== */
+    :root {
+      --saurus-paper: #FAFAF7;
+      --saurus-surface: #F5F5F0;
+      --saurus-sidebar: #F0F0EB;
+      --saurus-border: #E8E5DE;
+      --saurus-ink: #1C1C1E;
+      --saurus-ink-secondary: #6B7280;
+      --saurus-ink-muted: #9CA3AF;
+      --saurus-primary: #2D6A4F;
+      --saurus-primary-hover: #40916C;
+      --saurus-accent: #D4AF37;
+      --saurus-success: #40916C;
+      --saurus-error: #DC2626;
+      --saurus-pending: #9CA3AF;
+
+      --saurus-primary-bg: rgba(45, 106, 79, 0.08);
+      --saurus-accent-bg: rgba(212, 175, 55, 0.12);
+
+      /* Theme Chips */
+      --saurus-chip-1: #EDE9FE;
+      --saurus-chip-2: #DBEAFE;
+      --saurus-chip-3: #D1FAE5;
+      --saurus-chip-4: #FEF3C7;
+      --saurus-chip-5: #FCE7F3;
+      --saurus-chip-6: #E0E7FF;
+
+      /* Typography */
+      --font-heading: 'Literata', Georgia, serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'Fira Code', ui-monospace, monospace;
+
+      /* Board & Frame Chrome */
+      --board: #EBEBE6;
+      --dev-bezel: #1C1C1E;
+      --radius: 12px;
+    }
+
+    html.dark {
+      --saurus-paper: #1A1D1E;
+      --saurus-surface: #242728;
+      --saurus-sidebar: #161819;
+      --saurus-border: #353838;
+      --saurus-ink: #E8E4DD;
+      --saurus-ink-secondary: #9CA3AF;
+      --saurus-ink-muted: #6B7280;
+      --saurus-primary: #5BAB8A;
+      --saurus-primary-hover: #7CC4A5;
+      --saurus-accent: #E5C349;
+      --saurus-success: #5BAB8A;
+      --saurus-error: #F87171;
+      --saurus-pending: #6B7280;
+
+      --saurus-primary-bg: rgba(91, 171, 138, 0.12);
+      --saurus-accent-bg: rgba(229, 195, 73, 0.12);
+
+      --saurus-chip-1: #2D2640;
+      --saurus-chip-2: #1E2D3D;
+      --saurus-chip-3: #1A2E26;
+      --saurus-chip-4: #2E2A1A;
+      --saurus-chip-5: #2E1A24;
+      --saurus-chip-6: #1E2240;
+
+      --board: #111314;
+      --dev-bezel: #090A0B;
+    }
+
+    /* Reset & Base */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { color-scheme: light dark; scroll-behavior: smooth; }
+    body {
+      background: var(--board);
+      color: var(--saurus-ink);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    a { color: inherit; text-decoration: none; }
+    .mono { font-family: var(--font-mono); }
+    .muted { color: var(--saurus-ink-muted); }
+    .label {
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--saurus-ink-muted);
+    }
+    .card {
+      background: var(--saurus-surface);
+      border: 1px solid var(--saurus-border);
+      border-radius: var(--radius);
+      box-shadow: 0 1px 3px rgba(0,0,0,.04);
+      padding: 20px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.45rem 0.95rem;
+      border-radius: 6px;
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      line-height: 1.3;
+    }
+    .btn-sm { padding: 0.3rem 0.65rem; font-size: 0.75rem; }
+    .btn-primary { background: var(--saurus-primary); color: #FFFFFF; }
+    .btn-primary:hover { background: var(--saurus-primary-hover); }
+    .btn-secondary {
+      background: var(--saurus-paper);
+      color: var(--saurus-ink);
+      border-color: var(--saurus-border);
+    }
+    .btn-secondary:hover {
+      border-color: var(--saurus-primary);
+      color: var(--saurus-primary);
+    }
+
+    /* Chips */
+    .theme-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 9999px;
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--saurus-ink);
+      line-height: 1.4;
+      white-space: nowrap;
+      cursor: pointer;
+      border: 1px solid var(--saurus-border);
+    }
+    .theme-chip::before {
+      content: "";
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.7;
+    }
+    .chip-1 { background: var(--saurus-chip-1); }
+    .chip-2 { background: var(--saurus-chip-2); }
+    .chip-3 { background: var(--saurus-chip-3); }
+    .chip-4 { background: var(--saurus-chip-4); }
+    .chip-5 { background: var(--saurus-chip-5); }
+    .chip-6 { background: var(--saurus-chip-6); }
+
+    /* Citations in review text */
+    .cite-tag {
+      color: var(--saurus-primary);
+      font-weight: 500;
+      font-family: var(--font-body);
+      font-size: 0.88em;
+      border-bottom: 1px dotted currentColor;
+      cursor: pointer;
+      padding: 0 1px;
+      transition: all 0.15s;
+    }
+    .cite-tag:hover {
+      background: var(--saurus-primary-bg);
+      border-bottom-style: solid;
+    }
+    .cite-loc {
+      font-family: var(--font-mono);
+      font-size: 0.75em;
+      color: var(--saurus-ink-muted);
+      margin-left: 0.12em;
+    }
+
+    /* ==========================================================================
+       DOC CHROME (HEADER & TOOLBAR)
+       ========================================================================== */
+    .doc-head {
+      padding: 40px 48px 16px;
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+    .doc-head-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .doc-head h1 {
+      font-family: var(--font-heading);
+      font-weight: 600;
+      font-size: 2.35rem;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+    .doc-head p {
+      color: var(--saurus-ink-secondary);
+      max-width: 78ch;
+      margin-top: 8px;
+      font-size: 14.5px;
+      line-height: 1.6;
+    }
+    .doc-head .bp {
+      margin-top: 14px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .doc-head .bp span {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 4px 10px;
+      border: 1px solid var(--saurus-border);
+      border-radius: 6px;
+      background: var(--saurus-surface);
+      color: var(--saurus-ink-secondary);
+    }
+    .screen-jump-bar {
+      margin-top: 20px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .screen-jump-bar a {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      padding: 5px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--saurus-border);
+      background: var(--saurus-surface);
+      color: var(--saurus-ink);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .screen-jump-bar a:hover {
+      border-color: var(--saurus-primary);
+      color: var(--saurus-primary);
+    }
+    .screen-jump-bar a .idx {
+      color: var(--saurus-accent);
+      font-weight: 600;
+    }
+
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      background: var(--saurus-surface);
+      border: 1px solid var(--saurus-border);
+      color: var(--saurus-ink);
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      transition: all 0.15s;
+    }
+    .theme-toggle-btn:hover {
+      border-color: var(--saurus-primary);
+      color: var(--saurus-primary);
+    }
+    .sun-icon { display: none; }
+    html.dark .sun-icon { display: block; }
+    html.dark .moon-icon { display: none; }
+
+    /* ==========================================================================
+       SCREEN SECTIONS & DEVICE FRAMES (FORGE MOCKUPS TEMPLATE SPEC)
+       ========================================================================== */
+    .screen {
+      margin: 48px 0 0;
+      padding: 0 48px;
+    }
+    .screen > .title {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      margin-bottom: 18px;
+      max-width: 1440px;
+    }
+    .screen > .title h2 {
+      font-family: var(--font-heading);
+      font-weight: 600;
+      font-size: 1.55rem;
+    }
+    .screen > .title .idx {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--saurus-accent);
+      padding: 2px 7px;
+      background: var(--saurus-accent-bg);
+      border-radius: 4px;
+    }
+    .screen > .title p {
+      color: var(--saurus-ink-secondary);
+      font-size: 13px;
+      margin-left: auto;
+      max-width: 68ch;
+      text-align: right;
+    }
+    .board {
+      display: flex;
+      gap: 36px;
+      align-items: flex-start;
+      overflow-x: auto;
+      padding: 8px 8px 48px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--saurus-border) transparent;
+    }
+
+    /* Device frame wrapper */
+    .frame { flex: none; }
+    .frame .cap {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 10px;
+      padding-left: 2px;
+    }
+    .frame .cap b { font-weight: 600; font-size: 13px; }
+    .frame .cap span { font-family: var(--font-mono); font-size: 11px; color: var(--saurus-ink-muted); }
+
+    .dev {
+      overflow: hidden;
+      background: var(--saurus-paper);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 24px 60px -12px rgba(0,0,0,.18), 0 0 0 1px var(--saurus-border);
+      position: relative;
+    }
+
+    /* 3 Fixed Device Breakpoints */
+    .f-d { width: 1100px; }
+    .f-d .dev { border-radius: 14px; height: 780px; }
+
+    .f-t { width: 768px; }
+    .f-t .dev { border-radius: 26px; border: 6px solid var(--dev-bezel); height: 960px; }
+
+    .f-m { width: 390px; }
+    .f-m .dev { border-radius: 38px; border: 6px solid var(--dev-bezel); height: 844px; }
+
+    .dev > .dsk, .dev > .tab, .dev > .mob { flex: 1; min-height: 0; }
+    .dsk .main, .tab .main, .mob .main {
+      overflow-y: auto;
+      min-height: 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--saurus-border) transparent;
+      height: 100%;
+    }
+
+    /* ==========================================================================
+       NAVIGATION SHELLS (SIDEBAR, TOPNAV, TABS)
+       ========================================================================== */
+    /* Desktop Shell: 232px sidebar + main */
+    .dsk {
+      display: grid;
+      grid-template-columns: 232px 1fr;
+      grid-template-rows: minmax(0, 1fr);
+      height: 100%;
+    }
+    .side {
+      background: var(--saurus-sidebar);
+      border-right: 1px solid var(--saurus-border);
+      padding: 20px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      user-select: none;
+    }
+    .side .brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 6px 10px 22px;
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: -0.01em;
+      color: var(--saurus-ink);
+    }
+    .side a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      color: var(--saurus-ink-secondary);
+      font-weight: 500;
+      font-size: 13px;
+      transition: all 0.15s;
+    }
+    .side a:hover {
+      color: var(--saurus-ink);
+      background: var(--saurus-surface);
+    }
+    .side a.on {
+      background: var(--saurus-paper);
+      color: var(--saurus-ink);
+      font-weight: 600;
+      box-shadow: inset 3px 0 0 var(--saurus-primary);
+      border: 1px solid var(--saurus-border);
+      border-left: none;
+    }
+    .side a svg { width: 16px; height: 16px; flex: none; }
+    .side a .n {
+      margin-left: auto;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: var(--saurus-surface);
+      border: 1px solid var(--saurus-border);
+      color: var(--saurus-ink-muted);
+    }
+    .side a.on .n {
+      color: var(--saurus-primary);
+      font-weight: 600;
+      border-color: var(--saurus-primary);
+    }
+    .side .sp { flex: 1; }
+    .side .foot {
+      padding: 12px 10px 0;
+      border-top: 1px solid var(--saurus-border);
+      font-size: 11px;
+      color: var(--saurus-ink-muted);
+      line-height: 1.4;
+    }
+    .side .foot b {
+      display: block;
+      color: var(--saurus-ink-secondary);
+      font-weight: 600;
+      margin-top: 2px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+    }
+    .dsk .main {
+      padding: 24px 32px 36px;
+      min-width: 0;
+    }
+
+    /* Tablet Shell: Top nav + main */
+    .tab {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .topnav {
+      flex: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--saurus-sidebar);
+      border-bottom: 1px solid var(--saurus-border);
+      padding: 10px 20px;
+    }
+    .topnav .brand {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-right: 12px;
+      padding-right: 14px;
+      border-right: 1px solid var(--saurus-border);
+      color: var(--saurus-ink);
+    }
+    .topnav a {
+      padding: 6px 11px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--saurus-ink-secondary);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .topnav a:hover { color: var(--saurus-ink); }
+    .topnav a.on {
+      color: var(--saurus-ink);
+      background: var(--saurus-surface);
+      font-weight: 600;
+      box-shadow: inset 0 -2px 0 var(--saurus-primary);
+    }
+    .topnav .meta {
+      margin-left: auto;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--saurus-ink-muted);
+    }
+    .tab .main {
+      padding: 22px 24px 32px;
+      flex: 1;
+    }
+
+    /* Mobile Shell: Top bar + main + bottom tabs */
+    .mob {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .mtop {
+      flex: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--saurus-sidebar);
+      border-bottom: 1px solid var(--saurus-border);
+      padding: 12px 16px;
+    }
+    .mtop .brand {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--saurus-ink);
+    }
+    .mtop .ttl {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: var(--saurus-primary-bg);
+      color: var(--saurus-primary);
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1px solid var(--saurus-border);
+    }
+    .mob .main {
+      padding: 16px;
+      flex: 1;
+    }
+    .tabs {
+      flex: none;
+      display: flex;
+      background: var(--saurus-sidebar);
+      border-top: 1px solid var(--saurus-border);
+      padding: 6px 4px 12px;
+      justify-content: space-around;
+    }
+    .tabs a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      font-size: 9.5px;
+      font-weight: 500;
+      color: var(--saurus-ink-secondary);
+      padding: 3px 6px;
+      border-radius: 6px;
+    }
+    .tabs a.on {
+      color: var(--saurus-primary);
+      font-weight: 600;
+    }
+    .tabs a svg { width: 18px; height: 18px; }
+
+    /* ==========================================================================
+       SCREEN 1: EMPTY STATE STYLING
+       ========================================================================== */
+    .empty-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 36px 16px;
+      background: radial-gradient(600px 300px at 50% 20%, var(--saurus-accent-bg), transparent 70%);
+      min-height: 100%;
+    }
+    .empty-wrap.t { padding: 28px 16px; }
+    .empty-wrap.m { padding: 20px 10px; }
+
+    .mascot-box {
+      width: 200px;
+      height: 136px;
+      margin-bottom: 18px;
+      color: var(--saurus-ink);
+    }
+    .empty-wrap.m .mascot-box {
+      width: 150px;
+      height: 102px;
+      margin-bottom: 12px;
+    }
+
+    .empty-h1 {
+      font-family: var(--font-heading);
+      font-size: 2.1rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    .empty-wrap.m .empty-h1 { font-size: 1.5rem; }
+
+    .empty-p {
+      font-size: 14px;
+      color: var(--saurus-ink-secondary);
+      max-width: 54ch;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .empty-wrap.m .empty-p { font-size: 12.5px; margin-bottom: 16px; }
+
+    .dropzone {
+      width: 100%;
+      max-width: 540px;
+      border: 2px dashed var(--saurus-border);
+      border-radius: var(--radius);
+      padding: 28px 20px;
+      background: var(--saurus-surface);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .dropzone:hover {
+      border-color: var(--saurus-primary);
+      background: var(--saurus-primary-bg);
+    }
+    .dropzone svg {
+      width: 36px;
+      height: 36px;
+      margin-bottom: 10px;
+      color: var(--saurus-primary);
+    }
+    .dropzone h3 {
+      font-family: var(--font-heading);
+      font-size: 1.15rem;
+      margin-bottom: 4px;
+    }
+    .dropzone .sub {
+      font-size: 12px;
+      color: var(--saurus-ink-secondary);
+      margin-bottom: 14px;
+    }
+    .dropzone .limits {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--saurus-ink-muted);
+      margin-top: 12px;
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .preset-box {
+      margin-top: 24px;
+      width: 100%;
+      max-width: 580px;
+      border-top: 1px solid var(--saurus-border);
+      padding-top: 16px;
+      text-align: left;
+    }
+    .preset-title {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--saurus-ink-muted);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .preset-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background: var(--saurus-surface);
+      border: 1px solid var(--saurus-border);
+      border-radius: 8px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .preset-row:hover {
+      border-color: var(--saurus-primary);
+      transform: translateX(3px);
+    }
+    .preset-row .nm { font-size: 13px; font-weight: 600; color: var(--saurus-ink); }
+    .preset-row .ds { font-size: 11px; color: var(--saurus-ink-secondary); }
+    .preset-row .mt { font-family: var(--font-mono); font-size: 11px; color: var(--saurus-primary); white-space: nowrap; margin-left: 8px; }
+
+    /* ==========================================================================
+       SCREEN 2: PIPELINE TRACE STYLING
+       ========================================================================== */
+    .pipe-dsk-grid {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 20px;
+      height: 100%;
+      align-items: start;
+    }
+    .paper-rail {
+      background: var(--saurus-surface);
+      border: 1px solid var(--saurus-border);
+      border-radius: var(--radius);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 700px;
+      overflow-y: auto;
+    }
+    .rail-hd {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 4px 8px;
+      border-bottom: 1px solid var(--saurus-border);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .rail-hd .badge {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: var(--saurus-primary-bg);
+      color: var(--saurus-primary);
+    }
+    .paper-mini {
+      padding: 8px;
+      border-radius: 6px;
+      background: var(--saurus-paper);
+      border: 1px solid var(--saurus-border);
+      font-size: 11.5px;
+      cursor: pointer;
+    }
+    .paper-mini.on {
+      border-color: var(--saurus-primary);
+      background: var(--saurus-primary-bg);
+    }
+    .paper-mini .idx { font-family: var(--font-mono); font-weight: 600; color: var(--saurus-primary); }
+    .paper-mini .ttl { font-weight: 600; margin: 2px 0; line-height: 1.3; color: var(--saurus-ink); }
+    .paper-mini .sub { font-size: 10px; color: var(--saurus-ink-muted); }
+
+    .trace-pane {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .trace-status-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .trace-status-head h2 { font-size: 1.3rem; }
+    .trace-status-head .eta { font-family: var(--font-mono); font-size: 11px; color: var(--saurus-ink-secondary); }
+
+    .progress-bar-track {
+      height: 8px;
+      width: 100%;
+      background: var(--saurus-surface);
+      border: 1px solid var(--saurus-border);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 62%;
+      background: linear-gradient(90deg, var(--saurus-primary), var(--saurus-success) 60%, var(--saurus-accent) 100%);
+      border-radius: 999px;
+    }
+
+    .stages-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .stage-box {
+      border: 1px solid var(--saurus-border);
+      border-radius: 8px;
+      background: var(--saurus-surface);
+      padding: 12px 14px;
+    }
+    .stage-box.active {
+      border-color: var(--saurus-accent);
+      background: var(--saurus-accent-bg);
+    }
+    .stage-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .dot-state {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-state.done { background: var(--saurus-success); }
+    .dot-state.active {
+      background: var(--saurus-accent);
+      box-shadow: 0 0 0 3px rgba(212,175,55,0.25);
+    }
+    .dot-state.pending { background: var(--saurus-pending); opacity: 0.5; }
+
+    .stage-info { flex: 1; }
+    .stage-info .ttl-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .pill-st {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+    .pill-done { background: rgba(64,145,108,0.15); color: var(--saurus-success); }
+    .pill-active { background: var(--saurus-accent); color: #1C1C1E; font-weight: 600; }
+    .pill-pending { background: var(--saurus-border); color: var(--saurus-ink-muted); }
+    .stage-info .desc { font-size: 11.5px; color: var(--saurus-ink-secondary); margin-top: 2px; }
+    .stage-dur { font-family: var(--font-mono); font-size: 11px; color: var(--saurus-ink-muted); }
+
+    .substeps-list {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--saurus-border);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 11.5px;
+    }
+    .substep-item { display: flex; align-items: center; gap: 8px; }
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--saurus-accent);
+      animation: pulse-dot-anim 1.4s infinite;
+    }
+    @keyframes pulse-dot-anim { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+    .terminal-box {
+      border: 1px solid var(--saurus-border);
+      border-radius: 8px;
+      background: var(--saurus-surface);
+      overflow: hidden;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+    .term-hd {
+      padding: 6px 12px;
+      background: var(--saurus-sidebar);
+      border-bottom: 1px solid var(--saurus-border);
+      color: var(--saurus-ink-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+    .term-body {
+      padding: 10px 12px;
+      max-height: 120px;
+      overflow-y: auto;
+      line-height: 1.6;
+    }
+    .log-line { display: flex; gap: 8px; }
+    .log-line .ts { color: var(--saurus-ink-muted); }
+    .log-line .tag-g { color: var(--saurus-accent); }
+    .log-line .tag-d { color: var(--saurus-success); }
+
+    /* ==========================================================================
+       SCREEN 3: REVIEW STYLING (LITERATA SCHOLARLY MANUSCRIPT)
+       ========================================================================== */
+    .rev-dsk-grid {
+      display: grid;
+      grid-template-columns: 210px 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+    .toc-col {
+      background: var(--saurus-surface);
+      border: 1px solid var(--saurus-border);
+      border-radius: var(--radius);
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .toc-col .thd {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--saurus-ink-muted);
+      margin-bottom: 8px;
+      padding-left: 6px;
+    }
+    .toc-item {
+      font-size: 12px;
+      padding: 5px 8px;
+      border-radius: 6px;
+      color: var(--saurus-ink-secondary);
+      display: block;
+      transition: all 0.15s;
+    }
+    .toc-item:hover { color: var(--saurus-ink); background: var(--saurus-paper); }
+    .toc-item.on {
+      color: var(--saurus-primary);
+      font-weight: 600;
+      background: var(--saurus-primary-bg);
+    }
+    .toc-item.sub { padding-left: 18px; font-size: 11px; }
+
+    .audit-card {
+      margin-top: 14px;
+      padding: 10px;
+      border-radius: 6px;
+      background: var(--saurus-paper);
+      border: 1px solid var(--saurus-border);
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      line-height: 1.5;
+    }
+
+    .rev-article { max-width: 720px; }
+    .rev-action-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--saurus-border);
+      margin-bottom: 20px;
+    }
+    .rev-action-bar .kick { font-family: var(--font-mono); font-size: 11px; color: var(--saurus-ink-muted); }
+    .rev-title {
+      font-family: var(--font-heading);
+      font-size: 1.85rem;
+      line-height: 1.25;
+      margin-bottom: 8px;
+    }
+    .rev-sub {
+      font-size: 13px;
+      color: var(--saurus-ink-secondary);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .rev-lead {
+      font-family: var(--font-heading);
+      font-size: 1.15rem;
+      line-height: 1.7;
+      padding-left: 14px;
+      border-left: 3px solid var(--saurus-primary);
+      margin-bottom: 20px;
+    }
+    .rev-body {
+      font-family: var(--font-heading);
+      font-size: 1.05rem;
+      line-height: 1.8;
+      margin-bottom: 16px;
+    }
+    .rev-h2 {
+      font-size: 1.35rem;
+      margin: 24px 0 10px;
+      color: var(--saurus-primary);
+      border-bottom: 1px solid var(--saurus-border);
+      padding-bottom: 4px;
+    }
+    .rev-h3 {
+      font-size: 1.15rem;
+      margin: 16px 0 6px;
+      color: var(--saurus-primary-hover);
+    }
+
+    /* Receipt hovercard */
+    .receipt-card {
+      margin: 14px 0;
+      padding: 14px 16px;
+      background: var(--saurus-surface);
+      border: 1px solid var(--saurus-border);
+      border-left: 4px solid var(--saurus-accent);
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .receipt-hd {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      margin-bottom: 6px;
+    }
+    .receipt-quote {
+      font-family: var(--font-heading);
+      font-style: italic;
+      font-size: 0.95rem;
+      line-height: 1.45;
+      margin-bottom: 6px;
+    }
+    .receipt-src {
+      font-size: 11.5px;
+      color: var(--saurus-ink-secondary);
+    }
+
+    .disagree-box {
+      border-left: 3px solid var(--saurus-accent);
+      background: var(--saurus-accent-bg);
+      padding: 12px 14px;
+      border-radius: 0 8px 8px 0;
+      margin: 16px 0;
+      font-size: 12.5px;
+      line-height: 1.5;
+    }
+
+    .ref-list {
+      margin-top: 28px;
+      padding-top: 16px;
+      border-top: 2px solid var(--saurus-border);
+    }
+    .ref-row {
+      display: flex;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px dashed var(--saurus-border);
+      font-size: 12px;
+    }
+    .ref-row .idx {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--saurus-primary);
+      width: 26px;
+      flex-shrink: 0;
+    }
+    .ref-row .ti { font-weight: 600; color: var(--saurus-ink); }
+    .ref-row .au { font-size: 11px; color: var(--saurus-ink-secondary); }
+    .ref-row .lk { font-family: var(--font-mono); font-size: 10px; color: var(--saurus-primary); margin-top: 2px; }
+
+    /* ==========================================================================
+       SCREEN 4: PAPER EXPLORER STYLING
+       ========================================================================== */
+    .exp-head-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .exp-filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      background: var(--saurus-surface);
+      border: 1px solid var(--saurus-border);
+      border-radius: 8px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+    }
+    .paper-card {
+      border: 1px solid var(--saurus-border);
+      border-radius: 8px;
+      background: var(--saurus-surface);
+      margin-bottom: 10px;
+      overflow: hidden;
+      transition: all 0.15s;
+    }
+    .paper-card.open { border-color: var(--saurus-primary); }
+    .paper-card-top {
+      padding: 12px 14px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      cursor: pointer;
+    }
+    .paper-card-top .p-idx {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--saurus-primary);
+      padding: 2px 6px;
+      background: var(--saurus-primary-bg);
+      border-radius: 4px;
+    }
+    .paper-card-top .p-meta { flex: 1; }
+    .paper-card-top .p-ttl { font-weight: 600; font-size: 13.5px; color: var(--saurus-ink); line-height: 1.35; margin-bottom: 2px; }
+    .paper-card-top .p-sub { font-size: 11.5px; color: var(--saurus-ink-secondary); margin-bottom: 6px; }
+    .paper-card-top .p-chips { display: flex; gap: 4px; flex-wrap: wrap; }
+    .paper-card-top .p-cnt { text-align: right; }
+    .paper-card-top .p-cnt b { display: block; font-family: var(--font-mono); font-size: 16px; color: var(--saurus-primary); }
+    .paper-card-top .p-cnt span { font-size: 10px; color: var(--saurus-ink-muted); text-transform: uppercase; }
+
+    .paper-card-expand {
+      padding: 12px 14px 14px;
+      border-top: 1px dashed var(--saurus-border);
+      background: var(--saurus-paper);
+    }
+    .claim-item {
+      display: flex;
+      gap: 10px;
+      padding: 8px 10px;
+      background: var(--saurus-surface);
+      border-left: 3px solid var(--saurus-primary);
+      border-radius: 0 6px 6px 0;
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+    .claim-item .qm { font-family: var(--font-heading); font-size: 16px; color: var(--saurus-primary); line-height: 1; }
+    .claim-item .meta-row {
+      display: flex;
+      gap: 10px;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      margin-top: 4px;
+      color: var(--saurus-ink-muted);
+    }
+
+    /* ==========================================================================
+       SCREEN 5: CHAT ASSISTANT STYLING
+       ========================================================================== */
+    .chat-dsk-grid {
+      display: grid;
+      grid-template-columns: 1fr 390px;
+      gap: 20px;
+      height: 100%;
+      align-items: start;
+    }
+    .context-desk {
+      background: var(--saurus-paper);
+      border: 1px solid var(--saurus-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      overflow-y: auto;
+      max-height: 700px;
+    }
+    .desk-pill {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--saurus-primary);
+      background: var(--saurus-primary-bg);
+      padding: 3px 8px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-bottom: 12px;
+    }
+    .hi-pass {
+      background: var(--saurus-accent-bg);
+      padding: 1px 3px;
+      border-bottom: 2px solid var(--saurus-accent);
+    }
+
+    .chat-pane {
+      background: var(--saurus-surface);
+      border: 1px solid var(--saurus-border);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      height: 700px;
+      overflow: hidden;
+    }
+    .chat-hd {
+      padding: 12px 14px;
+      background: var(--saurus-sidebar);
+      border-bottom: 1px solid var(--saurus-border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .chat-hd .ti { font-family: var(--font-heading); font-size: 14px; font-weight: 700; }
+    .chat-hd .sb { font-family: var(--font-mono); font-size: 10px; color: var(--saurus-ink-muted); }
+
+    .chat-stream {
+      flex: 1;
+      padding: 14px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .bubble {
+      max-width: 90%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .bubble.user {
+      align-self: flex-end;
+      background: var(--saurus-primary);
+      color: #FFFFFF;
+      border-bottom-right-radius: 2px;
+    }
+    .bubble.saurus {
+      align-self: flex-start;
+      background: var(--saurus-paper);
+      border: 1px solid var(--saurus-border);
+      border-bottom-left-radius: 2px;
+    }
+    .bubble .who {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      opacity: 0.8;
+    }
+    .bubble.user .who { color: #FFFFFF; }
+    .bubble.saurus .who { color: var(--saurus-primary); }
+
+    .pill-receipts {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px dashed var(--saurus-border);
+    }
+    .pill-receipts span {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: var(--saurus-surface);
+      border: 1px solid var(--saurus-border);
+      color: var(--saurus-primary);
+    }
+
+    .ticker-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--saurus-accent);
+      padding: 6px 10px;
+      background: var(--saurus-accent-bg);
+      border-radius: 6px;
+    }
+
+    .chat-composer {
+      padding: 10px 12px;
+      background: var(--saurus-sidebar);
+      border-top: 1px solid var(--saurus-border);
+    }
+    .suggs {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      margin-bottom: 8px;
+      padding-bottom: 2px;
+    }
+    .sugg-btn {
+      font-size: 10.5px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--saurus-paper);
+      border: 1px solid var(--saurus-border);
+      color: var(--saurus-ink-secondary);
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .composer-row { display: flex; gap: 6px; }
+    .comp-input {
+      flex: 1;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--saurus-border);
+      background: var(--saurus-paper);
+      color: var(--saurus-ink);
+      font-size: 12px;
+      outline: none;
+    }
+    .comp-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: var(--saurus-primary);
+      color: #fff;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .comp-note {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      color: var(--saurus-ink-muted);
+      text-align: center;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================================================
+       DOC CHROME HEADER
+       ========================================================================== -->
+  <header class="doc-head">
+    <div class="doc-head-top">
+      <div>
+        <div class="label" style="margin-bottom:6px">The Saurus &middot; App Mockups &middot; Round 2 Correction</div>
+        <h1>The Saurus &mdash; Literature Review Pipeline</h1>
+        <p>Defensible literature reviews where every sentence has an address. Five core screens shown across 3 device breakpoints side-by-side: Desktop (1100&times;780, 232px sidebar), Tablet (768&times;960, top navigation bar), and Mobile (390&times;844, top bar + bottom tab bar). Scroll internally within any device frame; scroll the board horizontally to inspect breakpoints.</p>
+        <div class="bp">
+          <span>desktop &middot; 1100&times;780 (sidebar 232px)</span>
+          <span>tablet &middot; 768&times;960 (top nav)</span>
+          <span>mobile &middot; 390&times;844 (bottom tabs)</span>
+          <span>5 screens &times; 3 frames = 15 views</span>
+          <span>Corpus: Hepatic Gene Correction (40 papers)</span>
+        </div>
+      </div>
+      <div>
+        <button id="themeToggle" class="theme-toggle-btn" aria-label="Toggle dark mode">
+          <svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <span id="themeText">Dark Mode</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Jump Links -->
+    <nav class="screen-jump-bar">
+      <a href="#screen-empty"><span class="idx">01</span> Empty State</a>
+      <a href="#screen-pipeline"><span class="idx">02</span> Pipeline Trace</a>
+      <a href="#screen-review"><span class="idx">03</span> Synthesized Review</a>
+      <a href="#screen-explorer"><span class="idx">04</span> Paper Explorer</a>
+      <a href="#screen-assistant"><span class="idx">05</span> Chat Assistant</a>
+    </nav>
+  </header>
+
+
+  <!-- ==========================================================================
+       SCREEN 1: EMPTY STATE
+       ========================================================================== -->
+  <section id="screen-empty" class="screen">
+    <div class="title">
+      <span class="idx">01</span>
+      <h2>Empty State — The Literature Ingestion Room</h2>
+      <p>Cold start ingestion screen. Scientific line-art dinosaur mascot, value proposition, drag-and-drop zone for 10–100 PDF manuscripts, and pre-loaded benchmark corpora.</p>
+    </div>
+
+    <div class="board">
+
+      <!-- DESKTOP (1100x780) -->
+      <div class="frame f-d">
+        <div class="cap"><b>Desktop</b><span>1100 &times; 780 &middot; 232px sidebar</span></div>
+        <div class="dev">
+          <div class="dsk">
+            <div data-nav="side" data-on="upload"></div>
+            <main class="main">
+              <div class="empty-wrap">
+                <!-- Dinosaur Mascot SVG -->
+                <div class="mascot-box">
+                  <svg viewBox="0 0 200 140" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:100%;height:100%;">
+                    <path d="M30 110c12-3 22-12 28-26 4-10 2-24 9-34 8-10 24-12 36-7 9 4 16 12 21 21 4 7 5 14 11 19 7 6 19 7 28 5"/>
+                    <path d="M66 50c-5-7-2-16 5-21 7-5 16-2 21 5M102 43c7-1 13 3 14 10"/>
+                    <path d="M52 105c-3-7 0-16 5-21M80 110c0-7 3-14 7-19M32 110h72"/>
+                    <circle cx="116" cy="38" r="2.2" fill="currentColor"/>
+                    <circle cx="120" cy="38" r="5" stroke="var(--saurus-accent)" stroke-width="1.4"/>
+                    <line x1="115" y1="38" x2="108" y2="38" stroke="var(--saurus-accent)" stroke-width="1.4"/>
+                    <rect x="130" y="55" width="36" height="48" rx="2" stroke="var(--saurus-primary)" stroke-width="1.5" fill="var(--saurus-surface)"/>
+                    <line x1="138" y1="68" x2="158" y2="68" stroke="currentColor" stroke-width="1"/>
+                    <line x1="138" y1="76" x2="154" y2="76" stroke="currentColor" stroke-width="1"/>
+                    <line x1="138" y1="84" x2="150" y2="84" stroke="currentColor" stroke-width="1"/>
+                    <line x1="10" y1="126" x2="190" y2="126" stroke="var(--saurus-border)" stroke-dasharray="3 5"/>
+                  </svg>
+                </div>
+
+                <h1 class="empty-h1">Feed The Saurus your papers.</h1>
+                <p class="empty-p">Upload 10 to 100 PDF manuscripts. The Saurus extracts every claim, clusters recurring themes across the corpus, and builds a defensible literature review where every sentence has an address.</p>
+
+                <!-- Dropzone Box -->
+                <div class="dropzone">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                  </svg>
+                  <h3>Drop your research PDFs here</h3>
+                  <div class="sub">Drag and drop files, or <span style="color:var(--saurus-primary);text-decoration:underline;">browse folders</span></div>
+                  <button class="btn btn-primary">Select PDF Files</button>
+                  <div class="limits">
+                    <span>&bull; Up to 100 papers</span>
+                    <span>&bull; Optical OCR support</span>
+                    <span>&bull; NLI Grounding Check</span>
+                  </div>
+                </div>
+
+                <!-- Presets -->
+                <div class="preset-box">
+                  <div class="preset-title">
+                    <span>Or load a curated benchmark corpus</span>
+                    <span>Zero hallucination verified</span>
+                  </div>
+                  <div class="preset-row">
+                    <div>
+                      <div class="nm">Hepatic Gene Correction (2022–2024)</div>
+                      <div class="ds">AAV9 vectors, adenine base editing, and whole-liver LNP delivery</div>
+                    </div>
+                    <div class="mt">40 papers &middot; ~380 pp &rarr;</div>
+                  </div>
+                  <div class="preset-row">
+                    <div>
+                      <div class="nm">Solid-State Lithium Battery Electrolytes</div>
+                      <div class="ds">Sulfides, garnets, and polymer composite dendrite suppression</div>
+                    </div>
+                    <div class="mt">28 papers &middot; ~310 pp &rarr;</div>
+                  </div>
+                </div>
+              </div>
+            </main>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLET (768x960) -->
+      <div class="frame f-t">
+        <div class="cap"><b>Tablet</b><span>768 &times; 960 &middot; top nav</span></div>
+        <div class="dev">
+          <div class="tab">
+            <div data-nav="top" data-on="upload"></div>
+            <main class="main">
+              <div class="empty-wrap t">
+                <div class="mascot-box">
+                  <svg viewBox="0 0 200 140" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:100%;height:100%;">
+                    <path d="M30 110c12-3 22-12 28-26 4-10 2-24 9-34 8-10 24-12 36-7 9 4 16 12 21 21 4 7 5 14 11 19 7 6 19 7 28 5"/>
+                    <path d="M66 50c-5-7-2-16 5-21 7-5 16-2 21 5M102 43c7-1 13 3 14 10"/>
+                    <path d="M52 105c-3-7 0-16 5-21M80 110c0-7 3-14 7-19M32 110h72"/>
+                    <circle cx="116" cy="38" r="2.2" fill="currentColor"/>
+                    <circle cx="120" cy="38" r="5" stroke="var(--saurus-accent)" stroke-width="1.4"/>
+                    <line x1="115" y1="38" x2="108" y2="38" stroke="var(--saurus-accent)" stroke-width="1.4"/>
+                    <rect x="130" y="55" width="36" height="48" rx="2" stroke="var(--saurus-primary)" stroke-width="1.5" fill="var(--saurus-surface)"/>
+                    <line x1="138" y1="68" x2="158" y2="68" stroke="currentColor" stroke-width="1"/>
+                    <line x1="138" y1="76" x2="154" y2="76" stroke="currentColor" stroke-width="1"/>
+                    <line x1="138" y1="84" x2="150" y2="84" stroke="currentColor" stroke-width="1"/>
+                    <line x1="10" y1="126" x2="190" y2="126" stroke="var(--saurus-border)" stroke-dasharray="3 5"/>
+                  </svg>
+                </div>
+                <h1 class="empty-h1">Feed The Saurus your papers.</h1>
+                <p class="empty-p">Upload 10 to 100 PDF manuscripts. The Saurus extracts every claim, clusters recurring themes, and builds a defensible literature review.</p>
+
+                <div class="dropzone" style="max-width:480px;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                  </svg>
+                  <h3>Drop your research PDFs here</h3>
+                  <div class="sub">Drag &amp; drop files, or browse folders</div>
+                  <button class="btn btn-primary">Select PDF Files</button>
+                  <div class="limits">
+                    <span>&bull; Up to 100 papers</span>
+                    <span>&bull; OCR enabled</span>
+                    <span>&bull; NLI Grounding</span>
+                  </div>
+                </div>
+
+                <div class="preset-box" style="max-width:500px;">
+                  <div class="preset-title"><span>Curated benchmark corpora</span></div>
+                  <div class="preset-row">
+                    <div>
+                      <div class="nm">Hepatic Gene Correction (2022–2024)</div>
+                      <div class="ds">40 papers &middot; AAV9, base editing, LNP delivery</div>
+                    </div>
+                    <div class="mt">380 pp &rarr;</div>
+                  </div>
+                  <div class="preset-row">
+                    <div>
+                      <div class="nm">Solid-State Lithium Battery Electrolytes</div>
+                      <div class="ds">28 papers &middot; Sulfides, garnets, polymer composites</div>
+                    </div>
+                    <div class="mt">310 pp &rarr;</div>
+                  </div>
+                </div>
+              </div>
+            </main>
+          </div>
+        </div>
+      </div>
+
+      <!-- MOBILE (390x844) -->
+      <div class="frame f-m">
+        <div class="cap"><b>Mobile</b><span>390 &times; 844 &middot; bottom tabs</span></div>
+        <div class="dev">
+          <div class="mob">
+            <div data-nav="mtop" data-title="Upload"></div>
+            <main class="main">
+              <div class="empty-wrap m">
+                <div class="mascot-box">
+                  <svg viewBox="0 0 200 140" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:100%;height:100%;">
+                    <path d="M30 110c12-3 22-12 28-26 4-10 2-24 9-34 8-10 24-12 36-7 9 4 16 12 21 21 4 7 5 14 11 19 7 6 19 7 28 5"/>
+                    <path d="M66 50c-5-7-2-16 5-21 7-5 16-2 21 5M102 43c7-1 13 3 14 10"/>
+                    <circle cx="116" cy="38" r="2.2" fill="currentColor"/>
+                    <circle cx="120" cy="38" r="5" stroke="var(--saurus-accent)" stroke-width="1.4"/>
+                    <rect x="130" y="55" width="36" height="48" rx="2" stroke="var(--saurus-primary)" stroke-width="1.5" fill="var(--saurus-surface)"/>
+                    <line x1="10" y1="126" x2="190" y2="126" stroke="var(--saurus-border)" stroke-dasharray="3 5"/>
+                  </svg>
+                </div>
+                <h1 class="empty-h1">Feed The Saurus</h1>
+                <p class="empty-p">Upload 10 to 100 PDF manuscripts to synthesize a defensible literature review.</p>
+
+                <div class="dropzone" style="padding:20px 14px;">
+                  <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                  </svg>
+                  <h3 style="font-size:1.05rem;">Drop research PDFs</h3>
+                  <button class="btn btn-primary btn-sm" style="margin-top:8px;">Choose Files</button>
+                  <div class="limits" style="font-size:9.5px;gap:8px;">
+                    <span>100 papers max</span>
+                    <span>OCR ready</span>
+                  </div>
+                </div>
+
+                <div class="preset-box" style="margin-top:16px;">
+                  <div class="preset-title"><span>Or try sample corpus</span></div>
+                  <div class="preset-row" style="padding:6px 10px;">
+                    <div>
+                      <div class="nm" style="font-size:12px;">Hepatic Gene Correction</div>
+                      <div class="ds" style="font-size:10px;">40 papers &middot; 380 pp</div>
+                    </div>
+                    <div class="mt" style="font-size:10px;">Load &rarr;</div>
+                  </div>
+                </div>
+              </div>
+            </main>
+            <div data-nav="tabs" data-on="upload"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ==========================================================================
+       SCREEN 2: PIPELINE TRACE
+       ========================================================================== -->
+  <section id="screen-pipeline" class="screen">
+    <div class="title">
+      <span class="idx">02</span>
+      <h2>Pipeline Trace — "You Can Watch It Think"</h2>
+      <p>Real-time execution trace across 4 stages (Paper Analysis, Theme Dedup, Theme Review, Aggregation). Left: 40 corpus papers. Right: Progress bar, active substeps with NLI verification, and live event log terminal.</p>
+    </div>
+
+    <div class="board">
+
+      <!-- DESKTOP (1100x780) -->
+      <div class="frame f-d">
+        <div class="cap"><b>Desktop</b><span>1100 &times; 780 &middot; 232px sidebar</span></div>
+        <div class="dev">
+          <div class="dsk">
+            <div data-nav="side" data-on="pipeline"></div>
+            <main class="main">
+              <div class="pipe-dsk-grid">
+                <!-- Left: Papers Rail -->
+                <aside class="paper-rail">
+                  <div class="rail-hd">
+                    <span>Corpus Papers</span>
+                    <span class="badge">40 / 40 Parsed</span>
+                  </div>
+                  <div class="paper-mini on">
+                    <span class="idx">[1]</span>
+                    <div class="ttl">AAV9-mediated CRISPR correction in mice</div>
+                    <div class="sub">Liu et al. (2024) &middot; 14 claims &middot; 18 pp</div>
+                  </div>
+                  <div class="paper-mini">
+                    <span class="idx">[2]</span>
+                    <div class="ttl">Lipid nanoparticle delivery of base editors</div>
+                    <div class="sub">Chen &amp; Park (2023) &middot; 11 claims &middot; 16 pp</div>
+                  </div>
+                  <div class="paper-mini">
+                    <span class="idx">[3]</span>
+                    <div class="ttl">Dual-AAV split-intein Wilson disease</div>
+                    <div class="sub">Yamamoto et al. (2024) &middot; 9 claims &middot; 12 pp</div>
+                  </div>
+                  <div class="paper-mini">
+                    <span class="idx">[4]</span>
+                    <div class="ttl">In vivo ABE rescues OTC deficiency</div>
+                    <div class="sub">Okafor et al. (2023) &middot; 12 claims &middot; 14 pp</div>
+                  </div>
+                  <div class="paper-mini">
+                    <span class="idx">[5]</span>
+                    <div class="ttl">Comparative efficacy of CRISPR nucleases</div>
+                    <div class="sub">Rodriguez &amp; Singh (2024) &middot; 16 claims &middot; 22 pp</div>
+                  </div>
+                  <div class="paper-mini" style="opacity:0.75;">
+                    <span class="idx">[6..40]</span>
+                    <div class="ttl">35 Additional Peer-Reviewed Manuscripts</div>
+                    <div class="sub">Cell Stem Cell, Sci Transl Med (125 claims)</div>
+                  </div>
+                </aside>
+
+                <!-- Right: Trace Main -->
+                <section class="trace-pane">
+                  <div class="trace-status-head">
+                    <h2>Stage 2 of 4: Theme Dedup &amp; NLI Entailment</h2>
+                    <span class="eta">~1m 15s remaining &middot; 62% Completed</span>
+                  </div>
+                  <div class="progress-bar-track">
+                    <div class="progress-bar-fill"></div>
+                  </div>
+
+                  <div class="stages-stack">
+                    <!-- Stage 1 -->
+                    <div class="stage-box">
+                      <div class="stage-top">
+                        <span class="dot-state done"></span>
+                        <div class="stage-info">
+                          <div class="ttl-row">
+                            <span>Stage 1: Paper Analysis &amp; Claim Ingestion</span>
+                            <span class="pill-st pill-done">&check; DONE</span>
+                          </div>
+                          <div class="desc">40 papers ingested &middot; 187 claims indexed &middot; 63 raw candidate theme statements</div>
+                        </div>
+                        <span class="stage-dur">2m 14s</span>
+                      </div>
+                    </div>
+
+                    <!-- Stage 2 -->
+                    <div class="stage-box active">
+                      <div class="stage-top">
+                        <span class="dot-state active"></span>
+                        <div class="stage-info">
+                          <div class="ttl-row">
+                            <span>Stage 2: Theme Dedup &amp; NLI Entailment Verification</span>
+                            <span class="pill-st pill-active">&bull; RUNNING</span>
+                          </div>
+                          <div class="desc">Clustering candidate themes across papers &middot; 63 raw propositions &rarr; 6 canonical themes</div>
+                        </div>
+                        <span class="stage-dur">0:48</span>
+                      </div>
+                      <div class="substeps-list">
+                        <div class="substep-item">
+                          <span style="color:var(--saurus-success);">&check;</span>
+                          <span style="flex:1;">Embedding 63 theme propositions (text-embedding-3-large)</span>
+                          <span class="mono muted">63/63 (1.2s)</span>
+                        </div>
+                        <div class="substep-item">
+                          <span style="color:var(--saurus-success);">&check;</span>
+                          <span style="flex:1;">Cosine similarity graph partitioning (&tau; &ge; 0.82)</span>
+                          <span class="mono muted">6 clusters formed</span>
+                        </div>
+                        <div class="substep-item">
+                          <span class="pulse-dot"></span>
+                          <span style="flex:1;"><strong>Pairwise NLI verification:</strong> "Off-Target Effects" cross-paper claims</span>
+                          <span class="mono" style="color:var(--saurus-accent);font-weight:600;">verifying 42/58 pairs</span>
+                        </div>
+                        <div class="substep-item" style="opacity:0.6;">
+                          <span>&bull;</span>
+                          <span style="flex:1;">Canonical taxonomy naming pass &amp; dispute marking</span>
+                          <span class="mono muted">queued</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Stage 3 -->
+                    <div class="stage-box">
+                      <div class="stage-top">
+                        <span class="dot-state pending"></span>
+                        <div class="stage-info">
+                          <div class="ttl-row">
+                            <span style="color:var(--saurus-ink-secondary);">Stage 3: Thematic Synthesis &amp; Dispute Identification</span>
+                            <span class="pill-st pill-pending">PENDING</span>
+                          </div>
+                          <div class="desc">Cross-referencing claims per theme; detecting methodological contradictions</div>
+                        </div>
+                        <span class="stage-dur">&mdash;</span>
+                      </div>
+                    </div>
+
+                    <!-- Stage 4 -->
+                    <div class="stage-box">
+                      <div class="stage-top">
+                        <span class="dot-state pending"></span>
+                        <div class="stage-info">
+                          <div class="ttl-row">
+                            <span style="color:var(--saurus-ink-secondary);">Stage 4: Corpus Review Aggregation</span>
+                            <span class="pill-st pill-pending">PENDING</span>
+                          </div>
+                          <div class="desc">Generating cohesive manuscript prose with permanent page &amp; paragraph addresses</div>
+                        </div>
+                        <span class="stage-dur">&mdash;</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Terminal Box -->
+                  <div class="terminal-box">
+                    <div class="term-hd">
+                      <span>Event Stream Trace // Durable Restate Execution</span>
+                      <span>auto-scroll &check;</span>
+                    </div>
+                    <div class="term-body">
+                      <div class="log-line"><span class="ts">14:04:33</span><span class="tag-d">[stage.done]</span><span>paper_analysis: 40 papers parsed, 187 claims indexed</span></div>
+                      <div class="log-line"><span class="ts">14:04:35</span><span class="tag-g">[theme.start]</span><span>63 raw statements queued for clustering</span></div>
+                      <div class="log-line"><span class="ts">14:04:48</span><span class="tag-d">[embeddings]</span><span>63/63 embeddings generated in 1.2s</span></div>
+                      <div class="log-line"><span class="ts">14:05:02</span><span class="tag-g">[cluster.formed]</span><span>Cluster #1: "AAV Delivery Vectors" (4 papers &middot; 18 claims)</span></div>
+                      <div class="log-line"><span class="ts">14:05:09</span><span class="tag-g">[nli.verify]</span><span>Liu et al. [1] &lt;=&gt; Yamamoto et al. [3] &middot; Entailment: 0.93</span></div>
+                      <div class="log-line"><span class="ts">14:05:14</span><span class="tag-g">[nli.divergence]</span><span>Rodriguez [5] vs Okafor [4] &middot; Methodological assay discrepancy flagged</span></div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </main>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLET (768x960) -->
+      <div class="frame f-t">
+        <div class="cap"><b>Tablet</b><span>768 &times; 960 &middot; top nav</span></div>
+        <div class="dev">
+          <div class="tab">
+            <div data-nav="top" data-on="pipeline"></div>
+            <main class="main">
+              <div style="display:flex;flex-direction:column;gap:14px;">
+                <div class="card" style="padding:14px 18px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                    <div>
+                      <span class="label">Pipeline Running</span>
+                      <h3 style="font-size:1.15rem;margin-top:2px;">Stage 2 of 4: Theme Dedup</h3>
+                    </div>
+                    <span class="pill-st pill-active" style="font-size:11px;padding:3px 8px;">62% COMPLETED</span>
+                  </div>
+                  <div class="progress-bar-track"><div class="progress-bar-fill"></div></div>
+                  <div style="display:flex;gap:14px;font-family:var(--font-mono);font-size:11px;color:var(--saurus-ink-muted);margin-top:8px;">
+                    <span>40 Papers Ingested</span><span>187 Claims Extracted</span><span>~1m 15s remaining</span>
+                  </div>
+                </div>
+
+                <!-- 4 Stages -->
+                <div class="stages-stack">
+                  <div class="stage-box">
+                    <div class="stage-top">
+                      <span class="dot-state done"></span>
+                      <div class="stage-info">
+                        <div class="ttl-row"><span>Stage 1: Paper Analysis</span><span class="pill-st pill-done">&check; DONE</span></div>
+                        <div class="desc">40 papers &middot; 187 claims indexed</div>
+                      </div>
+                      <span class="stage-dur">2m 14s</span>
+                    </div>
+                  </div>
+
+                  <div class="stage-box active">
+                    <div class="stage-top">
+                      <span class="dot-state active"></span>
+                      <div class="stage-info">
+                        <div class="ttl-row"><span>Stage 2: Theme Dedup &amp; NLI Verification</span><span class="pill-st pill-active">&bull; ACTIVE</span></div>
+                        <div class="desc">63 propositions &rarr; 6 canonical themes</div>
+                      </div>
+                      <span class="stage-dur">0:48</span>
+                    </div>
+                    <div class="substeps-list">
+                      <div class="substep-item">
+                        <span style="color:var(--saurus-success);">&check;</span>
+                        <span style="flex:1;">Cosine similarity graph partitioning (6 clusters)</span>
+                      </div>
+                      <div class="substep-item">
+                        <span class="pulse-dot"></span>
+                        <span style="flex:1;"><strong>Pairwise NLI verification:</strong> "Off-Target Effects" (42/58 verified)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="stage-box">
+                    <div class="stage-top">
+                      <span class="dot-state pending"></span>
+                      <div class="stage-info">
+                        <div class="ttl-row"><span style="color:var(--saurus-ink-secondary);">Stage 3: Thematic Synthesis &amp; Disputes</span><span class="pill-st pill-pending">PENDING</span></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="stage-box">
+                    <div class="stage-top">
+                      <span class="dot-state pending"></span>
+                      <div class="stage-info">
+                        <div class="ttl-row"><span style="color:var(--saurus-ink-secondary);">Stage 4: Review Aggregation</span><span class="pill-st pill-pending">PENDING</span></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Event Terminal -->
+                <div class="terminal-box">
+                  <div class="term-hd"><span>Live Event Trace</span><span>Restate Engine</span></div>
+                  <div class="term-body" style="max-height:100px;">
+                    <div class="log-line"><span class="ts">14:05:02</span><span class="tag-g">[cluster]</span><span>Cluster #1: "AAV Delivery Vectors" (4 papers &middot; 18 claims)</span></div>
+                    <div class="log-line"><span class="ts">14:05:09</span><span class="tag-g">[nli]</span><span>Liu et al. [1] &lt;=&gt; Yamamoto et al. [3] &middot; Entailment: 0.93</span></div>
+                    <div class="log-line"><span class="ts">14:05:14</span><span class="tag-g">[dispute]</span><span>Rodriguez [5] vs Okafor [4] &middot; Assay discrepancy flagged</span></div>
+                  </div>
+                </div>
+
+                <!-- Horizontal Corpus Strip -->
+                <div style="background:var(--saurus-surface);border:1px solid var(--saurus-border);border-radius:8px;padding:10px 14px;">
+                  <div class="label" style="margin-bottom:6px;">Sample Corpus Papers (40 total)</div>
+                  <div style="display:flex;gap:8px;overflow-x:auto;">
+                    <span style="font-family:var(--font-mono);font-size:11px;padding:3px 8px;border-radius:4px;background:var(--saurus-paper);border:1px solid var(--saurus-border);white-space:nowrap;"><b>[1]</b> Liu et al. (14 claims)</span>
+                    <span style="font-family:var(--font-mono);font-size:11px;padding:3px 8px;border-radius:4px;background:var(--saurus-paper);border:1px solid var(--saurus-border);white-space:nowrap;"><b>[2]</b> Chen &amp; Park (11 claims)</span>
+                    <span style="font-family:var(--font-mono);font-size:11px;padding:3px 8px;border-radius:4px;background:var(--saurus-paper);border:1px solid var(--saurus-border);white-space:nowrap;"><b>[3]</b> Yamamoto (9 claims)</span>
+                    <span style="font-family:var(--font-mono);font-size:11px;padding:3px 8px;border-radius:4px;background:var(--saurus-paper);border:1px solid var(--saurus-border);white-space:nowrap;"><b>[4]</b> Okafor (12 claims)</span>
+                  </div>
+                </div>
+              </div>
+            </main>
+          </div>
+        </div>
+      </div>
+
+      <!-- MOBILE (390x844) -->
+      <div class="frame f-m">
+        <div class="cap"><b>Mobile</b><span>390 &times; 844 &middot; bottom tabs</span></div>
+        <div class="dev">
+          <div class="mob">
+            <div data-nav="mtop" data-title="Pipeline"></div>
+            <main class="main">
+              <div style="display:flex;flex-direction:column;gap:12px;">
+                <div class="card" style="padding:12px;">
+                  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+                    <h3 style="font-size:1rem;">Stage 2: Theme Dedup</h3>
+                    <span class="pill-st pill-active" style="font-size:10px;">62%</span>
+                  </div>
+                  <div class="progress-bar-track"><div class="progress-bar-fill"></div></div>
+                  <div style="font-family:var(--font-mono);font-size:10px;color:var(--saurus-ink-muted);margin-top:6px;">40 papers &middot; 187 claims &middot; 6 themes</div>
+                </div>
+
+                <!-- 4 Stepper Items -->
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div class="stage-box" style="padding:10px;">
+                    <div class="stage-top">
+                      <span class="dot-state done"></span>
+                      <div class="stage-info">
+                        <div class="ttl-row" style="font-size:12px;"><span>Stage 1: Paper Analysis</span><span class="pill-st pill-done">&check;</span></div>
+                        <div class="desc" style="font-size:10.5px;">187 claims indexed in 2m 14s</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="stage-box active" style="padding:10px;">
+                    <div class="stage-top">
+                      <span class="dot-state active"></span>
+                      <div class="stage-info">
+                        <div class="ttl-row" style="font-size:12px;"><span>Stage 2: Theme Dedup</span><span class="pill-st pill-active">&bull; RUNNING</span></div>
+                        <div class="desc" style="font-size:10.5px;">NLI cross-verification (42/58 pairs)</div>
+                      </div>
+                    </div>
+                    <div style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--saurus-border);font-size:10.5px;display:flex;align-items:center;gap:6px;">
+                      <span class="pulse-dot"></span>
+                      <span>Verifying Off-Target claims...</span>
+                    </div>
+                  </div>
+
+                  <div class="stage-box" style="padding:10px;">
+                    <div class="stage-top">
+                      <span class="dot-state pending"></span>
+                      <div class="stage-info">
+                        <div class="ttl-row" style="font-size:12px;color:var(--saurus-ink-secondary);"><span>Stage 3: Thematic Synthesis</span><span class="pill-st pill-pending">PENDING</span></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="stage-box" style="padding:10px;">
+                    <div class="stage-top">
+                      <span class="dot-state pending"></span>
+                      <div class="stage-info">
+                        <div class="ttl-row" style="font-size:12px;color:var(--saurus-ink-secondary);"><span>Stage 4: Aggregation</span><span class="pill-st pill-pending">PENDING</span></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Mini Log -->
+                <div class="terminal-box">
+                  <div class="term-hd" style="font-size:10px;padding:4px 8px;"><span>Trace Stream</span></div>
+                  <div class="term-body" style="padding:8px;font-size:10px;max-height:80px;">
+                    <div class="log-line"><span class="tag-g">[cluster]</span><span>Cluster #1 formed: AAV Vectors</span></div>
+                    <div class="log-line"><span class="tag-g">[nli]</span><span>Liu &lt;=&gt; Yamamoto: 0.93 match</span></div>
+                    <div class="log-line"><span class="tag-g">[conflict]</span><span>Rodriguez vs Okafor assay gap</span></div>
+                  </div>
+                </div>
+              </div>
+            </main>
+            <div data-nav="tabs" data-on="pipeline"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ==========================================================================
+       SCREEN 3: REVIEW VIEW
+       ========================================================================== -->
+  <section id="screen-review" class="screen">
+    <div class="title">
+      <span class="idx">03</span>
+      <h2>Review View — Literata Serif Scholarly Output</h2>
+      <p>Publication-ready literature review rendered in Literata serif. Features inline citations with page &amp; paragraph addresses [1](p.12,§3), interactive verified receipt hovercard with NLI score, table of contents, and references section.</p>
+    </div>
+
+    <div class="board">
+
+      <!-- DESKTOP (1100x780) -->
+      <div class="frame f-d">
+        <div class="cap"><b>Desktop</b><span>1100 &times; 780 &middot; 232px sidebar</span></div>
+        <div class="dev">
+          <div class="dsk">
+            <div data-nav="side" data-on="review"></div>
+            <main class="main">
+              <div class="rev-dsk-grid">
+                <!-- TOC Column -->
+                <nav class="toc-col">
+                  <div class="thd">Table of Contents</div>
+                  <a class="toc-item on">Overview &middot; Executive Thesis</a>
+                  <a class="toc-item">1 &middot; Delivery Modalities</a>
+                  <a class="toc-item sub">1.1 AAV Vector Kinetics</a>
+                  <a class="toc-item sub">1.2 Lipid Nanoparticle Platforms</a>
+                  <a class="toc-item">2 &middot; Editor Architecture</a>
+                  <a class="toc-item">3 &middot; Off-Target Safety Profiles</a>
+                  <a class="toc-item">Corpus References (40)</a>
+
+                  <div class="audit-card">
+                    <div style="color:var(--saurus-primary);font-weight:600;margin-bottom:2px;">PROVENANCE AUDIT</div>
+                    <div>&bull; 40 papers analyzed</div>
+                    <div>&bull; 187 claims verified</div>
+                    <div>&bull; 6 themes synthesized</div>
+                    <div style="color:var(--saurus-success);font-weight:600;margin-top:4px;">&check; Zero ungrounded claims</div>
+                  </div>
+                </nav>
+
+                <!-- Article Pane -->
+                <article class="rev-article">
+                  <div class="rev-action-bar">
+                    <span class="kick">Synthesized Literature Review &middot; Job #8f3a21</span>
+                    <div style="display:flex;gap:6px;">
+                      <button class="btn btn-secondary btn-sm">Citations: Inline (p.X,&sect;Y) &blacktriangledown;</button>
+                      <button class="btn btn-primary btn-sm">Export Review</button>
+                    </div>
+                  </div>
+
+                  <h1 class="rev-title">In Vivo Hepatic Gene Correction: Delivery Kinetics, Editor Architectures, and the Translation Frontier</h1>
+                  <div class="rev-sub">A comprehensive corpus synthesis of 40 papers (2022–2024) across 6 consolidated themes. Every finding addressed to paper, page, and paragraph.</div>
+
+                  <div class="rev-lead">
+                    Two primary delivery platforms, three editor architectures, and one pervasive physiological bottleneck: the liver remains the most accessible target for in vivo therapeutic genome editing, yet the field faces an intrinsic compromise between expression durability and vector immunogenicity.
+                  </div>
+
+                  <!-- Section 1 -->
+                  <h2 class="rev-h2">1 &middot; Delivery Modalities &amp; Vector Kinetics</h2>
+                  <p class="rev-body">
+                    Recent advances in hepatic gene correction have converged on two primary delivery modalities: adeno-associated virus (AAV) vectors and lipid nanoparticles (LNPs). AAV9-mediated delivery has demonstrated sustained therapeutic expression in murine models of metabolic liver disease <a class="cite-tag">[1]</a><span class="cite-loc">(p.12,&sect;3)</span>, while LNP-encapsulated base editors achieved transient but high-efficiency editing in hereditary tyrosinemia <a class="cite-tag">[2]</a><span class="cite-loc">(p.8,&sect;2)</span>. The choice between delivery platforms involves trade-offs between durability and immunogenicity <a class="cite-tag">[5]</a><span class="cite-loc">(p.15,&sect;4)</span>.
+                  </p>
+
+                  <!-- Receipt Hovercard / Popover -->
+                  <div class="receipt-card">
+                    <div class="receipt-hd">
+                      <span style="color:var(--saurus-primary);font-weight:700;">Verified Receipt &middot; Citation [1]</span>
+                      <span style="color:var(--saurus-success);font-weight:600;">&check; NLI Entailment: 0.96</span>
+                    </div>
+                    <div class="receipt-quote">
+                      "AAV9 achieved 60% hepatocyte transduction efficiency at 1&times;10¹² vg/kg in adult C57BL/6 mice, yielding phenotypic rescue."
+                    </div>
+                    <div class="receipt-src">
+                      <strong>Liu, W. et al. (2024)</strong> &middot; <em>Nature Gene Therapy</em> &middot; Section 3.2 &middot; Page 12, Paragraph 3 &middot; Claim ID #c_0142
+                    </div>
+                    <div style="margin-top:8px;font-family:var(--font-mono);font-size:11px;display:flex;gap:12px;">
+                      <a href="#screen-explorer" style="color:var(--saurus-primary);font-weight:600;">&rarr; View in Paper Explorer</a>
+                      <span style="color:var(--saurus-ink-muted);">&rarr; Page 12 PDF Coordinate</span>
+                    </div>
+                  </div>
+
+                  <h3 class="rev-h3">1.1 Recombinant AAV Vector Tropism</h3>
+                  <p class="rev-body">
+                    Across four studies dedicated to viral transduction, serotype-specific tropism dictated therapeutic ceiling. Recombinant AAV9 exhibited 60% hepatocyte transduction efficiency <a class="cite-tag">[1]</a><span class="cite-loc">(p.12,&sect;3)</span>, while split-intein dual-AAV constructs successfully reconstituted full-length large genes in 35% of hepatocytes <a class="cite-tag">[3]</a><span class="cite-loc">(p.4,&sect;1)</span>.
+                  </p>
+
+                  <!-- Section 2 -->
+                  <h2 class="rev-h2">2 &middot; Editor Architecture: Base Editors vs. Standard Nucleases</h2>
+                  <p class="rev-body">
+                    Comparative analysis illustrates that while canonical Cas9 nucleases retain broad versatility, adenine base editors (ABEs) provide superior therapeutic indexes in single-nucleotide metabolic disorders <a class="cite-tag">[5]</a><span class="cite-loc">(p.15,&sect;4)</span>. In vivo ABE administration rescued ornithine transcarbamylase deficiency, normalizing serum ammonia levels <a class="cite-tag">[4]</a><span class="cite-loc">(p.9,&sect;2)</span>.
+                  </p>
+
+                  <!-- Disagreement Callout -->
+                  <div class="disagree-box">
+                    <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--saurus-accent);margin-bottom:2px;text-transform:uppercase;">
+                      &bull; Methodological Conflict Detected Across Corpus
+                    </div>
+                    <div>
+                      Rodriguez &amp; Singh <a class="cite-tag">[5]</a><span class="cite-loc">(p.15,&sect;4)</span> identified measurable translocations via unbiased GUIDE-seq. Conversely, Okafor et al. <a class="cite-tag">[4]</a><span class="cite-loc">(p.9,&sect;2)</span> observed no alterations using targeted deep sequencing of 8 computationally anticipated sites. The Saurus flags this as an assay sensitivity discrepancy rather than genuine biological divergence.
+                    </div>
+                  </div>
+
+                  <!-- References -->
+                  <div class="ref-list">
+                    <h3 style="font-size:1.15rem;margin-bottom:8px;">Corpus References (Selection)</h3>
+                    <div class="ref-row">
+                      <span class="idx">[1]</span>
+                      <div>
+                        <div class="ti">AAV9-mediated CRISPR correction of metabolic liver disease in mice</div>
+                        <div class="au">Liu, W. et al. &middot; Nature Gene Therapy (2024) &middot; 14 verified claims</div>
+                        <div class="lk">Cited in: &sect;1, &sect;1.1 &mdash; 5 citations</div>
+                      </div>
+                    </div>
+                    <div class="ref-row">
+                      <span class="idx">[2]</span>
+                      <div>
+                        <div class="ti">Lipid nanoparticle delivery of base editors for hereditary tyrosinemia</div>
+                        <div class="au">Chen, R. &amp; Park, S. &middot; Molecular Therapy (2023) &middot; 11 verified claims</div>
+                        <div class="lk">Cited in: &sect;1, &sect;1.2 &mdash; 4 citations</div>
+                      </div>
+                    </div>
+                    <div class="ref-row">
+                      <span class="idx">[3]</span>
+                      <div>
+                        <div class="ti">Dual-AAV split-intein approach for large gene correction in Wilson disease</div>
+                        <div class="au">Yamamoto, K. et al. &middot; Cell Reports Medicine (2024) &middot; 9 verified claims</div>
+                        <div class="lk">Cited in: &sect;1.1 &mdash; 3 citations</div>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </main>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLET (768x960) -->
+      <div class="frame f-t">
+        <div class="cap"><b>Tablet</b><span>768 &times; 960 &middot; top nav</span></div>
+        <div class="dev">
+          <div class="tab">
+            <div data-nav="top" data-on="review"></div>
+            <main class="main">
+              <!-- Jump Pills -->
+              <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:14px;border-bottom:1px solid var(--saurus-border);">
+                <span style="font-size:11.5px;padding:3px 10px;border-radius:999px;background:var(--saurus-primary-bg);color:var(--saurus-primary);font-weight:600;white-space:nowrap;">Overview</span>
+                <span style="font-size:11.5px;padding:3px 10px;border-radius:999px;background:var(--saurus-surface);border:1px solid var(--saurus-border);white-space:nowrap;">1 &middot; Delivery</span>
+                <span style="font-size:11.5px;padding:3px 10px;border-radius:999px;background:var(--saurus-surface);border:1px solid var(--saurus-border);white-space:nowrap;">2 &middot; Editors</span>
+                <span style="font-size:11.5px;padding:3px 10px;border-radius:999px;background:var(--saurus-surface);border:1px solid var(--saurus-border);white-space:nowrap;">3 &middot; Safety</span>
+                <span style="font-size:11.5px;padding:3px 10px;border-radius:999px;background:var(--saurus-surface);border:1px solid var(--saurus-border);white-space:nowrap;">References (40)</span>
+              </div>
+
+              <article style="max-width:680px;margin:0 auto;">
+                <h1 class="rev-title" style="font-size:1.6rem;">In Vivo Hepatic Gene Correction: Delivery Kinetics, Editor Architectures, and the Translation Frontier</h1>
+                <div class="rev-sub">40 papers &middot; 6 themes &middot; Every finding addressed to paper, page, and paragraph.</div>
+
+                <div class="rev-lead" style="font-size:1.05rem;">
+                  Two primary delivery platforms, three editor architectures, and one pervasive physiological bottleneck: the liver remains the most accessible target for in vivo therapeutic genome editing.
+                </div>
+
+                <h2 class="rev-h2" style="font-size:1.25rem;">1 &middot; Delivery Modalities &amp; Vector Kinetics</h2>
+                <p class="rev-body" style="font-size:0.95rem;">
+                  Recent advances have converged on adeno-associated virus (AAV) vectors and lipid nanoparticles (LNPs). AAV9 demonstrated sustained expression <a class="cite-tag">[1]</a><span class="cite-loc">(p.12,&sect;3)</span>, while LNP base editors achieved transient high-efficiency editing <a class="cite-tag">[2]</a><span class="cite-loc">(p.8,&sect;2)</span>.
+                </p>
+
+                <div class="receipt-card">
+                  <div class="receipt-hd">
+                    <span style="color:var(--saurus-primary);font-weight:700;">Verified Receipt &middot; Citation [1]</span>
+                    <span style="color:var(--saurus-success);font-weight:600;">&check; NLI: 0.96</span>
+                  </div>
+                  <div class="receipt-quote">"AAV9 achieved 60% hepatocyte transduction efficiency at 1&times;10¹² vg/kg in adult C57BL/6 mice."</div>
+                  <div class="receipt-src">Liu et al. (2024) &middot; Nat Gene Ther &middot; p.12, &sect;3</div>
+                </div>
+
+                <div class="disagree-box" style="margin-top:16px;">
+                  <div style="font-family:var(--font-mono);font-size:10.5px;font-weight:700;color:var(--saurus-accent);margin-bottom:2px;">METHODOLOGICAL CONFLICT FLAGGED</div>
+                  <div>Rodriguez [5] (GUIDE-seq) detected translocations; Okafor [4] (targeted deep seq) did not. The Saurus flags an assay sensitivity gap.</div>
+                </div>
+              </article>
+            </main>
+          </div>
+        </div>
+      </div>
+
+      <!-- MOBILE (390x844) -->
+      <div class="frame f-m">
+        <div class="cap"><b>Mobile</b><span>390 &times; 844 &middot; bottom tabs</span></div>
+        <div class="dev">
+          <div class="mob">
+            <div data-nav="mtop" data-title="Review"></div>
+            <main class="main">
+              <article>
+                <div style="font-family:var(--font-mono);font-size:10px;color:var(--saurus-ink-muted);margin-bottom:4px;">SYNTHESIZED REVIEW &middot; 40 PAPERS</div>
+                <h1 style="font-family:var(--font-heading);font-size:1.3rem;line-height:1.3;margin-bottom:8px;">In Vivo Hepatic Gene Correction</h1>
+                <div class="rev-lead" style="font-size:0.95rem;padding-left:10px;margin-bottom:14px;">
+                  The liver remains the most accessible target for therapeutic genome editing, yet faces durability vs immunogenicity trade-offs.
+                </div>
+
+                <h3 style="font-family:var(--font-heading);font-size:1.05rem;color:var(--saurus-primary);margin-bottom:6px;">1 &middot; Delivery Modalities</h3>
+                <p style="font-family:var(--font-heading);font-size:0.92rem;line-height:1.6;margin-bottom:12px;">
+                  AAV9-mediated delivery achieved sustained correction in mice <a class="cite-tag">[1]</a><span class="cite-loc">(p.12,&sect;3)</span>, while LNPs enabled repeat dosing <a class="cite-tag">[2]</a><span class="cite-loc">(p.8,&sect;2)</span>.
+                </p>
+
+                <!-- Embedded Mobile Receipt Card -->
+                <div class="receipt-card" style="padding:10px 12px;margin:10px 0;">
+                  <div class="receipt-hd" style="font-size:10px;">
+                    <span style="color:var(--saurus-primary);font-weight:700;">Receipt &middot; [1]</span>
+                    <span style="color:var(--saurus-success);">&check; 0.96 NLI</span>
+                  </div>
+                  <div class="receipt-quote" style="font-size:0.88rem;">"AAV9 achieved 60% hepatocyte transduction at 1&times;10¹² vg/kg..."</div>
+                  <div class="receipt-src" style="font-size:10px;">Liu et al. (2024) &middot; p.12, &sect;3</div>
+                </div>
+
+                <div class="disagree-box" style="padding:8px 10px;font-size:11px;">
+                  <strong>Discrepancy:</strong> Rodriguez [5] (GUIDE-seq) vs Okafor [4] (targeted PCR). Assay sensitivity gap.
+                </div>
+              </article>
+            </main>
+            <div data-nav="tabs" data-on="review"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ==========================================================================
+       SCREEN 4: PAPER EXPLORER
+       ========================================================================== -->
+  <section id="screen-explorer" class="screen">
+    <div class="title">
+      <span class="idx">04</span>
+      <h2>Paper Explorer — Corpus-Level Facets &amp; Claim Evidence</h2>
+      <p>Corpus overview with faceted theme chips. Clickable paper cards expand to reveal exact quoted claims, page &amp; paragraph coordinates, and NLI entailment scores.</p>
+    </div>
+
+    <div class="board">
+
+      <!-- DESKTOP (1100x780) -->
+      <div class="frame f-d">
+        <div class="cap"><b>Desktop</b><span>1100 &times; 780 &middot; 232px sidebar</span></div>
+        <div class="dev">
+          <div class="dsk">
+            <div data-nav="side" data-on="papers"></div>
+            <main class="main">
+              <div class="exp-head-row">
+                <div>
+                  <h2 style="font-size:1.35rem;font-weight:700;">40 Papers &middot; 187 Extracted Claims</h2>
+                  <p style="font-size:12.5px;color:var(--saurus-ink-secondary);">Grouped by thematic clustering. Click any paper to view its addressable claims.</p>
+                </div>
+                <div style="display:flex;gap:6px;">
+                  <button class="btn btn-secondary btn-sm">Sort: Claim Density &blacktriangledown;</button>
+                  <button class="btn btn-secondary btn-sm">+ Add More Papers</button>
+                </div>
+              </div>
+
+              <!-- Faceted Theme Filter Bar -->
+              <div class="exp-filter-bar">
+                <span class="label" style="margin-right:6px;">Filter Themes:</span>
+                <span class="theme-chip chip-1">AAV Delivery Vectors (4)</span>
+                <span class="theme-chip chip-2">Base Editing vs Nuclease (3)</span>
+                <span class="theme-chip chip-3">Liver-Targeted Therapies (5)</span>
+                <span class="theme-chip chip-4">Off-Target Effects (3)</span>
+                <span class="theme-chip chip-5">Clinical Translation Barriers (4)</span>
+                <span class="theme-chip chip-6">Lipid Nanoparticle Delivery (2)</span>
+              </div>
+
+              <!-- Paper Cards Stack -->
+              <div class="paper-card open">
+                <div class="paper-card-top">
+                  <span class="p-idx">[1]</span>
+                  <div class="p-meta">
+                    <div class="p-ttl">AAV9-mediated CRISPR correction of metabolic liver disease in mice</div>
+                    <div class="p-sub">Liu, W. et al. (2024) &middot; <em>Nature Gene Therapy</em> &middot; 18 pages</div>
+                    <div class="p-chips">
+                      <span class="theme-chip chip-1">AAV Delivery Vectors</span>
+                      <span class="theme-chip chip-3">Liver-Targeted Therapies</span>
+                      <span class="theme-chip chip-4">Off-Target Effects</span>
+                    </div>
+                  </div>
+                  <div class="p-cnt">
+                    <b>14</b>
+                    <span>claims</span>
+                  </div>
+                </div>
+
+                <div class="paper-card-expand">
+                  <div class="label" style="margin-bottom:8px;">Extracted Verifiable Claims (Sample)</div>
+                  <div class="claim-item">
+                    <span class="qm">&ldquo;</span>
+                    <div>
+                      <div>AAV9 achieved 60% hepatocyte transduction efficiency at 1&times;10¹² vg/kg in adult C57BL/6 mice.</div>
+                      <div class="meta-row">
+                        <span>Coordinate: p.12, &sect;3</span>
+                        <span style="color:var(--saurus-success);">&check; NLI Entailment: 0.96</span>
+                        <span style="color:var(--saurus-primary);">&rarr; PDF Page 12</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="claim-item">
+                    <span class="qm">&ldquo;</span>
+                    <div>
+                      <div>Serum ammonia normalized within 14 days of a single systemic dose, conferring 100% survival over 6 months.</div>
+                      <div class="meta-row">
+                        <span>Coordinate: p.13, &sect;1</span>
+                        <span style="color:var(--saurus-success);">&check; NLI Entailment: 0.92</span>
+                        <span style="color:var(--saurus-primary);">&rarr; PDF Page 13</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="claim-item">
+                    <span class="qm">&ldquo;</span>
+                    <div>
+                      <div>GUIDE-seq detected no off-target indels above 0.1% frequency at top 12 predicted genomic loci.</div>
+                      <div class="meta-row">
+                        <span>Coordinate: p.15, &sect;2</span>
+                        <span style="color:var(--saurus-success);">&check; NLI Entailment: 0.94</span>
+                        <span style="color:var(--saurus-primary);">&rarr; PDF Page 15</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card 2 -->
+              <div class="paper-card">
+                <div class="paper-card-top">
+                  <span class="p-idx">[2]</span>
+                  <div class="p-meta">
+                    <div class="p-ttl">Lipid nanoparticle delivery of base editors for hereditary tyrosinemia</div>
+                    <div class="p-sub">Chen, R. &amp; Park, S. (2023) &middot; <em>Molecular Therapy</em> &middot; 16 pages</div>
+                    <div class="p-chips">
+                      <span class="theme-chip chip-6">Lipid Nanoparticles</span>
+                      <span class="theme-chip chip-2">Base Editing vs Nuclease</span>
+                    </div>
+                  </div>
+                  <div class="p-cnt"><b>11</b><span>claims</span></div>
+                </div>
+              </div>
+
+              <!-- Card 3 -->
+              <div class="paper-card">
+                <div class="paper-card-top">
+                  <span class="p-idx">[3]</span>
+                  <div class="p-meta">
+                    <div class="p-ttl">Dual-AAV split-intein approach for large gene correction in Wilson disease</div>
+                    <div class="p-sub">Yamamoto, K. et al. (2024) &middot; <em>Cell Reports Medicine</em> &middot; 12 pages</div>
+                    <div class="p-chips">
+                      <span class="theme-chip chip-1">AAV Delivery Vectors</span>
+                      <span class="theme-chip chip-5">Translation Barriers</span>
+                    </div>
+                  </div>
+                  <div class="p-cnt"><b>9</b><span>claims</span></div>
+                </div>
+              </div>
+            </main>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLET (768x960) -->
+      <div class="frame f-t">
+        <div class="cap"><b>Tablet</b><span>768 &times; 960 &middot; top nav</span></div>
+        <div class="dev">
+          <div class="tab">
+            <div data-nav="top" data-on="papers"></div>
+            <main class="main">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <h2 style="font-size:1.2rem;">40 Papers &middot; 187 Claims</h2>
+                <button class="btn btn-secondary btn-sm">Sort &blacktriangledown;</button>
+              </div>
+
+              <div class="exp-filter-bar">
+                <span class="theme-chip chip-1">AAV Vectors (4)</span>
+                <span class="theme-chip chip-2">Base Editing (3)</span>
+                <span class="theme-chip chip-3">Liver-Targeted (5)</span>
+                <span class="theme-chip chip-4">Off-Target (3)</span>
+              </div>
+
+              <!-- Card 1 Expanded -->
+              <div class="paper-card open">
+                <div class="paper-card-top">
+                  <span class="p-idx">[1]</span>
+                  <div class="p-meta">
+                    <div class="p-ttl">AAV9-mediated CRISPR correction in mice</div>
+                    <div class="p-sub">Liu, W. et al. (2024) &middot; Nat Gene Ther</div>
+                    <div class="p-chips">
+                      <span class="theme-chip chip-1">AAV Vectors</span>
+                      <span class="theme-chip chip-4">Off-Target</span>
+                    </div>
+                  </div>
+                  <div class="p-cnt"><b>14</b><span>claims</span></div>
+                </div>
+                <div class="paper-card-expand">
+                  <div class="claim-item">
+                    <span class="qm">&ldquo;</span>
+                    <div>
+                      <div>AAV9 achieved 60% hepatocyte transduction at 1&times;10¹² vg/kg in adult mice.</div>
+                      <div class="meta-row"><span>p.12, &sect;3</span><span style="color:var(--saurus-success);">&check; 0.96 NLI</span></div>
+                    </div>
+                  </div>
+                  <div class="claim-item">
+                    <span class="qm">&ldquo;</span>
+                    <div>
+                      <div>Serum ammonia normalized within 14 days conferring 100% survival.</div>
+                      <div class="meta-row"><span>p.13, &sect;1</span><span style="color:var(--saurus-success);">&check; 0.92 NLI</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="paper-card">
+                <div class="paper-card-top">
+                  <span class="p-idx">[2]</span>
+                  <div class="p-meta">
+                    <div class="p-ttl">Lipid nanoparticle delivery of base editors</div>
+                    <div class="p-sub">Chen &amp; Park (2023) &middot; Mol Ther</div>
+                  </div>
+                  <div class="p-cnt"><b>11</b><span>claims</span></div>
+                </div>
+              </div>
+            </main>
+          </div>
+        </div>
+      </div>
+
+      <!-- MOBILE (390x844) -->
+      <div class="frame f-m">
+        <div class="cap"><b>Mobile</b><span>390 &times; 844 &middot; bottom tabs</span></div>
+        <div class="dev">
+          <div class="mob">
+            <div data-nav="mtop" data-title="Papers"></div>
+            <main class="main">
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div style="font-family:var(--font-mono);font-size:11px;color:var(--saurus-ink-muted);">40 PAPERS &middot; 187 CLAIMS</div>
+
+                <!-- Chips scroll -->
+                <div style="display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;">
+                  <span class="theme-chip chip-1">AAV (4)</span>
+                  <span class="theme-chip chip-2">Base Editing (3)</span>
+                  <span class="theme-chip chip-3">Liver (5)</span>
+                  <span class="theme-chip chip-4">Off-Target (3)</span>
+                </div>
+
+                <!-- Paper Card 1 -->
+                <div class="paper-card open">
+                  <div class="paper-card-top" style="padding:10px;">
+                    <span class="p-idx">[1]</span>
+                    <div class="p-meta">
+                      <div class="p-ttl" style="font-size:12px;">AAV9-mediated CRISPR correction in mice</div>
+                      <div class="p-sub" style="font-size:10px;">Liu et al. (2024)</div>
+                    </div>
+                    <div class="p-cnt"><b style="font-size:13px;">14</b><span>claims</span></div>
+                  </div>
+                  <div class="paper-card-expand" style="padding:8px 10px;">
+                    <div class="claim-item" style="padding:6px 8px;font-size:11px;">
+                      <div>"AAV9 achieved 60% hepatocyte transduction..." <span style="font-family:var(--font-mono);font-size:9.5px;color:var(--saurus-primary);">(p.12,&sect;3)</span></div>
+                    </div>
+                    <div class="claim-item" style="padding:6px 8px;font-size:11px;">
+                      <div>"Serum ammonia normalized within 14 days..." <span style="font-family:var(--font-mono);font-size:9.5px;color:var(--saurus-primary);">(p.13,&sect;1)</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Paper Card 2 -->
+                <div class="paper-card">
+                  <div class="paper-card-top" style="padding:10px;">
+                    <span class="p-idx">[2]</span>
+                    <div class="p-meta">
+                      <div class="p-ttl" style="font-size:12px;">LNP delivery of base editors</div>
+                      <div class="p-sub" style="font-size:10px;">Chen &amp; Park (2023)</div>
+                    </div>
+                    <div class="p-cnt"><b style="font-size:13px;">11</b><span>claims</span></div>
+                  </div>
+                </div>
+              </div>
+            </main>
+            <div data-nav="tabs" data-on="papers"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ==========================================================================
+       SCREEN 5: CHAT ASSISTANT
+       ========================================================================== -->
+  <section id="screen-assistant" class="screen" style="margin-bottom: 80px;">
+    <div class="title">
+      <span class="idx">05</span>
+      <h2>Chat Assistant — "A Chatbot Gives You an Answer. The Saurus Gives You the Receipts."</h2>
+      <p>Grounded conversational assistant. Cross-examines all 40 papers in the corpus, flags methodological discrepancies, and cites exact paper, page, and paragraph coordinates.</p>
+    </div>
+
+    <div class="board">
+
+      <!-- DESKTOP (1100x780) -->
+      <div class="frame f-d">
+        <div class="cap"><b>Desktop</b><span>1100 &times; 780 &middot; 232px sidebar</span></div>
+        <div class="dev">
+          <div class="dsk">
+            <div data-nav="side" data-on="assistant"></div>
+            <main class="main">
+              <div class="chat-dsk-grid">
+                <!-- Left: Manuscript Reading Desk -->
+                <div class="context-desk">
+                  <span class="desk-pill">&sect; 1.2 Lipid Nanoparticles Context</span>
+                  <h3 style="font-family:var(--font-heading);font-size:1.25rem;margin-bottom:8px;">1.2 Lipid Nanoparticles and Non-Viral Vectors</h3>
+                  <p class="rev-body" style="font-size:0.95rem;">
+                    LNPs invert the traditional viral trade-off: avoiding capsid immunity permits repeat systemic administrations. <span class="hi-pass">LNP-delivered ABE8e corrected the splice-site mutation in 47% of hepatocytes <a class="cite-tag">[2]</a><span class="cite-loc">(p.8,&sect;2)</span></span>, and re-dosing was tolerated without transaminase elevation where AAV failed <a class="cite-tag">[2]</a><span class="cite-loc">(p.14,&sect;1)</span>.
+                  </p>
+                  <p class="rev-body" style="font-size:0.95rem;">
+                    Across the corpus, editing efficiency for LNP platforms clustered between 31% and 52%, measured by whole-liver lysate deep sequencing rather than sorted hepatocytes <a class="cite-tag">[2]</a><span class="cite-loc">(p.9,&sect;1)</span> &mdash; a methodological nuance flagged by the assistant.
+                  </p>
+                  <div style="margin-top:16px;padding:10px 12px;background:var(--saurus-surface);border:1px solid var(--saurus-border);border-radius:6px;font-size:11.5px;color:var(--saurus-ink-secondary);">
+                    <strong>Interactive Grounding:</strong> Selected text in the review feeds directly into the assistant. Every answer cites paper, page, and paragraph coordinates.
+                  </div>
+                </div>
+
+                <!-- Right: Docked Assistant Drawer -->
+                <aside class="chat-pane">
+                  <div class="chat-hd">
+                    <svg width="22" height="22" viewBox="0 0 160 120" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--saurus-primary);">
+                      <path d="M22 96c10-2 18-10 22-22 3-9 2-20 8-28 7-9 20-10 30-6 8 3 14 10 18 18 3 6 4 12 9 16 6 5 16 6 24 4"/>
+                      <path d="M52 46c-4-6-2-14 4-18 6-4 14-2 18 4M82 40c6-1 11 3 12 9"/>
+                      <circle cx="94" cy="36" r="2.2" fill="currentColor"/>
+                    </svg>
+                    <div>
+                      <div class="ti">The Saurus Assistant</div>
+                      <div class="sb">40 papers &middot; 187 claims &middot; Zero Hallucination Mode</div>
+                    </div>
+                  </div>
+
+                  <div class="chat-stream">
+                    <!-- User 1 -->
+                    <div class="bubble user">
+                      <span class="who">You</span>
+                      Do any of these papers disagree about off-target rates?
+                    </div>
+
+                    <!-- Saurus 1 -->
+                    <div class="bubble saurus">
+                      <span class="who">The Saurus</span>
+                      Yes. Two papers in this corpus report conflicting findings, and the discrepancy is <strong>methodological rather than biological:</strong>
+                      <br><br>
+                      &bull; <strong>Rodriguez &amp; Singh</strong> report measurable off-target indels for SpCas9 in hepatocytes <a class="cite-tag">[5]</a><span class="cite-loc">(p.15,&sect;4)</span>.<br>
+                      &bull; <strong>Okafor et al.</strong> found none with adenine base editing <a class="cite-tag">[4]</a><span class="cite-loc">(p.9,&sect;2)</span> &mdash; but assayed only 8 predicted sites, whereas [5] conducted unbiased genome-wide GUIDE-seq <a class="cite-tag">[5]</a><span class="cite-loc">(p.16,&sect;1)</span>.
+
+                      <div class="pill-receipts">
+                        <span>[5] p.15, &sect;4</span>
+                        <span>[5] p.16, &sect;1</span>
+                        <span>[4] p.9, &sect;2</span>
+                      </div>
+                    </div>
+
+                    <!-- User 2 -->
+                    <div class="bubble user">
+                      <span class="who">You</span>
+                      Which theme has the thinnest evidence?
+                    </div>
+
+                    <!-- Saurus 2 -->
+                    <div class="bubble saurus">
+                      <span class="who">The Saurus</span>
+                      <span class="theme-chip chip-6" style="margin-bottom:4px;">Lipid Nanoparticle Delivery</span>
+                      <br>
+                      This theme contains only <strong>2 papers</strong> with <strong>6 claims total</strong>, and both originate from the same research group <a class="cite-tag">[2]</a><span class="cite-loc">(p.1,&sect;1)</span>. I recommend a cautionary note in Section 1.2.
+                      <div class="pill-receipts">
+                        <span>[2] p.1, &sect;1</span>
+                        <span>[2] p.8, &sect;2</span>
+                      </div>
+                    </div>
+
+                    <!-- Ticker -->
+                    <div class="ticker-box">
+                      <span class="pulse-dot"></span>
+                      <span>Searching 187 indexed claims for supporting receipts...</span>
+                    </div>
+                  </div>
+
+                  <!-- Composer -->
+                  <div class="chat-composer">
+                    <div class="suggs">
+                      <span class="sugg-btn">Translation barriers in &sect;4?</span>
+                      <span class="sugg-btn">Compare immunogenicity</span>
+                      <span class="sugg-btn">Animal dosage ranges</span>
+                    </div>
+                    <div class="composer-row">
+                      <input type="text" class="comp-input" placeholder="Ask across 40 papers with receipts...">
+                      <button class="comp-btn" aria-label="Send query">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                      </button>
+                    </div>
+                    <div class="comp-note">Answers cite paper, page, and paragraph coordinates</div>
+                  </div>
+                </aside>
+              </div>
+            </main>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLET (768x960) -->
+      <div class="frame f-t">
+        <div class="cap"><b>Tablet</b><span>768 &times; 960 &middot; top nav</span></div>
+        <div class="dev">
+          <div class="tab">
+            <div data-nav="top" data-on="assistant"></div>
+            <main class="main" style="padding:16px;">
+              <div style="background:var(--saurus-surface);border:1px solid var(--saurus-border);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:11.5px;display:flex;justify-content:space-between;align-items:center;">
+                <span>Active Context: <strong>&sect; 1.2 Lipid Nanoparticles</strong></span>
+                <span class="pill-st pill-done">40 papers indexed</span>
+              </div>
+
+              <div class="chat-pane" style="height:760px;">
+                <div class="chat-hd">
+                  <div class="ti">The Saurus Assistant</div>
+                  <div class="sb">Strict Grounding Mode</div>
+                </div>
+                <div class="chat-stream">
+                  <div class="bubble user">
+                    <span class="who">You</span>
+                    Do any of these papers disagree about off-target rates?
+                  </div>
+                  <div class="bubble saurus">
+                    <span class="who">The Saurus</span>
+                    Yes. Two papers in this corpus report conflicting findings based on assay sensitivity:
+                    <br><br>
+                    &bull; <strong>Rodriguez [5]</strong> (unbiased GUIDE-seq) found off-target indels <a class="cite-tag">[5]</a><span class="cite-loc">(p.15,&sect;4)</span>.<br>
+                    &bull; <strong>Okafor [4]</strong> (targeted 8 loci) found none <a class="cite-tag">[4]</a><span class="cite-loc">(p.9,&sect;2)</span>.
+                    <div class="pill-receipts"><span>[5] p.15, &sect;4</span><span>[4] p.9, &sect;2</span></div>
+                  </div>
+                  <div class="bubble user">
+                    <span class="who">You</span>
+                    Which theme has the thinnest evidence?
+                  </div>
+                  <div class="bubble saurus">
+                    <span class="who">The Saurus</span>
+                    <span class="theme-chip chip-6">Lipid Nanoparticle Delivery</span> &mdash; only 2 papers and 6 claims total.
+                    <div class="pill-receipts"><span>[2] p.1, &sect;1</span><span>[2] p.8, &sect;2</span></div>
+                  </div>
+                </div>
+                <div class="chat-composer">
+                  <div class="composer-row">
+                    <input type="text" class="comp-input" placeholder="Ask across 40 papers with receipts...">
+                    <button class="comp-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+                  </div>
+                </div>
+              </div>
+            </main>
+          </div>
+        </div>
+      </div>
+
+      <!-- MOBILE (390x844) -->
+      <div class="frame f-m">
+        <div class="cap"><b>Mobile</b><span>390 &times; 844 &middot; bottom tabs</span></div>
+        <div class="dev">
+          <div class="mob">
+            <div data-nav="mtop" data-title="Chat"></div>
+            <main class="main" style="padding:12px;display:flex;flex-direction:column;">
+              <div style="font-family:var(--font-mono);font-size:10px;color:var(--saurus-primary);background:var(--saurus-primary-bg);padding:3px 8px;border-radius:4px;margin-bottom:8px;text-align:center;">
+                Context: &sect; 1.2 Lipid Nanoparticles
+              </div>
+              <div class="chat-stream" style="padding:4px;flex:1;">
+                <div class="bubble user" style="font-size:11.5px;">
+                  <span class="who">You</span>
+                  Do any papers disagree about off-target rates?
+                </div>
+                <div class="bubble saurus" style="font-size:11.5px;">
+                  <span class="who">The Saurus</span>
+                  Yes &mdash; Rodriguez [5] (GUIDE-seq) detected translocations, while Okafor [4] (targeted PCR) did not. It is an assay sensitivity gap.
+                  <div class="pill-receipts"><span>[5] p.15</span><span>[4] p.9</span></div>
+                </div>
+                <div class="ticker-box" style="font-size:9.5px;padding:4px 8px;">
+                  <span class="pulse-dot"></span>
+                  <span>Grounding against 40 papers...</span>
+                </div>
+              </div>
+              <div class="chat-composer" style="margin:0 -12px -12px;border-radius:0;">
+                <div class="composer-row">
+                  <input type="text" class="comp-input" placeholder="Ask with receipts...">
+                  <button class="comp-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+                </div>
+              </div>
+            </main>
+            <div data-nav="tabs" data-on="chat"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ==========================================================================
+       NAVIGATION STAMPING & INTERACTIVITY SCRIPT
+       ========================================================================== -->
+  <script>
+    (function() {
+      // SVGs for Navigation
+      const ICONS = {
+        brand: `<svg width="20" height="20" viewBox="0 0 160 120" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;color:var(--saurus-primary);">
+          <path d="M22 96c10-2 18-10 22-22 3-9 2-20 8-28 7-9 20-10 30-6 8 3 14 10 18 18 3 6 4 12 9 16 6 5 16 6 24 4"/>
+          <path d="M52 46c-4-6-2-14 4-18 6-4 14-2 18 4M82 40c6-1 11 3 12 9"/>
+          <path d="M40 92c-2-6 0-14 4-18M64 96c0-6 2-12 6-16M24 96h60"/>
+          <circle cx="94" cy="36" r="2.2" fill="currentColor"/>
+          <circle cx="98" cy="36" r="4.5" stroke="var(--saurus-accent)" stroke-width="1.5"/>
+        </svg>`,
+        upload: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,
+        pipeline: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="12" r="3"/><line x1="8.5" y1="7.5" x2="15.5" y2="10.5"/><line x1="8.5" y1="16.5" x2="15.5" y2="13.5"/></svg>`,
+        review: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/></svg>`,
+        papers: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
+        assistant: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`
+      };
+
+      const on = (k, a) => k === a ? ' class="on"' : '';
+
+      const NAV = {
+        side: (d) => {
+          const a = d.on || 'upload';
+          return `<aside class="side">
+            <div class="brand">${ICONS.brand}<span>The Saurus</span></div>
+            <a href="#screen-empty"${on('upload', a)}>${ICONS.upload}<span>Upload</span></a>
+            <a href="#screen-pipeline"${on('pipeline', a)}>${ICONS.pipeline}<span>Pipeline</span><span class="n">40</span></a>
+            <a href="#screen-review"${on('review', a)}>${ICONS.review}<span>Review</span><span class="n">142</span></a>
+            <a href="#screen-explorer"${on('papers', a)}>${ICONS.papers}<span>Papers</span><span class="n">187</span></a>
+            <a href="#screen-assistant"${on('assistant', a)}>${ICONS.assistant}<span>Assistant</span></a>
+            <div class="sp"></div>
+            <div class="foot">
+              Corpus: <span>Hepatic Gene</span>
+              <b>&bull; Strict Grounding Active</b>
+            </div>
+          </aside>`;
+        },
+        top: (d) => {
+          const a = d.on || 'upload';
+          return `<nav class="topnav">
+            <span class="brand">${ICONS.brand}The Saurus</span>
+            <a href="#screen-empty"${on('upload', a)}>${ICONS.upload}Upload</a>
+            <a href="#screen-pipeline"${on('pipeline', a)}>${ICONS.pipeline}Pipeline</a>
+            <a href="#screen-review"${on('review', a)}>${ICONS.review}Review</a>
+            <a href="#screen-explorer"${on('papers', a)}>${ICONS.papers}Papers</a>
+            <a href="#screen-assistant"${on('assistant', a)}>${ICONS.assistant}Assistant</a>
+            <span class="meta">40 papers &middot; 187 claims</span>
+          </nav>`;
+        },
+        mtop: (d) => {
+          const t = d.title || 'The Saurus';
+          return `<header class="mtop">
+            <span class="brand">${ICONS.brand}The Saurus</span>
+            <span class="ttl">${t}</span>
+          </header>`;
+        },
+        tabs: (d) => {
+          const a = d.on || 'upload';
+          return `<nav class="tabs">
+            <a href="#screen-empty"${on('upload', a)}>${ICONS.upload}<span>Upload</span></a>
+            <a href="#screen-pipeline"${on('pipeline', a)}>${ICONS.pipeline}<span>Pipeline</span></a>
+            <a href="#screen-review"${on('review', a)}>${ICONS.review}<span>Review</span></a>
+            <a href="#screen-explorer"${on('papers', a)}>${ICONS.papers}<span>Papers</span></a>
+            <a href="#screen-assistant"${on('chat', a)}>${ICONS.assistant}<span>Chat</span></a>
+          </nav>`;
+        }
+      };
+
+      // Stamp navigation
+      document.querySelectorAll('[data-nav]').forEach(el => {
+        el.outerHTML = NAV[el.dataset.nav](el.dataset);
+      });
+
+      // Dark mode toggle
+      const themeToggle = document.getElementById('themeToggle');
+      const themeText = document.getElementById('themeText');
+      const savedTheme = localStorage.getItem('saurus-theme');
+
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+        themeText.textContent = 'Light Mode';
+      } else {
+        document.documentElement.classList.remove('dark');
+        themeText.textContent = 'Dark Mode';
+      }
+
+      themeToggle.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('saurus-theme', isDark ? 'dark' : 'light');
+        themeText.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+      });
+    })();
+  </script>
+</body>
+</html>
