@@ -9,7 +9,7 @@
 A hand-drawn scientific diagram showing the pipeline of a literature review tool, rendered as a whimsical process schematic on ruled notebook paper.
 
 ### Overall Composition
-- Horizontal layout (landscape, ~16:9 or 3:2 aspect ratio)
+- SQUARE layout (1:1 aspect ratio)
 - Three-act flow reading LEFT to RIGHT: **Input → Digestion → Synthesis**
 - The dinosaur mascot is the CENTRAL element — the "processor" in the pipeline
 - Background: clean cream (#FAFAF7), NO ruled notebook lines — the illustration carries itself without background texture. If any grid is needed, use only 2-3 VERY faint horizontal hairlines (opacity ~8-10%) as subtle reference, like a graph paper ghost — not visible notebook ruling
@@ -26,15 +26,19 @@ A hand-drawn scientific diagram showing the pipeline of a literature review tool
 - Papers should feel like they're being PULLED into the mouth, not thrown
 
 ### CENTER: The Dinosaur (Digestion)
-- A BRONTOSAURUS (sauropod/apatosaurus) — NOT a stegosaurus, NOT a T-Rex
-- CRITICAL body proportions: LONG elegant neck (the neck is the dominant feature, ~40% of total height), SMALL head at the top, SLIM elongated body, THIN legs, LONG thin tail. Think giraffe-like elegance, not hippo-like bulk.
-- The dinosaur is SLENDER and GRACEFUL — not round, not chubby, not fat. A lean, scholarly figure.
-- CRITICAL: the dinosaur's HEAD and MOUTH must point LEFT, toward the papers on the left side. The tail goes to the right. This is non-negotiable — the visual flow is papers (left) → mouth (left-facing) → body → output (right)
-- Mouth open, actively receiving/chomping the nearest paper — paper halfway in the mouth
-- Small rounded head with a gentle curve — proportionally tiny compared to the long neck
-- 3-5 small triangular dorsal bumps along the spine (subtle, not prominent plates)
-- Long thin tail tapering to a point, extending to the right
-- Four slim legs, standing on the baseline — not thick or stumpy
+- A BABY BRONTOSAURUS — cute, young, with slightly exaggerated proportions like a baby animal
+- REFERENCE STYLE: think of a "cute baby brontosaurus vector cartoon" — oversized head relative to body (baby proportions), big round eyes, short chubby legs, soft rounded silhouette. Like a chibi/kawaii dinosaur but drawn in ink line art, not anime.
+- The head is proportionally LARGER than an adult brontosaurus would be (baby animal proportions — big head, big eyes, small body)
+- Long curved neck — still the signature brontosaurus feature, but with a gentle S-curve, not stiff
+- Body is COMPACT and softly rounded — not fat/barrel-shaped, but has the roundness of a baby animal. Think baby elephant proportions: rounded belly, short legs, oversized head.
+- Short stubby legs, slightly splayed — standing firmly but with baby clumsiness
+- Short tail, slightly upturned — playful, not dragging
+- Big round expressive eyes — the key to the "cute" factor
+- Smooth rounded outline — no sharp angles, everything curves gently
+- Small subtle dorsal bumps along the spine (2-3, very rounded, not spiky)
+- CRITICAL: the dinosaur's HEAD and MOUTH must point LEFT, toward the papers on the left side. The tail goes to the right. This is non-negotiable.
+- Mouth open, happily chomping the nearest paper — paper halfway in the mouth
+- The overall vibe is: baby dinosaur discovered papers and is delightfully eating them. Innocent, curious, slightly mischievous.
 - Small monocle on the visible eye — thin gold CIRCULAR FRAME sitting in front of the eye, with a thin chain or cord that drapes DOWN along the neck (NOT a hoop earring, NOT dangling from the side — it sits on the eye like a proper monocle)
 - Expression: eager, hungry, slightly comedic — one eyebrow raised, eyes focused on the papers
 - Small comical details: tiny crumb-like paper scraps falling from the mouth
@@ -79,9 +83,10 @@ A hand-drawn scientific diagram showing the pipeline of a literature review tool
 ### What to AVOID
 - Do NOT make the dinosaur FACE RIGHT — it MUST face LEFT. Head on the left, tail on the right. This is the most common error.
 - Do NOT make the dinosaur look like a lizard, gecko, or crocodile
-- Do NOT make it a stegosaurus (too chunky) or T-Rex (too fierce) — it's a BRONTOSAURUS/sauropod with a long neck
-- Do NOT make it fat, round, chubby, or muscular — it must be SLIM and ELEGANT with a long graceful neck
-- Do NOT make the body wide or barrel-shaped — elongated oval, lean
+- Do NOT make it a stegosaurus (too chunky/spiky) or T-Rex (too fierce) — it's a BABY BRONTOSAURUS
+- Do NOT make it look adult/mature — baby proportions: oversized head, short legs, compact body
+- Do NOT make it muscular, fierce, or intimidating — cute, innocent, scholarly
+- Do NOT make the neck too long or stiff — gentle S-curve, baby proportions
 - Do NOT place the review book near the tail/rear end (reads as defecation) — float it high and far to the right, with generous separation from the body
 - Do NOT use thick cartoon outlines or bubble style
 - Do NOT add a landscape background (trees, sky, etc.) — this is a DIAGRAM, not a scene
@@ -92,10 +97,10 @@ A hand-drawn scientific diagram showing the pipeline of a literature review tool
 - Do NOT make the monocle look like an earring or hoop — it's a classic monocle (lens in front of eye, chain draping down)
 
 ### Size and Format
-- Landscape orientation, approximately 2400x1200px or wider
+- SQUARE (1:1 aspect ratio), 2048x2048px or 2400x2400px
 - PNG with transparent background (or cream #FAFAF7)
 - The illustration should work inside a hero section with text overlaid on top or beside it
-- Must be legible at 50% scale (1200x600 on mobile)
+- Must be legible at 50% scale (1024x1024 on mobile)
 
 ---
 
