@@ -27,25 +27,29 @@ A hand-drawn scientific diagram showing the pipeline of a literature review tool
 
 ### CENTER: The Dinosaur (Digestion)
 - Friendly stegosaurus-like dinosaur, facing LEFT (toward the incoming papers)
+- CRITICAL: the dinosaur's HEAD and MOUTH must point LEFT, toward the papers on the left side. The tail goes to the right. This is non-negotiable — the visual flow is papers (left) → mouth (left-facing) → body → output (right)
 - Mouth WIDE OPEN, actively receiving/chomping the nearest paper — paper halfway in the mouth
 - Body is round, slightly chubby — friendly, not fierce, not muscular
 - 3-5 small triangular dorsal plates along the spine
 - Thick tail curves behind to the right
 - Two sturdy short legs, standing on the baseline
-- Small monocle on the visible eye (thin gold circle) — the academic touch
+- Small monocle on the visible eye — thin gold CIRCULAR FRAME sitting in front of the eye, with a thin chain or cord that drapes DOWN along the neck (NOT a hoop earring, NOT dangling from the side — it sits on the eye like a proper monocle)
 - Expression: eager, hungry, slightly comedic — one eyebrow raised, eyes focused on the papers
-- Small comical details: tiny crumb-like paper scraps falling from the mouth, or a satisfied squint
+- Small comical details: tiny crumb-like paper scraps falling from the mouth
 - The dinosaur should look like it's ENJOYING the meal
 - NO color fill on the body — line art only, same green ink as everything else
-- Small annotation arrows or hatch marks on the belly suggesting "processing happening inside" (optional, scientific diagram style)
+- Do NOT write any text or labels ON the dinosaur's body. No "processing happening inside" text. If you want to suggest internal processing, use only small subtle hatch marks or scientific-style annotation arrows — visual only, no words on the body
+- Do NOT add speech bubbles, thought bubbles, heart symbols, or emoji-like elements. The humor comes from the diagram format itself, not from cartoon expressions
 
 ### RIGHT: Output (Review)
-- A bound notebook/book, standing upright or slightly angled
+- A bound notebook/book, standing upright ON THE GROUND/BASELINE — not floating in the air
+- The book rests on the same baseline as the dinosaur's feet, slightly to the right of the tail
 - Dark green cover with "Review" written on it in cream/light text
 - A gold bookmark ribbon hanging from the bottom
 - Small checkmark or verification symbol near the book (gold)
 - Small sparkle/radiance lines around the book suggesting "freshly produced"
 - The book should feel like a FINISHED PRODUCT — polished, complete, in contrast to the messy papers on the left
+- IMPORTANT: the book must NOT appear to come out of the tail or rear end — place it clearly beside the dinosaur, on the ground, with some horizontal distance from the tail
 
 ### Connecting Elements
 - Dashed or dotted line connecting the three stages along the bottom (timeline)
@@ -71,14 +75,17 @@ A hand-drawn scientific diagram showing the pipeline of a literature review tool
 - The comedy comes from the contrast between the formal diagrammatic register (labels, baselines, annotations) and the absurd content (a dinosaur eating PDFs)
 
 ### What to AVOID
+- Do NOT make the dinosaur FACE RIGHT — it MUST face LEFT. Head on the left, tail on the right. This is the most common error.
 - Do NOT make the dinosaur look like a lizard, gecko, or crocodile — clearly a dinosaur (round body, dorsal plates, thick tail)
 - Do NOT make it muscular or fierce — round, soft, scholarly
-- Do NOT place the review book near the tail/rear end (reads as defecation)
+- Do NOT place the review book near the tail/rear end (reads as defecation) — place it on the ground to the right with clear separation
 - Do NOT use thick cartoon outlines or bubble style
 - Do NOT add a landscape background (trees, sky, etc.) — this is a DIAGRAM, not a scene
-- Do NOT make the dinosaur face right — must face LEFT
 - Do NOT fill the dinosaur body with color — line art only
 - Do NOT make it too busy — whitespace between the three stages is part of the design (editorial breathing)
+- Do NOT add speech bubbles, thought bubbles, hearts, or emoji symbols — this is a scientific diagram, not a comic strip
+- Do NOT write text/labels directly on the dinosaur's body — no "processing happening inside" or similar annotations on the animal itself
+- Do NOT make the monocle look like an earring or hoop — it's a classic monocle (lens in front of eye, chain draping down)
 
 ### Size and Format
 - Landscape orientation, approximately 2400x1200px or wider
