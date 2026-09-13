@@ -3,10 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The Saurus — Screens R1</title>
+<title>The Saurus — App Mockups · R2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;0,7..72,600;0,7..72,700;1,7..72,400&family=Inter:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
 <style>
+/* ===== THE SAURUS TOKENS ===== */
 :root{
   --saurus-paper:#FAFAF7;--saurus-surface:#F5F5F0;--saurus-sidebar:#F0F0EB;--saurus-border:#E8E5DE;
   --saurus-ink:#1C1C1E;--saurus-ink-secondary:#6B7280;--saurus-ink-muted:#9CA3AF;
@@ -18,7 +19,7 @@
   --font-heading:'Literata',Georgia,serif;--font-body:'Inter',-apple-system,sans-serif;--font-mono:'Fira Code',monospace;
   --radius-sm:4px;--radius-md:8px;--radius-lg:12px;
   --shadow-sm:0 1px 2px rgba(0,0,0,.04);--shadow-md:0 2px 8px rgba(0,0,0,.06);
-  --glow:none;
+  --board:#E6E4DC;--bezel:#1C1C1E;
 }
 html.dark{
   --saurus-paper:#1A1D1E;--saurus-surface:#242728;--saurus-sidebar:#161819;--saurus-border:#353838;
@@ -29,237 +30,300 @@ html.dark{
   --saurus-chip-1:#3B2F6B;--saurus-chip-2:#1E3A5F;--saurus-chip-3:#1B4332;
   --saurus-chip-4:#5A4416;--saurus-chip-5:#5C2A44;--saurus-chip-6:#2C3467;
   --shadow-sm:0 1px 2px rgba(0,0,0,.20);--shadow-md:0 2px 8px rgba(0,0,0,.30);
-  --glow:radial-gradient(1000px 600px at 70% -10%,rgba(229,195,73,.055),transparent 70%);
+  --board:#0F1112;--bezel:#3A3D3E;
 }
-*{box-sizing:border-box}
+*{box-sizing:border-box;margin:0;padding:0}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
-body{margin:0;font-family:var(--font-body);font-size:15px;line-height:1.6;color:var(--saurus-ink);background:var(--saurus-paper);background-image:var(--glow);transition:background-color .25s,color .25s}
-h1,h2,h3,h4{font-family:var(--font-heading);font-weight:600;margin:0;letter-spacing:-.01em}
+body{background:var(--board);color:var(--saurus-ink);font-family:var(--font-body);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;transition:background-color .25s,color .25s}
+a{color:inherit;text-decoration:none}
 button{font-family:inherit}
+h1,h2,h3,h4{font-family:var(--font-heading);font-weight:600;letter-spacing:-.01em}
 .mono{font-family:var(--font-mono)}
+.muted{color:var(--saurus-ink-secondary)}
 
-/* ---- chrome ---- */
+/* ===== theme toggle ===== */
 .theme-toggle{position:fixed;top:1rem;right:1rem;z-index:100;display:flex;align-items:center;gap:.5rem;padding:.5rem .85rem;background:var(--saurus-surface);border:1px solid var(--saurus-border);border-radius:999px;box-shadow:var(--shadow-md);cursor:pointer;color:var(--saurus-ink);font:500 .8rem var(--font-body)}
 .theme-toggle:hover{border-color:var(--saurus-primary)}
 .theme-toggle svg{width:16px;height:16px}
 .theme-toggle .sun{display:none}html.dark .theme-toggle .sun{display:block}html.dark .theme-toggle .moon{display:none}
 
-.screen{max-width:1240px;margin:0 auto;padding:4.5rem 1.5rem 0}
-.screen-label{display:flex;align-items:baseline;gap:.9rem;margin-bottom:1rem;flex-wrap:wrap}
-.screen-label .num{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.14em;color:var(--saurus-primary);padding:.2rem .5rem;background:var(--saurus-primary-bg);border-radius:var(--radius-sm)}
-.screen-label h2{font-size:1.35rem}
-.screen-label .note{color:var(--saurus-ink-muted);font-size:.82rem}
-.frame{border:1px solid var(--saurus-border);border-radius:var(--radius-lg);background:var(--saurus-paper);box-shadow:var(--shadow-md);overflow:hidden}
-.titlebar{display:flex;align-items:center;gap:.6rem;padding:.55rem .9rem;background:var(--saurus-sidebar);border-bottom:1px solid var(--saurus-border)}
-.titlebar .dots{display:flex;gap:.3rem}
-.titlebar .dots i{width:9px;height:9px;border-radius:50%;background:var(--saurus-border);display:block}
-.titlebar .path{font-family:var(--font-mono);font-size:.7rem;color:var(--saurus-ink-muted)}
-.titlebar .spacer{flex:1}
-.titlebar .mini-nav{display:flex;gap:.15rem}
-.titlebar .mini-nav span{font-size:.72rem;padding:.2rem .5rem;border-radius:var(--radius-sm);color:var(--saurus-ink-secondary)}
-.titlebar .mini-nav span.on{background:var(--saurus-primary-bg);color:var(--saurus-primary);font-weight:500}
+/* ===== BOARD CHROME ===== */
+.doc-head{padding:48px 40px 8px}
+.doc-head h1{font-size:2.5rem;font-weight:600;letter-spacing:-.02em}
+.doc-head p{color:var(--saurus-ink-secondary);max-width:74ch;margin-top:8px}
+.doc-head .bp{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap}
+.doc-head .bp span{font-family:var(--font-mono);font-size:11px;padding:4px 10px;border:1px solid var(--saurus-border);border-radius:6px;background:var(--saurus-surface)}
+.screen{margin:56px 0 0;padding:0 40px}
+.screen>.title{display:flex;align-items:baseline;gap:14px;margin-bottom:20px;max-width:1400px}
+.screen>.title h2{font-size:1.5rem}
+.screen>.title .idx{font-family:var(--font-mono);font-size:11px;color:var(--saurus-primary);padding:2px 8px;background:var(--saurus-primary-bg);border-radius:var(--radius-sm);letter-spacing:.14em}
+.screen>.title p{color:var(--saurus-ink-secondary);font-size:13px;margin-left:auto;max-width:64ch;text-align:right}
+.board{display:flex;gap:40px;align-items:flex-start;overflow-x:auto;padding:8px 8px 40px}
+.frame{flex:none}
+.frame .cap{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;padding-left:2px}
+.frame .cap b{font-weight:500;font-size:13px}
+.frame .cap span{font-family:var(--font-mono);font-size:11px;color:var(--saurus-ink-muted)}
+.dev{overflow:hidden;background:var(--saurus-paper);display:flex;flex-direction:column;box-shadow:0 1px 2px rgba(0,0,0,.08),0 24px 60px -12px rgba(0,0,0,.22),0 0 0 1px rgba(0,0,0,.08)}
+.f-d{width:1100px}.f-d .dev{border-radius:14px;height:780px}
+.f-t{width:768px}.f-t .dev{border-radius:26px;border:6px solid var(--bezel);height:960px}
+.f-m{width:390px}.f-m .dev{border-radius:40px;border:6px solid var(--bezel);height:844px}
+.dev>.dsk,.dev>.tab,.dev>.mob{flex:1;min-height:0}
+.dsk .main,.tab .main,.mob .main{overflow-y:auto;min-height:0;scrollbar-width:thin;scrollbar-color:var(--saurus-border) transparent}
 
-/* ---- shared bits ---- */
-.btn{display:inline-flex;align-items:center;gap:.45rem;padding:.55rem 1rem;border-radius:var(--radius-md);border:1px solid transparent;font:500 .875rem var(--font-body);cursor:pointer;transition:background .15s,border-color .15s,color .15s}
-.btn-primary{background:var(--saurus-primary);color:#fff}.btn-primary:hover{background:var(--saurus-primary-hover)}
-.btn-secondary{background:transparent;color:var(--saurus-ink);border-color:var(--saurus-border)}.btn-secondary:hover{border-color:var(--saurus-primary);color:var(--saurus-primary)}
-.btn-ghost{background:transparent;color:var(--saurus-ink-secondary);padding:.4rem .6rem}.btn-ghost:hover{background:var(--saurus-primary-bg);color:var(--saurus-primary)}
-.btn svg{width:15px;height:15px}
-.btn-sm{padding:.35rem .7rem;font-size:.8rem}
-.chip-t{display:inline-flex;align-items:center;gap:.35rem;padding:.18rem .55rem;border-radius:999px;font-size:.72rem;font-weight:500;color:var(--saurus-ink);line-height:1.6;white-space:nowrap}
+/* ===== DESKTOP SHELL ===== */
+.dsk{display:grid;grid-template-columns:220px 1fr;grid-template-rows:minmax(0,1fr)}
+.side{background:var(--saurus-sidebar);border-right:1px solid var(--saurus-border);padding:18px 12px;display:flex;flex-direction:column;gap:2px}
+.side .brand{display:flex;align-items:center;gap:9px;padding:4px 10px 20px;font-family:var(--font-heading);font-weight:600;font-size:18px}
+.side .brand svg{width:30px;height:26px;color:var(--saurus-primary);flex:none}
+.side a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--radius-md);color:var(--saurus-ink-secondary);font-weight:500;font-size:13px}
+.side a svg{width:16px;height:16px;flex:none}
+.side a .n{margin-left:auto;font-family:var(--font-mono);font-size:10.5px;color:var(--saurus-ink-muted)}
+.side a.on{background:var(--saurus-primary-bg);color:var(--saurus-primary);box-shadow:inset 3px 0 0 var(--saurus-primary)}
+.side a.on .n{color:var(--saurus-primary)}
+.side .sp{flex:1}
+.side .job{padding:10px 10px 4px;border-top:1px solid var(--saurus-border);font-size:11px;color:var(--saurus-ink-muted);line-height:1.5}
+.side .job b{display:block;font-family:var(--font-mono);font-size:11px;color:var(--saurus-ink);font-weight:500}
+.side .job .st{display:flex;align-items:center;gap:6px;margin-top:4px}
+.dsk .main{min-width:0;display:flex;flex-direction:column}
+
+/* ===== TABLET SHELL ===== */
+.tab{display:flex;flex-direction:column}
+.topnav{flex:none;display:flex;align-items:center;gap:2px;background:var(--saurus-sidebar);border-bottom:1px solid var(--saurus-border);padding:10px 20px}
+.topnav .brand{font-family:var(--font-heading);font-weight:600;font-size:16px;display:flex;align-items:center;gap:7px;margin-right:12px;padding-right:12px;border-right:1px solid var(--saurus-border)}
+.topnav .brand svg{width:26px;height:22px;color:var(--saurus-primary)}
+.topnav a{padding:6px 11px;border-radius:var(--radius-md);font-size:13px;font-weight:500;color:var(--saurus-ink-secondary);white-space:nowrap}
+.topnav a.on{color:var(--saurus-primary);background:var(--saurus-primary-bg);box-shadow:inset 0 -2px 0 var(--saurus-primary)}
+.topnav .jb{margin-left:auto;font-family:var(--font-mono);font-size:10.5px;color:var(--saurus-ink-muted);white-space:nowrap}
+.tab .main{flex:1;display:flex;flex-direction:column}
+
+/* ===== MOBILE SHELL ===== */
+.mob{display:flex;flex-direction:column}
+.mtop{flex:none;display:flex;align-items:center;gap:8px;background:var(--saurus-sidebar);border-bottom:1px solid var(--saurus-border);padding:14px 16px 10px}
+.mtop .brand{display:flex;align-items:center;gap:6px;font-family:var(--font-heading);font-weight:600;font-size:15px}
+.mtop .brand svg{width:24px;height:20px;color:var(--saurus-primary)}
+.mtop .ttl{font-family:var(--font-heading);font-size:14px;margin-left:2px;padding-left:10px;border-left:1px solid var(--saurus-border);color:var(--saurus-ink-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mtop .act{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--saurus-ink-muted);white-space:nowrap}
+.mob .main{flex:1;display:flex;flex-direction:column}
+.tabs{flex:none;display:flex;background:var(--saurus-sidebar);border-top:1px solid var(--saurus-border);padding:8px 6px 16px;justify-content:space-around}
+.tabs a{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:500;color:var(--saurus-ink-muted);padding:4px 8px}
+.tabs a svg{width:20px;height:20px}
+.tabs a.on{color:var(--saurus-primary)}
+
+/* ===== shared bits ===== */
+.btn{display:inline-flex;align-items:center;gap:.45rem;padding:.5rem .9rem;border-radius:var(--radius-md);border:1px solid transparent;font:500 .82rem var(--font-body);cursor:pointer;white-space:nowrap}
+.btn-primary{background:var(--saurus-primary);color:#fff}
+.btn-secondary{background:transparent;color:var(--saurus-ink);border-color:var(--saurus-border)}
+.btn-ghost{background:transparent;color:var(--saurus-ink-secondary);padding:.4rem .6rem}
+.btn svg{width:14px;height:14px}
+.btn-sm{padding:.32rem .65rem;font-size:.76rem}
+.chip-t{display:inline-flex;align-items:center;gap:.35rem;padding:.15rem .55rem;border-radius:999px;font-size:.7rem;font-weight:500;color:var(--saurus-ink);line-height:1.6;white-space:nowrap}
 .chip-t::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.5}
 .c1{background:var(--saurus-chip-1)}.c2{background:var(--saurus-chip-2)}.c3{background:var(--saurus-chip-3)}.c4{background:var(--saurus-chip-4)}.c5{background:var(--saurus-chip-5)}.c6{background:var(--saurus-chip-6)}
-.cite{color:var(--saurus-primary);font-weight:500;font-family:var(--font-body);font-size:.85em;border-bottom:1px dotted currentColor;cursor:pointer;text-decoration:none}
-.cite:hover{background:var(--saurus-primary-bg);border-bottom-style:solid}
-.loc{font-family:var(--font-mono);font-size:.7em;color:var(--saurus-ink-muted);margin-left:.12em;white-space:nowrap}
-.dot{width:8px;height:8px;border-radius:50%;flex:none}
+.cite{color:var(--saurus-primary);font-weight:500;font-family:var(--font-body);font-size:.85em;border-bottom:1px dotted currentColor;cursor:pointer}
+.loc{font-family:var(--font-mono);font-size:.68em;color:var(--saurus-ink-muted);margin-left:.12em;white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;display:inline-block}
 .dot.done{background:var(--saurus-success)}
 .dot.active{background:var(--saurus-accent);animation:pulse 1.8s ease-in-out infinite}
 .dot.pending{background:var(--saurus-pending)}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 3px var(--saurus-accent-bg)}50%{box-shadow:0 0 0 7px transparent}}
 .mascot{color:var(--saurus-ink-secondary)}
+.sec-h{font-family:var(--font-mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--saurus-ink-muted);margin:0 0 .5rem}
 
-/* ---- 1 empty ---- */
-.empty{display:grid;place-items:center;min-height:520px;padding:3.5rem 1.5rem;text-align:center;background:
-  radial-gradient(600px 300px at 50% 20%,var(--saurus-accent-bg),transparent 70%)}
+/* ===== 1 empty ===== */
+.empty{flex:1;display:grid;place-items:center;padding:2.5rem 1.5rem;text-align:center;background:radial-gradient(600px 300px at 50% 15%,var(--saurus-accent-bg),transparent 70%)}
 .empty .inner{max-width:520px;width:100%}
-.empty .mascot svg{width:210px;height:auto}
-.empty h1{font-size:2.1rem;margin:.6rem 0 .4rem}
-.empty p.sub{color:var(--saurus-ink-secondary);margin:0 0 1.75rem}
-.drop{border:1.5px dashed var(--saurus-border);border-radius:var(--radius-lg);padding:2.1rem 1.5rem;background:var(--saurus-surface);cursor:pointer;transition:border-color .2s,background .2s}
-.drop:hover{border-color:var(--saurus-primary);background:var(--saurus-primary-bg)}
-.drop .big{font-family:var(--font-heading);font-size:1.05rem;margin-bottom:.3rem}
-.drop .small{font-size:.82rem;color:var(--saurus-ink-secondary)}
+.empty .mascot svg{width:200px;height:auto}
+.empty h1{font-size:1.9rem;margin:.4rem 0 .35rem;line-height:1.2}
+.empty p.sub{color:var(--saurus-ink-secondary);margin:0 0 1.4rem;font-size:.9rem}
+.drop{border:1.5px dashed var(--saurus-border);border-radius:var(--radius-lg);padding:1.8rem 1.4rem;background:var(--saurus-surface);cursor:pointer}
+.drop .big{font-family:var(--font-heading);font-size:1rem;margin-bottom:.25rem}
+.drop .small{font-size:.78rem;color:var(--saurus-ink-secondary)}
 .drop .browse{color:var(--saurus-primary);font-weight:500;text-decoration:underline;text-decoration-style:dotted}
-.empty .meta{display:flex;gap:1.25rem;justify-content:center;flex-wrap:wrap;margin-top:1.1rem;font-family:var(--font-mono);font-size:.7rem;color:var(--saurus-ink-muted)}
-.empty .recent{margin-top:2.25rem;text-align:left;border-top:1px solid var(--saurus-border);padding-top:1.1rem}
-.empty .recent .h{font-size:.7rem;font-family:var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--saurus-ink-muted);margin-bottom:.5rem}
-.recent-row{display:flex;justify-content:space-between;gap:1rem;padding:.45rem 0;font-size:.85rem;border-bottom:1px dashed var(--saurus-border);cursor:pointer}
-.recent-row:hover{color:var(--saurus-primary)}
-.recent-row .r{font-family:var(--font-mono);font-size:.72rem;color:var(--saurus-ink-muted)}
+.empty .meta{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-top:.9rem;font-family:var(--font-mono);font-size:.66rem;color:var(--saurus-ink-muted)}
+.recent{margin-top:1.8rem;text-align:left;border-top:1px solid var(--saurus-border);padding-top:1rem}
+.recent-row{display:flex;justify-content:space-between;gap:1rem;padding:.42rem 0;font-size:.82rem;border-bottom:1px dashed var(--saurus-border);cursor:pointer}
+.recent-row:last-child{border-bottom:0}
+.recent-row .r{font-family:var(--font-mono);font-size:.68rem;color:var(--saurus-ink-muted);white-space:nowrap}
+.empty.t .mascot svg{width:170px}
+.empty.t h1{font-size:1.7rem}
+.empty.m{padding:1.4rem 1rem;align-content:start}
+.empty.m .mascot svg{width:140px}
+.empty.m h1{font-size:1.45rem}
+.empty.m p.sub{font-size:.82rem}
+.empty.m .drop{padding:1.4rem 1rem}
+.empty.m .recent-row{flex-direction:column;gap:.1rem}
 
-/* ---- 2 pipeline ---- */
-.split{display:grid;grid-template-columns:340px 1fr;min-height:620px}
-.pane-l{background:var(--saurus-sidebar);border-right:1px solid var(--saurus-border);display:flex;flex-direction:column}
-.pane-head{padding:.9rem 1rem;border-bottom:1px solid var(--saurus-border);display:flex;align-items:center;justify-content:space-between;gap:.5rem}
-.pane-head .t{font-family:var(--font-heading);font-size:.98rem}
-.pane-head .c{font-family:var(--font-mono);font-size:.7rem;color:var(--saurus-ink-muted)}
-.paper-list{overflow:auto;max-height:520px;padding:.4rem}
-.paper-row{display:grid;grid-template-columns:16px 1fr;gap:.6rem;padding:.6rem .65rem;border-radius:var(--radius-md);cursor:pointer;align-items:start}
-.paper-row:hover{background:var(--saurus-primary-bg)}
-.paper-row .ttl{font-size:.82rem;line-height:1.4;font-weight:500}
-.paper-row .sub{font-size:.72rem;color:var(--saurus-ink-secondary);margin-top:.1rem}
-.paper-row .sub .mono{font-size:.68rem;color:var(--saurus-ink-muted)}
+/* ===== 2 pipeline ===== */
+.split{display:grid;grid-template-columns:300px 1fr;flex:1;min-height:0}
+.pane-l{background:var(--saurus-sidebar);border-right:1px solid var(--saurus-border);display:flex;flex-direction:column;min-height:0}
+.pane-head{padding:.8rem 1rem;border-bottom:1px solid var(--saurus-border);display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.pane-head .t{font-family:var(--font-heading);font-size:.95rem}
+.pane-head .c{font-family:var(--font-mono);font-size:.66rem;color:var(--saurus-ink-muted)}
+.paper-list{overflow:auto;padding:.35rem;flex:1;min-height:0}
+.paper-row{display:grid;grid-template-columns:14px 1fr;gap:.55rem;padding:.55rem .6rem;border-radius:var(--radius-md);cursor:pointer;align-items:start}
+.paper-row .dot{margin-top:.35rem}
+.paper-row .ttl{font-size:.78rem;line-height:1.4;font-weight:500}
+.paper-row .sub{font-size:.68rem;color:var(--saurus-ink-secondary);margin-top:.1rem}
 .paper-row.warn .ttl{color:var(--saurus-ink-secondary)}
-.pane-foot{margin-top:auto;padding:.75rem 1rem;border-top:1px solid var(--saurus-border);font-family:var(--font-mono);font-size:.7rem;color:var(--saurus-ink-muted)}
-.pane-r{padding:1.4rem 1.6rem;display:flex;flex-direction:column;gap:1.1rem}
+.pane-foot{padding:.65rem 1rem;border-top:1px solid var(--saurus-border);font-family:var(--font-mono);font-size:.66rem;color:var(--saurus-ink-muted)}
+.pane-r{padding:1.2rem 1.4rem;display:flex;flex-direction:column;gap:.95rem;overflow:auto;min-height:0}
 .run-head{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap}
-.run-head h3{font-size:1.25rem}
-.run-head .id{font-family:var(--font-mono);font-size:.72rem;color:var(--saurus-ink-muted);margin-top:.2rem}
-.overall{display:flex;flex-direction:column;gap:.4rem}
-.overall .bar{height:7px;background:var(--saurus-border);border-radius:999px;overflow:hidden}
+.run-head h3{font-size:1.15rem}
+.run-head .id{font-family:var(--font-mono);font-size:.68rem;color:var(--saurus-ink-muted);margin-top:.15rem}
+.overall{display:flex;flex-direction:column;gap:.35rem}
+.overall .bar{height:6px;background:var(--saurus-border);border-radius:999px;overflow:hidden}
 .overall .bar>span{display:block;height:100%;width:58%;border-radius:999px;background:linear-gradient(90deg,var(--saurus-primary),var(--saurus-accent))}
-.overall .legend{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:.7rem;color:var(--saurus-ink-muted)}
+.overall .legend{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:.66rem;color:var(--saurus-ink-muted)}
 .trace{border:1px solid var(--saurus-border);border-radius:var(--radius-lg);background:var(--saurus-surface);overflow:hidden}
-.stage{padding:.9rem 1.1rem;border-bottom:1px solid var(--saurus-border)}
+.stage{padding:.8rem 1rem;border-bottom:1px solid var(--saurus-border)}
 .stage:last-child{border-bottom:0}
-.stage-top{display:grid;grid-template-columns:auto 1fr auto;gap:.75rem;align-items:center}
-.stage-name{font-family:var(--font-heading);font-size:.98rem}
-.stage-meta{font-size:.78rem;color:var(--saurus-ink-secondary);margin-top:.1rem}
-.stage-time{font-family:var(--font-mono);font-size:.72rem;color:var(--saurus-ink-muted);text-align:right}
-.badge{display:inline-block;font-family:var(--font-mono);font-size:.64rem;letter-spacing:.08em;text-transform:uppercase;padding:.15rem .45rem;border-radius:var(--radius-sm);margin-left:.5rem;vertical-align:1px}
+.stage-top{display:grid;grid-template-columns:auto 1fr auto;gap:.7rem;align-items:center}
+.stage-name{font-family:var(--font-heading);font-size:.93rem}
+.stage-meta{font-size:.74rem;color:var(--saurus-ink-secondary);margin-top:.05rem}
+.stage-time{font-family:var(--font-mono);font-size:.68rem;color:var(--saurus-ink-muted);text-align:right}
+.badge{display:inline-block;font-family:var(--font-mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;padding:.12rem .4rem;border-radius:var(--radius-sm);margin-left:.45rem;vertical-align:1px}
 .badge.done{background:var(--saurus-primary-bg);color:var(--saurus-primary)}
 .badge.active{background:var(--saurus-accent-bg);color:var(--saurus-ink)}
 .badge.pending{background:var(--saurus-border);color:var(--saurus-ink-muted)}
 .stage.is-active{background:var(--saurus-accent-bg)}
 .stage.is-pending .stage-name{color:var(--saurus-ink-muted)}
-.substeps{margin:.75rem 0 0;padding:.7rem 0 0 1.85rem;border-top:1px dashed var(--saurus-border);display:grid;gap:.4rem}
-.sub{display:grid;grid-template-columns:14px 1fr auto;gap:.6rem;align-items:center;font-size:.8rem}
-.sub .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sub .st{font-family:var(--font-mono);font-size:.7rem;color:var(--saurus-ink-muted)}
-.sub .tick{width:14px;height:14px;display:grid;place-items:center}
-.sub .tick svg{width:12px;height:12px;color:var(--saurus-success)}
-.mini-bar{height:4px;background:var(--saurus-border);border-radius:999px;overflow:hidden;width:70px}
+.substeps{margin:.65rem 0 0;padding:.6rem 0 0 1.6rem;border-top:1px dashed var(--saurus-border);display:grid;gap:.35rem}
+.substeps .sub{display:grid;grid-template-columns:14px 1fr auto;gap:.55rem;align-items:center;font-size:.76rem}
+.substeps .sub .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.substeps .sub .st{font-family:var(--font-mono);font-size:.66rem;color:var(--saurus-ink-muted)}
+.substeps .sub .tick{width:14px;height:14px;display:grid;place-items:center}
+.substeps .sub .tick svg{width:12px;height:12px;color:var(--saurus-success)}
+.mini-bar{height:4px;background:var(--saurus-border);border-radius:999px;overflow:hidden;width:64px}
 .mini-bar>span{display:block;height:100%;background:var(--saurus-accent)}
-.events{border:1px solid var(--saurus-border);border-radius:var(--radius-lg);padding:.8rem 1rem;background:var(--saurus-paper);font-family:var(--font-mono);font-size:.72rem;line-height:1.85;color:var(--saurus-ink-secondary);max-height:150px;overflow:auto}
+.events{border:1px solid var(--saurus-border);border-radius:var(--radius-lg);padding:.7rem .9rem;background:var(--saurus-paper);font-family:var(--font-mono);font-size:.66rem;line-height:1.85;color:var(--saurus-ink-secondary);max-height:128px;overflow:auto}
 .events .ts{color:var(--saurus-ink-muted)}
 .events .ok{color:var(--saurus-success)}
 .events .gold{color:var(--saurus-accent)}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.8rem}
-.stat{border:1px solid var(--saurus-border);border-radius:var(--radius-md);padding:.65rem .8rem;background:var(--saurus-surface)}
-.stat .v{font-family:var(--font-heading);font-size:1.35rem;line-height:1.2}
-.stat .k{font-size:.72rem;color:var(--saurus-ink-secondary)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem}
+.stat{border:1px solid var(--saurus-border);border-radius:var(--radius-md);padding:.55rem .75rem;background:var(--saurus-surface)}
+.stat .v{font-family:var(--font-heading);font-size:1.25rem;line-height:1.2}
+.stat .k{font-size:.68rem;color:var(--saurus-ink-secondary)}
+.corpus-strip{display:flex;gap:.4rem;overflow-x:auto;padding-bottom:.3rem;scrollbar-width:thin}
+.corpus-strip .pc{flex:none;width:200px;border:1px solid var(--saurus-border);border-radius:var(--radius-md);padding:.5rem .65rem;background:var(--saurus-surface);font-size:.72rem;line-height:1.35}
+.corpus-strip .pc .sub{font-family:var(--font-mono);font-size:.62rem;color:var(--saurus-ink-muted);margin-top:.2rem}
+.corpus-strip .pc.warn{border-style:dashed}
+.corpus-strip .pc.warn .sub{color:var(--saurus-error)}
 
-/* ---- 3 review ---- */
-.review-grid{display:grid;grid-template-columns:230px 1fr;min-height:640px}
-.toc{background:var(--saurus-sidebar);border-right:1px solid var(--saurus-border);padding:1.2rem 1rem;font-size:.82rem}
-.toc .h{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--saurus-ink-muted);margin-bottom:.7rem}
-.toc a{display:block;padding:.3rem .5rem;border-radius:var(--radius-sm);color:var(--saurus-ink-secondary);text-decoration:none;border-left:2px solid transparent}
-.toc a:hover{color:var(--saurus-primary);background:var(--saurus-primary-bg)}
+/* ===== 3 review ===== */
+.review-grid{display:grid;grid-template-columns:210px 1fr;flex:1;min-height:0}
+.toc{background:var(--saurus-sidebar);border-right:1px solid var(--saurus-border);padding:1.1rem .9rem;font-size:.78rem;overflow:auto}
+.toc a{display:block;padding:.28rem .5rem;border-radius:var(--radius-sm);color:var(--saurus-ink-secondary);border-left:2px solid transparent}
 .toc a.on{color:var(--saurus-primary);font-weight:500;border-left-color:var(--saurus-primary);background:var(--saurus-primary-bg)}
-.toc a.sub2{padding-left:1.2rem;font-size:.78rem}
-.toc .foot{margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--saurus-border);font-family:var(--font-mono);font-size:.68rem;color:var(--saurus-ink-muted);line-height:1.8}
-.doc{padding:2.2rem 3rem 2.5rem;max-width:820px}
-.doc .toolbar{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding-bottom:1.2rem;margin-bottom:1.8rem;border-bottom:1px solid var(--saurus-border);flex-wrap:wrap}
-.doc .toolbar .kicker{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--saurus-ink-muted)}
-.doc h1{font-size:2rem;line-height:1.2;margin-bottom:.5rem}
-.doc .byline{color:var(--saurus-ink-secondary);font-size:.85rem;margin-bottom:2rem}
-.doc h2{font-size:1.35rem;margin:2.2rem 0 .7rem}
-.doc h3{font-size:1.05rem;margin:1.6rem 0 .5rem}
-.doc p{font-family:var(--font-heading);font-size:1.03rem;line-height:1.8;margin:0 0 1.1rem}
-.doc .lead{font-size:1.12rem;color:var(--saurus-ink-secondary);font-style:italic}
-.pull{border-left:3px solid var(--saurus-accent);padding:.2rem 0 .2rem 1.1rem;margin:1.5rem 0;font-family:var(--font-heading);font-size:1.05rem;color:var(--saurus-ink-secondary)}
-.refs{margin-top:2.5rem;padding-top:1.4rem;border-top:1px solid var(--saurus-border)}
+.toc a.sub2{padding-left:1.1rem;font-size:.74rem}
+.toc .foot{margin-top:1.3rem;padding-top:.9rem;border-top:1px solid var(--saurus-border);font-family:var(--font-mono);font-size:.64rem;color:var(--saurus-ink-muted);line-height:1.8}
+.doc{padding:1.8rem 2.4rem 2.2rem;max-width:780px;overflow:auto;min-height:0}
+.doc .toolbar{display:flex;justify-content:space-between;align-items:center;gap:.8rem;padding-bottom:1rem;margin-bottom:1.4rem;border-bottom:1px solid var(--saurus-border);flex-wrap:wrap}
+.doc .toolbar .kicker{font-family:var(--font-mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--saurus-ink-muted)}
+.doc h1{font-size:1.75rem;line-height:1.2;margin-bottom:.45rem}
+.doc .byline{color:var(--saurus-ink-secondary);font-size:.8rem;margin-bottom:1.6rem}
+.doc h2{font-size:1.25rem;margin:1.9rem 0 .6rem}
+.doc h3{font-size:1rem;margin:1.4rem 0 .45rem}
+.doc p{font-family:var(--font-heading);font-size:.98rem;line-height:1.8;margin:0 0 1rem}
+.doc .lead{font-size:1.05rem;color:var(--saurus-ink-secondary);font-style:italic}
+.pull{border-left:3px solid var(--saurus-accent);padding:.15rem 0 .15rem 1rem;margin:1.3rem 0;font-family:var(--font-heading);font-size:1rem;color:var(--saurus-ink-secondary)}
+.refs{margin-top:2.2rem;padding-top:1.2rem;border-top:1px solid var(--saurus-border)}
 .refs h2{margin-top:0}
-.ref{display:grid;grid-template-columns:2.1rem 1fr;gap:.6rem;padding:.75rem 0;border-bottom:1px dashed var(--saurus-border);font-size:.88rem}
-.ref .n{font-family:var(--font-mono);color:var(--saurus-primary);font-size:.8rem}
-.ref .t{font-family:var(--font-heading);line-height:1.5}
-.ref .s{color:var(--saurus-ink-secondary);font-size:.8rem;margin-top:.2rem}
-.ref .back{margin-top:.35rem;font-family:var(--font-mono);font-size:.7rem;color:var(--saurus-ink-muted)}
-.ref .back a{color:var(--saurus-primary);text-decoration:none;border-bottom:1px dotted}
-.hovercard{margin:1.2rem 0;border:1px solid var(--saurus-accent);background:var(--saurus-accent-bg);border-radius:var(--radius-md);padding:.8rem .95rem;font-family:var(--font-body);font-size:.84rem}
-.hovercard .hh{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--saurus-ink-secondary);margin-bottom:.35rem}
-.hovercard .q{font-family:var(--font-heading);line-height:1.6}
-.hovercard .src{margin-top:.4rem;font-family:var(--font-mono);font-size:.7rem;color:var(--saurus-ink-secondary)}
+.ref{display:grid;grid-template-columns:2rem 1fr;gap:.55rem;padding:.65rem 0;border-bottom:1px dashed var(--saurus-border);font-size:.84rem}
+.ref:last-child{border-bottom:0}
+.ref .n{font-family:var(--font-mono);color:var(--saurus-primary);font-size:.76rem}
+.ref .t{font-family:var(--font-heading);line-height:1.45}
+.ref .s{color:var(--saurus-ink-secondary);font-size:.76rem;margin-top:.15rem}
+.ref .back{margin-top:.3rem;font-family:var(--font-mono);font-size:.66rem;color:var(--saurus-ink-muted)}
+.ref .back a{color:var(--saurus-primary);border-bottom:1px dotted}
+.hovercard{margin:1rem 0;border:1px solid var(--saurus-accent);background:var(--saurus-accent-bg);border-radius:var(--radius-md);padding:.7rem .9rem;font-family:var(--font-body);font-size:.8rem}
+.hovercard .hh{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--saurus-ink-secondary);margin-bottom:.3rem}
+.hovercard .q{font-family:var(--font-heading);line-height:1.55}
+.hovercard .src{margin-top:.35rem;font-family:var(--font-mono);font-size:.66rem;color:var(--saurus-ink-secondary)}
+.toc-strip{display:flex;gap:.3rem;overflow-x:auto;padding:.6rem 1.2rem;border-bottom:1px solid var(--saurus-border);background:var(--saurus-sidebar);font-size:.74rem;scrollbar-width:none;flex:none}
+.toc-strip a{white-space:nowrap;padding:.25rem .6rem;border-radius:999px;color:var(--saurus-ink-secondary);border:1px solid transparent}
+.toc-strip a.on{color:var(--saurus-primary);background:var(--saurus-primary-bg);border-color:var(--saurus-primary)}
+.doc.t{padding:1.5rem 1.8rem 2rem;max-width:none}
+.doc.m{padding:1.1rem 1rem 1.6rem;max-width:none}
+.doc.m h1{font-size:1.35rem}
+.doc.m p{font-size:.92rem;line-height:1.7}
+.doc.m h2{font-size:1.1rem;margin-top:1.4rem}
+.doc.m .lead{font-size:.95rem}
 
-/* ---- 4 explorer ---- */
-.explorer{padding:1.4rem 1.6rem}
-.exp-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
-.filters{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin-bottom:1.1rem;padding-bottom:1.1rem;border-bottom:1px solid var(--saurus-border)}
-.filters .lbl{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--saurus-ink-muted);margin-right:.3rem}
+/* ===== 4 explorer ===== */
+.explorer{padding:1.2rem 1.4rem;overflow:auto;min-height:0;flex:1}
+.exp-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:.85rem}
+.exp-head h3{font-size:1.12rem}
+.exp-head .sub{font-size:.78rem;color:var(--saurus-ink-secondary)}
+.filters{display:flex;gap:.35rem;flex-wrap:wrap;align-items:center;margin-bottom:.95rem;padding-bottom:.95rem;border-bottom:1px solid var(--saurus-border)}
+.filters.scroll{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+.filters .lbl{font-family:var(--font-mono);font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;color:var(--saurus-ink-muted);margin-right:.25rem;white-space:nowrap}
 .filters .chip-t{cursor:pointer;border:1px solid transparent}
 .filters .chip-t.off{background:transparent;border-color:var(--saurus-border);color:var(--saurus-ink-muted)}
-.filters .n{font-family:var(--font-mono);font-size:.65rem;opacity:.7}
-.papers{display:grid;gap:.75rem}
+.filters .n{font-family:var(--font-mono);font-size:.62rem;opacity:.7}
+.papers{display:grid;gap:.65rem}
 .pcard{border:1px solid var(--saurus-border);border-radius:var(--radius-lg);background:var(--saurus-surface);overflow:hidden}
 .pcard.open{border-color:var(--saurus-primary);box-shadow:var(--shadow-md)}
-.pcard-head{display:grid;grid-template-columns:2rem 1fr auto;gap:.9rem;padding:.95rem 1.1rem;cursor:pointer;align-items:start}
-.pcard-head:hover{background:var(--saurus-primary-bg)}
-.pnum{font-family:var(--font-mono);font-size:.75rem;color:var(--saurus-ink-muted);padding-top:.15rem}
-.pcard .ttl{font-family:var(--font-heading);font-size:1rem;line-height:1.4}
-.pcard .authors{font-size:.8rem;color:var(--saurus-ink-secondary);margin-top:.2rem}
-.pcard .chips{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.55rem}
-.pcard .count{text-align:right;font-family:var(--font-mono);font-size:.72rem;color:var(--saurus-ink-muted);white-space:nowrap}
-.pcard .count b{display:block;font-family:var(--font-heading);font-size:1.15rem;color:var(--saurus-ink);font-weight:600}
-.pcard-body{border-top:1px solid var(--saurus-border);padding:1.1rem 1.1rem 1.2rem 3rem;background:var(--saurus-paper)}
-.sec-h{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--saurus-ink-muted);margin:0 0 .6rem}
-.theme-line{display:flex;align-items:center;gap:.6rem;padding:.4rem 0;border-bottom:1px dashed var(--saurus-border);font-size:.84rem}
-.theme-line .ev{margin-left:auto;font-family:var(--font-mono);font-size:.7rem;color:var(--saurus-ink-muted)}
-.claim{display:grid;grid-template-columns:auto 1fr;gap:.6rem;padding:.55rem 0;border-bottom:1px dashed var(--saurus-border);font-size:.9rem}
-.claim .q{font-family:var(--font-heading);line-height:1.65}
-.claim .mk{color:var(--saurus-accent);font-family:var(--font-mono);font-size:.8rem}
+.pcard-head{display:grid;grid-template-columns:1.9rem 1fr auto;gap:.8rem;padding:.85rem 1rem;cursor:pointer;align-items:start}
+.pnum{font-family:var(--font-mono);font-size:.72rem;color:var(--saurus-ink-muted);padding-top:.15rem}
+.pcard .ttl{font-family:var(--font-heading);font-size:.95rem;line-height:1.4}
+.pcard .authors{font-size:.76rem;color:var(--saurus-ink-secondary);margin-top:.15rem}
+.pcard .chips{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.5rem}
+.pcard .count{text-align:right;font-family:var(--font-mono);font-size:.68rem;color:var(--saurus-ink-muted);white-space:nowrap}
+.pcard .count b{display:block;font-family:var(--font-heading);font-size:1.1rem;color:var(--saurus-ink);font-weight:600}
+.pcard-body{border-top:1px solid var(--saurus-border);padding:1rem 1rem 1.1rem 2.75rem;background:var(--saurus-paper)}
+.theme-line{display:flex;align-items:center;gap:.55rem;padding:.35rem 0;border-bottom:1px dashed var(--saurus-border);font-size:.8rem}
+.theme-line .ev{margin-left:auto;font-family:var(--font-mono);font-size:.66rem;color:var(--saurus-ink-muted)}
+.claim{display:grid;grid-template-columns:auto 1fr;gap:.55rem;padding:.5rem 0;border-bottom:1px dashed var(--saurus-border);font-size:.86rem}
+.claim .q{font-family:var(--font-heading);line-height:1.6}
+.claim .mk{color:var(--saurus-accent);font-family:var(--font-mono);font-size:.78rem}
+.explorer.m{padding:.9rem .9rem 1.2rem}
+.explorer.m .pcard-head{grid-template-columns:1fr auto;gap:.5rem}
+.explorer.m .pnum{display:none}
+.explorer.m .pcard-body{padding-left:1rem}
+.explorer.m .pcard .ttl{font-size:.88rem}
 
-/* ---- 5 chat ---- */
-.chat-shell{display:grid;grid-template-columns:1fr 400px;min-height:620px}
-.chat-context{padding:1.6rem 1.8rem;background:var(--saurus-paper)}
-.chat-context h3{font-size:1.15rem;margin-bottom:.3rem}
-.chat-context p{font-family:var(--font-heading);line-height:1.8;color:var(--saurus-ink-secondary);font-size:.98rem}
+/* ===== 5 chat ===== */
+.chat-shell{display:grid;grid-template-columns:1fr 380px;flex:1;min-height:0}
+.chat-context{padding:1.4rem 1.6rem;background:var(--saurus-paper);overflow:auto;min-height:0}
+.chat-context h3{font-size:1.1rem;margin-bottom:.25rem}
+.chat-context .path{font-size:.72rem;color:var(--saurus-ink-muted);font-family:var(--font-mono);margin-bottom:.9rem}
+.chat-context p{font-family:var(--font-heading);line-height:1.8;color:var(--saurus-ink-secondary);font-size:.94rem;margin-bottom:.9rem}
 .hl{background:var(--saurus-accent-bg);border-bottom:1px solid var(--saurus-accent);padding:0 .1em}
-.chat{background:var(--saurus-sidebar);border-left:1px solid var(--saurus-border);display:flex;flex-direction:column}
-.chat-head{padding:.85rem 1rem;border-bottom:1px solid var(--saurus-border);display:flex;align-items:center;gap:.6rem}
-.chat-head .mascot svg{width:30px;height:30px}
-.chat-head .t{font-family:var(--font-heading);font-size:.95rem}
-.chat-head .s{font-size:.7rem;color:var(--saurus-ink-muted);font-family:var(--font-mono)}
-.chat-body{flex:1;overflow:auto;padding:1.1rem 1rem;display:flex;flex-direction:column;gap:.9rem;max-height:470px}
-.msg{display:flex;flex-direction:column;gap:.25rem;max-width:88%}
+.ctx-note{margin-top:1.2rem;padding:.75rem .9rem;border-left:3px solid var(--saurus-accent);background:var(--saurus-accent-bg);border-radius:var(--radius-sm);font-size:.8rem;color:var(--saurus-ink-secondary)}
+.chat{background:var(--saurus-sidebar);border-left:1px solid var(--saurus-border);display:flex;flex-direction:column;min-height:0}
+.chat-head{padding:.75rem 1rem;border-bottom:1px solid var(--saurus-border);display:flex;align-items:center;gap:.6rem;flex:none}
+.chat-head .mascot svg{width:28px;height:28px}
+.chat-head .t{font-family:var(--font-heading);font-size:.92rem}
+.chat-head .s{font-size:.66rem;color:var(--saurus-ink-muted);font-family:var(--font-mono)}
+.chat-body{flex:1;overflow:auto;padding:1rem .9rem;display:flex;flex-direction:column;gap:.8rem;min-height:0}
+.msg{display:flex;flex-direction:column;gap:.22rem;max-width:90%}
 .msg.me{align-self:flex-end;align-items:flex-end}
-.who{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--saurus-ink-muted)}
-.bubble{padding:.7rem .9rem;border-radius:var(--radius-lg);font-size:.875rem;line-height:1.6}
+.who{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--saurus-ink-muted)}
+.bubble{padding:.65rem .85rem;border-radius:var(--radius-lg);font-size:.83rem;line-height:1.58}
 .msg.me .bubble{background:var(--saurus-primary);color:#fff;border-bottom-right-radius:var(--radius-sm)}
-.msg.me .cite,.msg.me .loc{color:rgba(255,255,255,.85)}
 .msg.bot .bubble{background:var(--saurus-surface);border:1px solid var(--saurus-border);border-bottom-left-radius:var(--radius-sm)}
-.sources{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.5rem;padding-top:.5rem;border-top:1px dashed var(--saurus-border)}
-.src-pill{font-family:var(--font-mono);font-size:.66rem;padding:.15rem .45rem;border-radius:var(--radius-sm);background:var(--saurus-primary-bg);color:var(--saurus-primary);cursor:pointer}
-.thinking{display:flex;align-items:center;gap:.5rem;font-size:.78rem;color:var(--saurus-ink-muted);font-family:var(--font-mono)}
+.sources{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.45rem;padding-top:.45rem;border-top:1px dashed var(--saurus-border)}
+.src-pill{font-family:var(--font-mono);font-size:.62rem;padding:.12rem .42rem;border-radius:var(--radius-sm);background:var(--saurus-primary-bg);color:var(--saurus-primary);cursor:pointer}
+.thinking{display:flex;align-items:center;gap:.5rem;font-size:.74rem;color:var(--saurus-ink-muted);font-family:var(--font-mono)}
 .thinking i{width:5px;height:5px;border-radius:50%;background:var(--saurus-accent);animation:blink 1.4s infinite}
 .thinking i:nth-child(2){animation-delay:.2s}.thinking i:nth-child(3){animation-delay:.4s}
 @keyframes blink{0%,100%{opacity:.25}50%{opacity:1}}
-.chat-foot{border-top:1px solid var(--saurus-border);padding:.8rem 1rem;background:var(--saurus-paper)}
+.chat-foot{border-top:1px solid var(--saurus-border);padding:.7rem .9rem;background:var(--saurus-paper);flex:none}
 .composer{display:flex;gap:.5rem;align-items:flex-end}
-.composer .input{flex:1;padding:.6rem .8rem;border:1px solid var(--saurus-border);border-radius:var(--radius-md);background:var(--saurus-surface);color:var(--saurus-ink);font:400 .875rem var(--font-body)}
-.composer .send{width:36px;height:36px;border-radius:var(--radius-md);background:var(--saurus-primary);color:#fff;border:0;display:grid;place-items:center;cursor:pointer}
+.composer .input{flex:1;padding:.55rem .75rem;border:1px solid var(--saurus-border);border-radius:var(--radius-md);background:var(--saurus-surface);color:var(--saurus-ink-muted);font:400 .83rem var(--font-body)}
+.composer .send{width:34px;height:34px;border-radius:var(--radius-md);background:var(--saurus-primary);color:#fff;border:0;display:grid;place-items:center;cursor:pointer;flex:none}
 .composer .send svg{width:16px;height:16px}
-.suggest{display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.6rem}
-.suggest span{font-size:.72rem;padding:.25rem .55rem;border:1px solid var(--saurus-border);border-radius:999px;color:var(--saurus-ink-secondary);cursor:pointer}
-.suggest span:hover{border-color:var(--saurus-primary);color:var(--saurus-primary)}
-.chat-foot .hint{font-family:var(--font-mono);font-size:.65rem;color:var(--saurus-ink-muted);margin-top:.5rem;text-align:center}
+.suggest{display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.55rem}
+.suggest span{font-size:.68rem;padding:.22rem .5rem;border:1px solid var(--saurus-border);border-radius:999px;color:var(--saurus-ink-secondary);cursor:pointer;white-space:nowrap}
+.chat-foot .hint{font-family:var(--font-mono);font-size:.62rem;color:var(--saurus-ink-muted);margin-top:.45rem;text-align:center}
+.chat.full{border-left:0}
+.ctx-pill{display:flex;align-items:center;gap:.5rem;padding:.55rem .9rem;background:var(--saurus-accent-bg);border-bottom:1px solid var(--saurus-border);font-size:.72rem;color:var(--saurus-ink-secondary);flex:none}
+.ctx-pill b{font-family:var(--font-mono);font-weight:500;color:var(--saurus-ink);font-size:.68rem}
+.ctx-pill .x{margin-left:auto;color:var(--saurus-ink-muted)}
+.chat-stack{display:grid;grid-template-rows:auto 1fr;flex:1;min-height:0}
+.chat-stack .chat-context{max-height:230px;border-bottom:1px solid var(--saurus-border);padding:1.1rem 1.4rem}
 
-footer.end{max-width:1240px;margin:4rem auto 0;padding:2rem 1.5rem 3rem;border-top:1px solid var(--saurus-border);font-family:var(--font-mono);font-size:.72rem;color:var(--saurus-ink-muted);display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
-
-@media(max-width:900px){
-  .split,.review-grid,.chat-shell{grid-template-columns:1fr}
-  .pane-l,.toc{border-right:0;border-bottom:1px solid var(--saurus-border)}
-  .chat{border-left:0;border-top:1px solid var(--saurus-border)}
-  .doc{padding:1.5rem 1.25rem 2rem}
-  .paper-list{max-height:300px}
-}
-@media(max-width:560px){
-  .screen{padding-top:3rem}
-  .pcard-head{grid-template-columns:1fr;gap:.4rem}.pnum{display:none}
-  .pcard .count{text-align:left}
-  .pcard-body{padding-left:1.1rem}
-  .doc h1{font-size:1.6rem}
-}
+footer.end{margin:64px 40px 0;padding:24px 0 48px;border-top:1px solid var(--saurus-border);font-family:var(--font-mono);font-size:11px;color:var(--saurus-ink-muted);display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -269,381 +333,660 @@ footer.end{max-width:1240px;margin:4rem auto 0;padding:2rem 1.5rem 3rem;border-t
   <span>Theme</span>
 </button>
 
-<!-- ============ 1 · EMPTY STATE ============ -->
+<div class="doc-head">
+  <h1>The Saurus — Mockups</h1>
+  <p>Five screens at three breakpoints. Desktop carries a persistent sidebar; tablet collapses it to a top nav; mobile keeps a top bar and bottom tabs. Every claim on every screen carries its address — paper, page, paragraph.</p>
+  <div class="bp"><span>desktop 1100 × 780</span><span>tablet 768 × 960</span><span>mobile 390 × 844</span><span>round 2 · fable</span></div>
+</div>
+
+<!-- ================================================================ 01 EMPTY STATE -->
 <div class="screen">
-  <div class="screen-label"><span class="num">01</span><h2>Empty State</h2><span class="note">First run · nothing ingested yet</span></div>
-  <div class="frame">
-    <div class="titlebar"><div class="dots"><i></i><i></i><i></i></div><span class="path">the-saurus</span><div class="spacer"></div><div class="mini-nav"><span class="on">Library</span><span>Reviews</span><span>Settings</span></div></div>
-    <div class="empty">
-      <div class="inner">
-        <div class="mascot">
-          <svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <!-- tail through body through neck to head -->
-            <path d="M16 104c14-3 24-13 29-28 4-12 2-26 10-36 9-12 26-13 39-8 11 4 18 13 23 23 4 8 5 16 12 21"/>
-            <path d="M64 44c-5-8-3-18 5-23 8-5 18-3 23 5"/>
-            <path d="M92 33c8-1 14 4 15 12l-2 6"/>
-            <path d="M105 51c5 3 12 3 17 0" stroke-width="1.2"/>
-            <circle cx="104" cy="31" r="1.8" fill="currentColor"/>
-            <!-- legs -->
-            <path d="M44 100c-3-8 0-18 5-23M76 104c0-8 3-15 8-20"/>
-            <path d="M36 104h16M68 104h16"/>
-            <!-- spine plates -->
-            <path d="M54 42l-4-7M64 34l-3-8M76 29l-2-8" stroke-width="1.1"/>
-            <!-- papers being offered -->
-            <g stroke-width="1.2">
-              <rect x="136" y="46" width="30" height="38" rx="2"/>
-              <path d="M141 55h20M141 62h20M141 69h13"/>
-              <rect x="148" y="38" width="30" height="38" rx="2" fill="var(--saurus-paper)"/>
-              <path d="M153 47h20M153 54h20M153 61h13"/>
-            </g>
-            <path d="M8 118h184" stroke-dasharray="2 6" stroke-width="1"/>
-          </svg>
-        </div>
-        <h1>Feed The Saurus your papers.</h1>
-        <p class="sub">Drop a corpus. It reads every one, finds the themes running through them, and writes you a review where every sentence carries its address.</p>
-        <div class="drop">
-          <div class="big">Drop PDFs here</div>
-          <div class="small">or <span class="browse">click to browse</span> · up to 50 files, 50 MB each</div>
-        </div>
-        <div class="meta"><span>PDF only</span><span>·</span><span>nothing leaves your job folder</span><span>·</span><span>~3 min for 40 papers</span></div>
-        <div class="recent">
-          <div class="h">Or pick up where you left off</div>
-          <div class="recent-row"><span>Hepatic gene correction — 40 papers</span><span class="r">6 themes · 2d ago</span></div>
-          <div class="recent-row"><span>CAR-T persistence in solid tumors — 17 papers</span><span class="r">4 themes · 3w ago</span></div>
-          <div class="recent-row" style="border-bottom:0"><span>Untitled corpus — 3 papers</span><span class="r">draft · 3w ago</span></div>
-        </div>
+  <div class="title"><span class="idx">01</span><h2>Empty State</h2><p>First run, nothing ingested yet. The dinosaur offers you papers; the drop zone takes them. Recent jobs sit below so a returning user picks up where they left off instead of re-uploading.</p></div>
+  <div class="board">
+
+    <!-- DESKTOP -->
+    <div class="frame f-d"><div class="cap"><b>Desktop</b><span>1100 × 780</span></div><div class="dev">
+      <div class="dsk">
+        <div data-nav="side" data-on="upload" data-job="none"></div>
+        <main class="main">
+          <div class="empty">
+            <div class="inner">
+              <div class="mascot" data-mascot="big"></div>
+              <h1>Feed The Saurus your papers.</h1>
+              <p class="sub">Drop a corpus. It reads every one, finds the themes running through them, and writes you a review where every sentence carries its address.</p>
+              <div class="drop"><div class="big">Drop PDFs here</div><div class="small">or <span class="browse">click to browse</span> · up to 50 files, 50 MB each</div></div>
+              <div class="meta"><span>PDF only</span><span>·</span><span>nothing leaves your job folder</span><span>·</span><span>~3 min for 40 papers</span></div>
+              <div class="recent">
+                <div class="sec-h">Or pick up where you left off</div>
+                <div class="recent-row"><span>Hepatic gene correction — 40 papers</span><span class="r">6 themes · 2d ago</span></div>
+                <div class="recent-row"><span>CAR-T persistence in solid tumors — 17 papers</span><span class="r">4 themes · 3w ago</span></div>
+                <div class="recent-row"><span>Untitled corpus — 3 papers</span><span class="r">draft · 3w ago</span></div>
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
-    </div>
+    </div></div>
+
+    <!-- TABLET -->
+    <div class="frame f-t"><div class="cap"><b>Tablet</b><span>768 × 960</span></div><div class="dev">
+      <div class="tab">
+        <div data-nav="top" data-on="upload"></div>
+        <main class="main">
+          <div class="empty t">
+            <div class="inner">
+              <div class="mascot" data-mascot="big"></div>
+              <h1>Feed The Saurus your papers.</h1>
+              <p class="sub">Drop a corpus. It reads every one, finds the themes running through them, and writes a review where every sentence carries its address.</p>
+              <div class="drop"><div class="big">Drop PDFs here</div><div class="small">or <span class="browse">click to browse</span> · up to 50 files, 50 MB each</div></div>
+              <div class="meta"><span>PDF only</span><span>·</span><span>stays in your job folder</span><span>·</span><span>~3 min / 40 papers</span></div>
+              <div class="recent">
+                <div class="sec-h">Or pick up where you left off</div>
+                <div class="recent-row"><span>Hepatic gene correction — 40 papers</span><span class="r">6 themes · 2d ago</span></div>
+                <div class="recent-row"><span>CAR-T persistence in solid tumors — 17 papers</span><span class="r">4 themes · 3w ago</span></div>
+                <div class="recent-row"><span>Untitled corpus — 3 papers</span><span class="r">draft · 3w ago</span></div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div></div>
+
+    <!-- MOBILE -->
+    <div class="frame f-m"><div class="cap"><b>Mobile</b><span>390 × 844</span></div><div class="dev">
+      <div class="mob">
+        <div data-nav="mtop" data-title="Upload"></div>
+        <main class="main">
+          <div class="empty m">
+            <div class="inner">
+              <div class="mascot" data-mascot="big"></div>
+              <h1>Feed The Saurus your papers.</h1>
+              <p class="sub">It reads every one, finds the themes, and writes a review where every sentence carries its address.</p>
+              <div class="drop"><div class="big">Choose PDFs</div><div class="small">from Files or your cloud drive · up to 50</div></div>
+              <div class="meta"><span>PDF only</span><span>·</span><span>~3 min / 40 papers</span></div>
+              <div class="recent">
+                <div class="sec-h">Pick up where you left off</div>
+                <div class="recent-row"><span>Hepatic gene correction — 40 papers</span><span class="r">6 themes · 2d ago</span></div>
+                <div class="recent-row"><span>CAR-T persistence in solid tumors — 17 papers</span><span class="r">4 themes · 3w ago</span></div>
+                <div class="recent-row"><span>Untitled corpus — 3 papers</span><span class="r">draft · 3w ago</span></div>
+              </div>
+            </div>
+          </div>
+        </main>
+        <div data-nav="tabs" data-on="upload"></div>
+      </div>
+    </div></div>
+
   </div>
 </div>
 
-<!-- ============ 2 · UPLOAD + PIPELINE TRACE ============ -->
+<!-- ================================================================ 02 PIPELINE TRACE -->
 <div class="screen">
-  <div class="screen-label"><span class="num">02</span><h2>Upload &amp; Pipeline Trace</h2><span class="note">Live run · you can watch it think</span></div>
-  <div class="frame">
-    <div class="titlebar"><div class="dots"><i></i><i></i><i></i></div><span class="path">job_8f3a21 · hepatic gene correction</span><div class="spacer"></div><div class="mini-nav"><span>Library</span><span class="on">Pipeline</span><span>Review</span></div></div>
-    <div class="split">
-      <aside class="pane-l">
-        <div class="pane-head"><span class="t">Corpus</span><span class="c">40 papers · 214 MB</span></div>
-        <div class="paper-list">
-          <div class="paper-row"><span class="dot done" style="margin-top:.4rem"></span><div><div class="ttl">AAV9-mediated CRISPR correction of metabolic liver disease in mice</div><div class="sub">Liu, W. et al. · 2024 · <span class="mono">14 claims</span></div></div></div>
-          <div class="paper-row"><span class="dot done" style="margin-top:.4rem"></span><div><div class="ttl">Lipid nanoparticle delivery of base editors for hereditary tyrosinemia</div><div class="sub">Chen, R. &amp; Park, S. · 2023 · <span class="mono">11 claims</span></div></div></div>
-          <div class="paper-row"><span class="dot done" style="margin-top:.4rem"></span><div><div class="ttl">Dual-AAV split-intein approach for large gene correction in Wilson disease</div><div class="sub">Yamamoto, K. et al. · 2024 · <span class="mono">9 claims</span></div></div></div>
-          <div class="paper-row"><span class="dot done" style="margin-top:.4rem"></span><div><div class="ttl">In vivo adenine base editing rescues ornithine transcarbamylase deficiency</div><div class="sub">Okafor, A. et al. · 2023 · <span class="mono">12 claims</span></div></div></div>
-          <div class="paper-row"><span class="dot done" style="margin-top:.4rem"></span><div><div class="ttl">Comparative efficacy of CRISPR nucleases for hepatic gene correction</div><div class="sub">Rodriguez, M. &amp; Singh, P. · 2024 · <span class="mono">16 claims</span></div></div></div>
-          <div class="paper-row"><span class="dot done" style="margin-top:.4rem"></span><div><div class="ttl">Immunogenicity of AAV capsids in non-human primates</div><div class="sub">Novak, J. et al. · 2022 · <span class="mono">8 claims</span></div></div></div>
-          <div class="paper-row warn"><span class="dot pending" style="margin-top:.4rem"></span><div><div class="ttl">Scanned proceedings: hepatic delivery workshop</div><div class="sub" style="color:var(--saurus-error)">no extractable text · skipped</div></div></div>
-          <div class="paper-row"><span class="dot done" style="margin-top:.4rem"></span><div><div class="ttl">Prime editing efficiency in primary human hepatocytes</div><div class="sub">Baptista, L. et al. · 2024 · <span class="mono">13 claims</span></div></div></div>
-          <div class="paper-row"><span class="dot done" style="margin-top:.4rem"></span><div><div class="ttl">Serotype screening for liver tropism across AAV libraries</div><div class="sub">Haddad, N. et al. · 2023 · <span class="mono">10 claims</span></div></div></div>
-          <div class="paper-row" style="opacity:.55"><span class="dot done" style="margin-top:.4rem"></span><div><div class="ttl">Long-term durability of episomal AAV genomes in dividing hepatocytes</div><div class="sub">Ferreira, D. et al. · 2022 · <span class="mono">7 claims</span></div></div></div>
-        </div>
-        <div class="pane-foot">scroll · 31 more · 1 skipped</div>
-      </aside>
+  <div class="title"><span class="idx">02</span><h2>Pipeline Trace</h2><p>A live run you can watch think. Four durable stages, sub-steps inside the active one, an event tail from the Restate journal, and a corpus list where one scanned PDF was honestly skipped.</p></div>
+  <div class="board">
 
-      <section class="pane-r">
-        <div class="run-head">
-          <div><h3>Reading your corpus</h3><div class="id">job_8f3a21 · started 14:02 · restate journal active</div></div>
-          <div style="display:flex;gap:.5rem"><button class="btn btn-secondary btn-sm">Pause</button><button class="btn btn-ghost btn-sm">View events</button></div>
-        </div>
-
-        <div class="overall">
-          <div class="bar"><span></span></div>
-          <div class="legend"><span>stage 2 of 4 · theme dedup</span><span>~1m 20s remaining</span></div>
-        </div>
-
-        <div class="trace">
-          <div class="stage">
-            <div class="stage-top">
-              <span class="dot done"></span>
-              <div><div class="stage-name">Paper Analysis<span class="badge done">completed</span></div><div class="stage-meta">40/40 papers · 187 claims · 63 raw themes</div></div>
-              <div class="stage-time">2m 14s</div>
-            </div>
+    <!-- DESKTOP -->
+    <div class="frame f-d"><div class="cap"><b>Desktop</b><span>1100 × 780</span></div><div class="dev">
+      <div class="dsk">
+        <div data-nav="side" data-on="pipeline" data-job="running"></div>
+        <main class="main">
+          <div class="split">
+            <aside class="pane-l">
+              <div class="pane-head"><span class="t">Corpus</span><span class="c">40 papers · 214 MB</span></div>
+              <div class="paper-list">
+                <div class="paper-row"><span class="dot done"></span><div><div class="ttl">AAV9-mediated CRISPR correction of metabolic liver disease in mice</div><div class="sub">Liu, W. et al. · 2024 · <span class="mono">14 claims</span></div></div></div>
+                <div class="paper-row"><span class="dot done"></span><div><div class="ttl">Lipid nanoparticle delivery of base editors for hereditary tyrosinemia</div><div class="sub">Chen, R. &amp; Park, S. · 2023 · <span class="mono">11 claims</span></div></div></div>
+                <div class="paper-row"><span class="dot done"></span><div><div class="ttl">Dual-AAV split-intein approach for large gene correction in Wilson disease</div><div class="sub">Yamamoto, K. et al. · 2024 · <span class="mono">9 claims</span></div></div></div>
+                <div class="paper-row"><span class="dot done"></span><div><div class="ttl">In vivo adenine base editing rescues ornithine transcarbamylase deficiency</div><div class="sub">Okafor, A. et al. · 2023 · <span class="mono">12 claims</span></div></div></div>
+                <div class="paper-row"><span class="dot done"></span><div><div class="ttl">Comparative efficacy of CRISPR nucleases for hepatic gene correction</div><div class="sub">Rodriguez, M. &amp; Singh, P. · 2024 · <span class="mono">16 claims</span></div></div></div>
+                <div class="paper-row"><span class="dot done"></span><div><div class="ttl">Immunogenicity of AAV capsids in non-human primates</div><div class="sub">Novak, J. et al. · 2022 · <span class="mono">8 claims</span></div></div></div>
+                <div class="paper-row warn"><span class="dot pending"></span><div><div class="ttl">Scanned proceedings: hepatic delivery workshop</div><div class="sub" style="color:var(--saurus-error)">no extractable text · skipped</div></div></div>
+                <div class="paper-row"><span class="dot done"></span><div><div class="ttl">Prime editing efficiency in primary human hepatocytes</div><div class="sub">Baptista, L. et al. · 2024 · <span class="mono">13 claims</span></div></div></div>
+                <div class="paper-row"><span class="dot done"></span><div><div class="ttl">Serotype screening for liver tropism across AAV libraries</div><div class="sub">Haddad, N. et al. · 2023 · <span class="mono">10 claims</span></div></div></div>
+                <div class="paper-row" style="opacity:.55"><span class="dot done"></span><div><div class="ttl">Long-term durability of episomal AAV genomes in dividing hepatocytes</div><div class="sub">Ferreira, D. et al. · 2022 · <span class="mono">7 claims</span></div></div></div>
+              </div>
+              <div class="pane-foot">scroll · 30 more · 1 skipped</div>
+            </aside>
+            <section class="pane-r">
+              <div class="run-head">
+                <div><h3>Reading your corpus</h3><div class="id">job_8f3a21 · started 14:02 · restate journal active</div></div>
+                <div style="display:flex;gap:.5rem"><button class="btn btn-secondary btn-sm">Pause</button><button class="btn btn-ghost btn-sm">View events</button></div>
+              </div>
+              <div class="overall"><div class="bar"><span></span></div><div class="legend"><span>stage 2 of 4 · theme dedup</span><span>~1m 20s remaining</span></div></div>
+              <div class="trace">
+                <div class="stage"><div class="stage-top"><span class="dot done"></span><div><div class="stage-name">Paper Analysis<span class="badge done">completed</span></div><div class="stage-meta">40/40 papers · 187 claims · 63 raw themes</div></div><div class="stage-time">2m 14s</div></div></div>
+                <div class="stage is-active">
+                  <div class="stage-top"><span class="dot active"></span><div><div class="stage-name">Theme Dedup<span class="badge active">active</span></div><div class="stage-meta">Matching themes across papers — 63 → 6 so far</div></div><div class="stage-time">0:41</div></div>
+                  <div class="substeps">
+                    <div class="sub"><span class="tick" data-ico="tick"></span><span class="nm">Embedding 63 theme statements</span><span class="st">done · 63/63</span></div>
+                    <div class="sub"><span class="tick" data-ico="tick"></span><span class="nm">Clustering by cosine similarity (τ=0.82)</span><span class="st">done · 6 groups</span></div>
+                    <div class="sub"><span class="dot active"></span><span class="nm">Verifying member pairs — “Off-Target Effects”</span><span class="mini-bar"><span style="width:72%"></span></span></div>
+                    <div class="sub"><span class="dot pending"></span><span class="nm">Canonical naming pass</span><span class="st">queued</span></div>
+                  </div>
+                </div>
+                <div class="stage is-pending"><div class="stage-top"><span class="dot pending"></span><div><div class="stage-name">Theme Review<span class="badge pending">pending</span></div><div class="stage-meta">Batched 5 themes per call · 2 batches expected</div></div><div class="stage-time">—</div></div></div>
+                <div class="stage is-pending"><div class="stage-top"><span class="dot pending"></span><div><div class="stage-name">Aggregation<span class="badge pending">pending</span></div><div class="stage-meta">Cohesive review with resolved citations</div></div><div class="stage-time">—</div></div></div>
+              </div>
+              <div class="events">
+                <div><span class="ts">14:04:33</span> <span class="ok">stage.completed</span> paper_analysis · 187 claims persisted</div>
+                <div><span class="ts">14:04:33</span> theme_dedup.started · 63 statements</div>
+                <div><span class="ts">14:04:48</span> embeddings.batch ok · 63/63 · 1.2s</div>
+                <div><span class="ts">14:05:02</span> cluster.formed “AAV Delivery Vectors” · 4 papers</div>
+                <div><span class="ts">14:05:09</span> <span class="gold">nli.verify</span> pair 14/19 · entailment 0.91</div>
+                <div><span class="ts">14:05:11</span> <span class="gold">nli.reask</span> pair 15/19 · borderline 0.54 → escalating</div>
+              </div>
+              <div class="stats">
+                <div class="stat"><div class="v">187</div><div class="k">claims extracted</div></div>
+                <div class="stat"><div class="v">6</div><div class="k">themes after dedup</div></div>
+                <div class="stat"><div class="v">39</div><div class="k">papers analyzed</div></div>
+                <div class="stat"><div class="v">1</div><div class="k">skipped (no text)</div></div>
+              </div>
+            </section>
           </div>
+        </main>
+      </div>
+    </div></div>
 
-          <div class="stage is-active">
-            <div class="stage-top">
-              <span class="dot active"></span>
-              <div><div class="stage-name">Theme Dedup<span class="badge active">active</span></div><div class="stage-meta">Matching themes across papers — 63 → 6 so far</div></div>
-              <div class="stage-time">0:41</div>
+    <!-- TABLET -->
+    <div class="frame f-t"><div class="cap"><b>Tablet</b><span>768 × 960</span></div><div class="dev">
+      <div class="tab">
+        <div data-nav="top" data-on="pipeline" data-job="job_8f3a21 · running"></div>
+        <main class="main">
+          <section class="pane-r" style="padding:1.2rem 1.4rem">
+            <div class="run-head">
+              <div><h3>Reading your corpus</h3><div class="id">job_8f3a21 · started 14:02 · restate journal active</div></div>
+              <div style="display:flex;gap:.5rem"><button class="btn btn-secondary btn-sm">Pause</button><button class="btn btn-ghost btn-sm">Events</button></div>
             </div>
-            <div class="substeps">
-              <div class="sub"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg></span><span class="nm">Embedding 63 theme statements</span><span class="st">done · 63/63</span></div>
-              <div class="sub"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg></span><span class="nm">Clustering by cosine similarity (τ=0.82)</span><span class="st">done · 6 groups</span></div>
-              <div class="sub"><span class="dot active"></span><span class="nm">Verifying member pairs — “Off-Target Effects”</span><span class="mini-bar"><span style="width:72%"></span></span></div>
-              <div class="sub"><span class="dot pending"></span><span class="nm">Canonical naming pass</span><span class="st">queued</span></div>
+            <div class="overall"><div class="bar"><span></span></div><div class="legend"><span>stage 2 of 4 · theme dedup</span><span>~1m 20s remaining</span></div></div>
+            <div class="stats">
+              <div class="stat"><div class="v">187</div><div class="k">claims</div></div>
+              <div class="stat"><div class="v">6</div><div class="k">themes</div></div>
+              <div class="stat"><div class="v">39</div><div class="k">analyzed</div></div>
+              <div class="stat"><div class="v">1</div><div class="k">skipped</div></div>
             </div>
-          </div>
-
-          <div class="stage is-pending">
-            <div class="stage-top">
-              <span class="dot pending"></span>
-              <div><div class="stage-name">Theme Review<span class="badge pending">pending</span></div><div class="stage-meta">Batched 5 themes per call · 2 batches expected</div></div>
-              <div class="stage-time">—</div>
+            <div class="trace">
+              <div class="stage"><div class="stage-top"><span class="dot done"></span><div><div class="stage-name">Paper Analysis<span class="badge done">completed</span></div><div class="stage-meta">40/40 papers · 187 claims · 63 raw themes</div></div><div class="stage-time">2m 14s</div></div></div>
+              <div class="stage is-active">
+                <div class="stage-top"><span class="dot active"></span><div><div class="stage-name">Theme Dedup<span class="badge active">active</span></div><div class="stage-meta">Matching themes across papers — 63 → 6 so far</div></div><div class="stage-time">0:41</div></div>
+                <div class="substeps">
+                  <div class="sub"><span class="tick" data-ico="tick"></span><span class="nm">Embedding 63 theme statements</span><span class="st">63/63</span></div>
+                  <div class="sub"><span class="tick" data-ico="tick"></span><span class="nm">Clustering by cosine similarity (τ=0.82)</span><span class="st">6 groups</span></div>
+                  <div class="sub"><span class="dot active"></span><span class="nm">Verifying member pairs — “Off-Target Effects”</span><span class="mini-bar"><span style="width:72%"></span></span></div>
+                  <div class="sub"><span class="dot pending"></span><span class="nm">Canonical naming pass</span><span class="st">queued</span></div>
+                </div>
+              </div>
+              <div class="stage is-pending"><div class="stage-top"><span class="dot pending"></span><div><div class="stage-name">Theme Review<span class="badge pending">pending</span></div><div class="stage-meta">5 themes per call · 2 batches expected</div></div><div class="stage-time">—</div></div></div>
+              <div class="stage is-pending"><div class="stage-top"><span class="dot pending"></span><div><div class="stage-name">Aggregation<span class="badge pending">pending</span></div><div class="stage-meta">Cohesive review with resolved citations</div></div><div class="stage-time">—</div></div></div>
             </div>
-          </div>
-
-          <div class="stage is-pending">
-            <div class="stage-top">
-              <span class="dot pending"></span>
-              <div><div class="stage-name">Aggregation<span class="badge pending">pending</span></div><div class="stage-meta">Cohesive review with resolved citations</div></div>
-              <div class="stage-time">—</div>
+            <div class="events">
+              <div><span class="ts">14:04:33</span> <span class="ok">stage.completed</span> paper_analysis · 187 claims</div>
+              <div><span class="ts">14:04:48</span> embeddings.batch ok · 63/63 · 1.2s</div>
+              <div><span class="ts">14:05:02</span> cluster.formed “AAV Delivery Vectors” · 4 papers</div>
+              <div><span class="ts">14:05:11</span> <span class="gold">nli.reask</span> pair 15/19 · borderline 0.54 → escalating</div>
             </div>
-          </div>
-        </div>
+            <div>
+              <div class="sec-h" style="display:flex;justify-content:space-between"><span>Corpus · 40 papers</span><span>1 skipped</span></div>
+              <div class="corpus-strip">
+                <div class="pc"><span class="dot done"></span> AAV9-mediated CRISPR correction of metabolic liver disease<div class="sub">Liu 2024 · 14 claims</div></div>
+                <div class="pc"><span class="dot done"></span> LNP delivery of base editors for hereditary tyrosinemia<div class="sub">Chen 2023 · 11 claims</div></div>
+                <div class="pc warn"><span class="dot pending"></span> Scanned proceedings: hepatic delivery workshop<div class="sub">no extractable text · skipped</div></div>
+                <div class="pc"><span class="dot done"></span> Dual-AAV split-intein correction in Wilson disease<div class="sub">Yamamoto 2024 · 9 claims</div></div>
+                <div class="pc"><span class="dot done"></span> Comparative efficacy of CRISPR nucleases<div class="sub">Rodriguez 2024 · 16 claims</div></div>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div></div>
 
-        <div class="events">
-          <div><span class="ts">14:04:33</span> <span class="ok">stage.completed</span> paper_analysis · 187 claims persisted</div>
-          <div><span class="ts">14:04:33</span> theme_dedup.started · 63 statements</div>
-          <div><span class="ts">14:04:48</span> embeddings.batch ok · 63/63 · 1.2s</div>
-          <div><span class="ts">14:05:02</span> cluster.formed “AAV Delivery Vectors” · 4 papers</div>
-          <div><span class="ts">14:05:09</span> <span class="gold">nli.verify</span> pair 14/19 · entailment 0.91</div>
-          <div><span class="ts">14:05:11</span> <span class="gold">nli.reask</span> pair 15/19 · borderline 0.54 → escalating</div>
-        </div>
+    <!-- MOBILE -->
+    <div class="frame f-m"><div class="cap"><b>Mobile</b><span>390 × 844</span></div><div class="dev">
+      <div class="mob">
+        <div data-nav="mtop" data-title="Pipeline" data-act="job_8f3a21"></div>
+        <main class="main">
+          <section class="pane-r" style="padding:1rem .9rem;gap:.8rem">
+            <div><h3 style="font-size:1.05rem">Reading your corpus</h3><div class="id" style="font-family:var(--font-mono);font-size:.64rem;color:var(--saurus-ink-muted)">started 14:02 · journal active</div></div>
+            <div class="overall"><div class="bar"><span></span></div><div class="legend"><span>stage 2 of 4</span><span>~1m 20s left</span></div></div>
+            <div class="stats" style="grid-template-columns:repeat(2,1fr)">
+              <div class="stat"><div class="v">187</div><div class="k">claims extracted</div></div>
+              <div class="stat"><div class="v">6</div><div class="k">themes after dedup</div></div>
+            </div>
+            <div class="trace">
+              <div class="stage" style="padding:.65rem .8rem"><div class="stage-top"><span class="dot done"></span><div><div class="stage-name" style="font-size:.86rem">Paper Analysis</div><div class="stage-meta" style="font-size:.68rem">40/40 · 187 claims</div></div><div class="stage-time">2m 14s</div></div></div>
+              <div class="stage is-active" style="padding:.65rem .8rem">
+                <div class="stage-top"><span class="dot active"></span><div><div class="stage-name" style="font-size:.86rem">Theme Dedup</div><div class="stage-meta" style="font-size:.68rem">63 → 6 so far</div></div><div class="stage-time">0:41</div></div>
+                <div class="substeps" style="padding-left:1.2rem">
+                  <div class="sub" style="font-size:.7rem"><span class="tick" data-ico="tick"></span><span class="nm">Embedding 63 statements</span><span class="st">63/63</span></div>
+                  <div class="sub" style="font-size:.7rem"><span class="tick" data-ico="tick"></span><span class="nm">Clustering (τ=0.82)</span><span class="st">6 groups</span></div>
+                  <div class="sub" style="font-size:.7rem"><span class="dot active"></span><span class="nm">Verifying “Off-Target Effects”</span><span class="mini-bar" style="width:44px"><span style="width:72%"></span></span></div>
+                  <div class="sub" style="font-size:.7rem"><span class="dot pending"></span><span class="nm">Canonical naming</span><span class="st">queued</span></div>
+                </div>
+              </div>
+              <div class="stage is-pending" style="padding:.65rem .8rem"><div class="stage-top"><span class="dot pending"></span><div><div class="stage-name" style="font-size:.86rem">Theme Review</div><div class="stage-meta" style="font-size:.68rem">2 batches expected</div></div><div class="stage-time">—</div></div></div>
+              <div class="stage is-pending" style="padding:.65rem .8rem"><div class="stage-top"><span class="dot pending"></span><div><div class="stage-name" style="font-size:.86rem">Aggregation</div><div class="stage-meta" style="font-size:.68rem">review with citations</div></div><div class="stage-time">—</div></div></div>
+            </div>
+            <div class="events" style="max-height:96px">
+              <div><span class="ts">14:05:02</span> cluster.formed “AAV Delivery Vectors”</div>
+              <div><span class="ts">14:05:09</span> <span class="gold">nli.verify</span> 14/19 · 0.91</div>
+              <div><span class="ts">14:05:11</span> <span class="gold">nli.reask</span> 15/19 · 0.54 → escalating</div>
+            </div>
+            <div class="sec-h" style="display:flex;justify-content:space-between;margin-bottom:.2rem"><span>Corpus · 40</span><span style="color:var(--saurus-error)">1 skipped</span></div>
+            <div class="paper-row" style="padding:.4rem .2rem"><span class="dot done"></span><div><div class="ttl">AAV9-mediated CRISPR correction of metabolic liver disease</div><div class="sub">Liu 2024 · 14 claims</div></div></div>
+            <div class="paper-row warn" style="padding:.4rem .2rem"><span class="dot pending"></span><div><div class="ttl">Scanned proceedings: hepatic delivery workshop</div><div class="sub" style="color:var(--saurus-error)">no extractable text · skipped</div></div></div>
+            <div class="pane-foot" style="border:0;padding:.2rem .2rem 0">38 more ↓</div>
+          </section>
+        </main>
+        <div data-nav="tabs" data-on="pipeline"></div>
+      </div>
+    </div></div>
 
-        <div class="stats">
-          <div class="stat"><div class="v">187</div><div class="k">claims extracted</div></div>
-          <div class="stat"><div class="v">6</div><div class="k">themes after dedup</div></div>
-          <div class="stat"><div class="v">39</div><div class="k">papers analyzed</div></div>
-          <div class="stat"><div class="v">1</div><div class="k">skipped (no text)</div></div>
-        </div>
-      </section>
-    </div>
   </div>
 </div>
 
-<!-- ============ 3 · REVIEW VIEW ============ -->
+<!-- ================================================================ 03 REVIEW -->
 <div class="screen">
-  <div class="screen-label"><span class="num">03</span><h2>Review</h2><span class="note">The output · serif, addressable, printable</span></div>
-  <div class="frame">
-    <div class="titlebar"><div class="dots"><i></i><i></i><i></i></div><span class="path">job_8f3a21 / review.md</span><div class="spacer"></div><div class="mini-nav"><span>Library</span><span>Pipeline</span><span class="on">Review</span></div></div>
-    <div class="review-grid">
-      <nav class="toc">
-        <div class="h">Contents</div>
-        <a href="#" class="on">1 · Delivery modalities</a>
-        <a href="#" class="sub2">1.1 AAV vectors</a>
-        <a href="#" class="sub2">1.2 Lipid nanoparticles</a>
-        <a href="#">2 · Editor architecture</a>
-        <a href="#">3 · Off-target profiles</a>
-        <a href="#">4 · Translation barriers</a>
-        <a href="#">References (40)</a>
-        <div class="foot">
-          40 papers<br>187 claims<br>6 themes<br>142 citations resolved<br><span style="color:var(--saurus-success)">0 unresolved refs</span>
-        </div>
-      </nav>
-      <article class="doc">
-        <div class="toolbar">
-          <span class="kicker">Generated review · draft 3 · 14:07</span>
-          <div style="display:flex;gap:.5rem">
-            <button class="btn btn-ghost btn-sm">Citations: inline ▾</button>
-            <button class="btn btn-secondary btn-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9V2h12v7M6 18H4v-6h16v6h-2M8 22h8v-6H8z"/></svg>Print</button>
-            <button class="btn btn-primary btn-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Export</button>
+  <div class="title"><span class="idx">03</span><h2>Review</h2><p>The output. Serif, addressable, printable. Every citation resolves to paper, page and paragraph; hovering one shows the extracted claim verbatim. The sidebar table of contents becomes a scrolling chip strip on smaller screens.</p></div>
+  <div class="board">
+
+    <!-- DESKTOP -->
+    <div class="frame f-d"><div class="cap"><b>Desktop</b><span>1100 × 780</span></div><div class="dev">
+      <div class="dsk">
+        <div data-nav="side" data-on="review" data-job="done"></div>
+        <main class="main">
+          <div class="review-grid">
+            <nav class="toc">
+              <div class="sec-h">Contents</div>
+              <a class="on">1 · Delivery modalities</a>
+              <a class="sub2">1.1 AAV vectors</a>
+              <a class="sub2">1.2 Lipid nanoparticles</a>
+              <a>2 · Editor architecture</a>
+              <a>3 · Off-target profiles</a>
+              <a>4 · Translation barriers</a>
+              <a>References (40)</a>
+              <div class="foot">40 papers<br>187 claims<br>6 themes<br>142 citations resolved<br><span style="color:var(--saurus-success)">0 unresolved refs</span></div>
+            </nav>
+            <article class="doc">
+              <div class="toolbar">
+                <span class="kicker">Generated review · draft 3 · 14:07</span>
+                <div style="display:flex;gap:.45rem">
+                  <button class="btn btn-ghost btn-sm">Citations: inline ▾</button>
+                  <button class="btn btn-secondary btn-sm"><span data-ico="print"></span>Print</button>
+                  <button class="btn btn-primary btn-sm"><span data-ico="export"></span>Export</button>
+                </div>
+              </div>
+              <h1>Hepatic gene correction: delivery platforms, editor architectures, and the road to trials</h1>
+              <div class="byline">Synthesized from 40 papers (2022–2024) · 6 themes · every claim addressed to paper, page, and paragraph</div>
+              <p class="lead">Two delivery platforms, three editor architectures, and one recurring bottleneck — the liver is the most tractable organ for in vivo editing, and also the one where durability and immunogenicity pull hardest against each other.</p>
+              <h2>1 · Delivery modalities</h2>
+              <p>Recent advances in hepatic gene correction have converged on two primary delivery modalities: adeno-associated virus (AAV) vectors and lipid nanoparticles (LNPs). AAV9-mediated delivery has demonstrated sustained therapeutic expression in murine models of metabolic liver disease <span class="cite">[1]</span><span class="loc">(p.12,§3)</span>, while LNP-encapsulated base editors achieved transient but high-efficiency editing in hereditary tyrosinemia <span class="cite">[2]</span><span class="loc">(p.8,§2)</span>. The choice between delivery platforms involves trade-offs between durability and immunogenicity <span class="cite">[5]</span><span class="loc">(p.15,§4)</span>, with emerging evidence suggesting that dual-AAV split-intein approaches may overcome payload limitations <span class="cite">[3]</span><span class="loc">(p.4,§1)</span>.</p>
+              <div class="hovercard"><div class="hh">Citation [1] · hovering</div><div class="q">“AAV9 achieved 60% hepatocyte transduction efficiency at 1×10¹² vg/kg.”</div><div class="src">Liu, W. et al. (2024) · Nature Gene Therapy · p.12 §3 · extracted claim c_0142 · open source PDF →</div></div>
+              <h3>1.1 AAV vectors</h3>
+              <p>Across four papers, serotype choice dominated transduction efficiency more than dose. AAV9 reached 60% hepatocyte transduction at 1×10¹² vg/kg <span class="cite">[1]</span><span class="loc">(p.12,§3)</span>, whereas engineered capsids from library screens exceeded this only marginally in the same dose range <span class="cite">[9]</span><span class="loc">(p.6,§2)</span>. Durability remains the open question: episomal genomes dilute in dividing hepatocytes, an effect pronounced in juvenile models <span class="cite">[10]</span><span class="loc">(p.11,§5)</span>.</p>
+              <div class="pull">No paper in this corpus reports durability beyond 52 weeks in a dividing-liver model. Treat long-term claims as extrapolation.</div>
+              <h3>1.2 Lipid nanoparticles</h3>
+              <p>LNPs invert the trade-off — no capsid immunity, no integration risk, but a single transient exposure. LNP-delivered ABE8e corrected the splice-site mutation in 47% of hepatocytes <span class="cite">[2]</span><span class="loc">(p.8,§2)</span>, and re-dosing was tolerated where AAV re-administration was not <span class="cite">[2]</span><span class="loc">(p.14,§1)</span>.</p>
+              <h2>2 · Editor architecture</h2>
+              <p>Where payload exceeds AAV capacity, split-intein reconstitution restored full-length ATP7B protein in 35% of treated cells <span class="cite">[3]</span><span class="loc">(p.4,§1)</span>. Base editors avoid double-strand breaks entirely: in vivo adenine base editing rescued ornithine transcarbamylase deficiency with survival benefit at 12 weeks <span class="cite">[4]</span><span class="loc">(p.9,§2)</span>.</p>
+              <div class="refs">
+                <h2>References</h2>
+                <div class="ref"><div class="n">[1]</div><div><div class="t">AAV9-mediated CRISPR correction of metabolic liver disease in mice</div><div class="s">Liu, W. et al. · Nature Gene Therapy · 2024 · 14 claims</div><div class="back">cited in <a>§1</a> · <a>§1.1</a> · <a>§3</a> — 5 times</div></div></div>
+                <div class="ref"><div class="n">[2]</div><div><div class="t">Lipid nanoparticle delivery of base editors for hereditary tyrosinemia</div><div class="s">Chen, R. &amp; Park, S. · Molecular Therapy · 2023 · 11 claims</div><div class="back">cited in <a>§1</a> · <a>§1.2</a> — 4 times</div></div></div>
+                <div class="ref"><div class="n">[3]</div><div><div class="t">Dual-AAV split-intein approach for large gene correction in Wilson disease</div><div class="s">Yamamoto, K. et al. · Cell Reports Medicine · 2024 · 9 claims</div><div class="back">cited in <a>§1</a> · <a>§2</a> — 3 times</div></div></div>
+              </div>
+            </article>
           </div>
-        </div>
+        </main>
+      </div>
+    </div></div>
 
-        <h1>Hepatic gene correction: delivery platforms, editor architectures, and the road to trials</h1>
-        <div class="byline">Synthesized from 40 papers (2022–2024) · 6 themes · every claim addressed to paper, page, and paragraph</div>
+    <!-- TABLET -->
+    <div class="frame f-t"><div class="cap"><b>Tablet</b><span>768 × 960</span></div><div class="dev">
+      <div class="tab">
+        <div data-nav="top" data-on="review" data-job="job_8f3a21 · done"></div>
+        <main class="main">
+          <div class="toc-strip"><a class="on">1 Delivery</a><a>1.1 AAV</a><a>1.2 LNP</a><a>2 Editors</a><a>3 Off-target</a><a>4 Translation</a><a>Refs (40)</a></div>
+          <article class="doc t">
+            <div class="toolbar">
+              <span class="kicker">Draft 3 · 14:07 · 142 citations · 0 unresolved</span>
+              <div style="display:flex;gap:.45rem"><button class="btn btn-secondary btn-sm"><span data-ico="print"></span>Print</button><button class="btn btn-primary btn-sm"><span data-ico="export"></span>Export</button></div>
+            </div>
+            <h1>Hepatic gene correction: delivery platforms, editor architectures, and the road to trials</h1>
+            <div class="byline">Synthesized from 40 papers (2022–2024) · 6 themes · every claim addressed to paper, page, and paragraph</div>
+            <p class="lead">Two delivery platforms, three editor architectures, and one recurring bottleneck — the liver is the most tractable organ for in vivo editing, and also the one where durability and immunogenicity pull hardest against each other.</p>
+            <h2>1 · Delivery modalities</h2>
+            <p>Recent advances in hepatic gene correction have converged on two primary delivery modalities: AAV vectors and lipid nanoparticles. AAV9-mediated delivery has demonstrated sustained therapeutic expression in murine models of metabolic liver disease <span class="cite">[1]</span><span class="loc">(p.12,§3)</span>, while LNP-encapsulated base editors achieved transient but high-efficiency editing in hereditary tyrosinemia <span class="cite">[2]</span><span class="loc">(p.8,§2)</span>. The choice involves trade-offs between durability and immunogenicity <span class="cite">[5]</span><span class="loc">(p.15,§4)</span>.</p>
+            <div class="hovercard"><div class="hh">Citation [1] · tapped</div><div class="q">“AAV9 achieved 60% hepatocyte transduction efficiency at 1×10¹² vg/kg.”</div><div class="src">Liu, W. et al. (2024) · p.12 §3 · claim c_0142 · open PDF →</div></div>
+            <h3>1.1 AAV vectors</h3>
+            <p>Across four papers, serotype choice dominated transduction efficiency more than dose. AAV9 reached 60% hepatocyte transduction at 1×10¹² vg/kg <span class="cite">[1]</span><span class="loc">(p.12,§3)</span>, whereas engineered capsids exceeded this only marginally <span class="cite">[9]</span><span class="loc">(p.6,§2)</span>. Episomal genomes dilute in dividing hepatocytes, pronounced in juvenile models <span class="cite">[10]</span><span class="loc">(p.11,§5)</span>.</p>
+            <div class="pull">No paper in this corpus reports durability beyond 52 weeks in a dividing-liver model. Treat long-term claims as extrapolation.</div>
+            <h3>1.2 Lipid nanoparticles</h3>
+            <p>LNPs invert the trade-off — no capsid immunity, no integration risk, but a single transient exposure. LNP-delivered ABE8e corrected the splice-site mutation in 47% of hepatocytes <span class="cite">[2]</span><span class="loc">(p.8,§2)</span>, and re-dosing was tolerated where AAV re-administration was not <span class="cite">[2]</span><span class="loc">(p.14,§1)</span>.</p>
+            <h2>2 · Editor architecture</h2>
+            <p>Where payload exceeds AAV capacity, split-intein reconstitution restored full-length ATP7B protein in 35% of treated cells <span class="cite">[3]</span><span class="loc">(p.4,§1)</span>. Base editors avoid double-strand breaks entirely <span class="cite">[4]</span><span class="loc">(p.9,§2)</span>.</p>
+            <div class="refs">
+              <h2>References</h2>
+              <div class="ref"><div class="n">[1]</div><div><div class="t">AAV9-mediated CRISPR correction of metabolic liver disease in mice</div><div class="s">Liu, W. et al. · 2024 · 14 claims</div><div class="back">cited in <a>§1</a> · <a>§1.1</a> · <a>§3</a> — 5 times</div></div></div>
+              <div class="ref"><div class="n">[2]</div><div><div class="t">Lipid nanoparticle delivery of base editors for hereditary tyrosinemia</div><div class="s">Chen, R. &amp; Park, S. · 2023 · 11 claims</div><div class="back">cited in <a>§1</a> · <a>§1.2</a> — 4 times</div></div></div>
+            </div>
+          </article>
+        </main>
+      </div>
+    </div></div>
 
-        <p class="lead">Two delivery platforms, three editor architectures, and one recurring bottleneck — the liver is the most tractable organ for in vivo editing, and also the one where durability and immunogenicity pull hardest against each other.</p>
+    <!-- MOBILE -->
+    <div class="frame f-m"><div class="cap"><b>Mobile</b><span>390 × 844</span></div><div class="dev">
+      <div class="mob">
+        <div data-nav="mtop" data-title="Review" data-act="export ↓"></div>
+        <main class="main">
+          <div class="toc-strip" style="padding:.5rem .9rem"><a class="on">1 Delivery</a><a>1.1 AAV</a><a>1.2 LNP</a><a>2 Editors</a><a>3 Off-target</a><a>4 Transl.</a><a>Refs</a></div>
+          <article class="doc m">
+            <div class="kicker" style="font-family:var(--font-mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--saurus-ink-muted);margin-bottom:.6rem">Draft 3 · 142 cites · 0 unresolved</div>
+            <h1>Hepatic gene correction: delivery platforms, editor architectures, and the road to trials</h1>
+            <div class="byline" style="font-size:.74rem;margin-bottom:1.1rem">40 papers · 6 themes · every claim addressed</div>
+            <p class="lead">Two delivery platforms, three editor architectures, and one recurring bottleneck — the liver is where durability and immunogenicity pull hardest against each other.</p>
+            <h2>1 · Delivery modalities</h2>
+            <p>Hepatic gene correction has converged on two delivery modalities: AAV vectors and lipid nanoparticles. AAV9 delivery demonstrated sustained expression in murine metabolic liver disease <span class="cite">[1]</span><span class="loc">(p.12,§3)</span>, while LNP base editors achieved transient, high-efficiency editing in tyrosinemia <span class="cite">[2]</span><span class="loc">(p.8,§2)</span>.</p>
+            <div class="hovercard" style="font-size:.76rem"><div class="hh">Citation [1] · tapped</div><div class="q">“AAV9 achieved 60% hepatocyte transduction efficiency at 1×10¹² vg/kg.”</div><div class="src">Liu 2024 · p.12 §3 · c_0142 · open PDF →</div></div>
+            <h3 style="font-size:.95rem">1.1 AAV vectors</h3>
+            <p>Serotype choice dominated transduction efficiency more than dose. AAV9 reached 60% at 1×10¹² vg/kg <span class="cite">[1]</span><span class="loc">(p.12,§3)</span>; engineered capsids exceeded this only marginally <span class="cite">[9]</span><span class="loc">(p.6,§2)</span>.</p>
+            <div class="pull" style="font-size:.9rem">No paper reports durability beyond 52 weeks in a dividing-liver model. Treat long-term claims as extrapolation.</div>
+            <h3 style="font-size:.95rem">1.2 Lipid nanoparticles</h3>
+            <p>LNPs invert the trade-off — no capsid immunity, no integration risk, but a single transient exposure. LNP-delivered ABE8e corrected 47% of hepatocytes <span class="cite">[2]</span><span class="loc">(p.8,§2)</span>.</p>
+            <div class="refs" style="margin-top:1.6rem">
+              <h2>References</h2>
+              <div class="ref"><div class="n">[1]</div><div><div class="t">AAV9-mediated CRISPR correction of metabolic liver disease in mice</div><div class="s">Liu et al. · 2024</div><div class="back">cited <a>§1</a> · <a>§1.1</a> — 5×</div></div></div>
+              <div class="ref"><div class="n">[2]</div><div><div class="t">Lipid nanoparticle delivery of base editors for hereditary tyrosinemia</div><div class="s">Chen &amp; Park · 2023</div><div class="back">cited <a>§1</a> · <a>§1.2</a> — 4×</div></div></div>
+            </div>
+          </article>
+        </main>
+        <div data-nav="tabs" data-on="review"></div>
+      </div>
+    </div></div>
 
-        <h2>1 · Delivery modalities</h2>
-        <p>Recent advances in hepatic gene correction have converged on two primary delivery modalities: adeno-associated virus (AAV) vectors and lipid nanoparticles (LNPs). AAV9-mediated delivery has demonstrated sustained therapeutic expression in murine models of metabolic liver disease <a class="cite">[1]</a><span class="loc">(p.12,§3)</span>, while LNP-encapsulated base editors achieved transient but high-efficiency editing in hereditary tyrosinemia <a class="cite">[2]</a><span class="loc">(p.8,§2)</span>. The choice between delivery platforms involves trade-offs between durability and immunogenicity <a class="cite">[5]</a><span class="loc">(p.15,§4)</span>, with emerging evidence suggesting that dual-AAV split-intein approaches may overcome payload limitations <a class="cite">[3]</a><span class="loc">(p.4,§1)</span>.</p>
-
-        <div class="hovercard">
-          <div class="hh">Citation [1] · hovering</div>
-          <div class="q">“AAV9 achieved 60% hepatocyte transduction efficiency at 1×10¹² vg/kg.”</div>
-          <div class="src">Liu, W. et al. (2024) · Nature Gene Therapy · p.12 §3 · extracted claim c_0142 · open source PDF →</div>
-        </div>
-
-        <h3>1.1 AAV vectors</h3>
-        <p>Across four papers, serotype choice dominated transduction efficiency more than dose. AAV9 reached 60% hepatocyte transduction at 1×10¹² vg/kg <a class="cite">[1]</a><span class="loc">(p.12,§3)</span>, whereas engineered capsids from library screens exceeded this only marginally in the same dose range <a class="cite">[9]</a><span class="loc">(p.6,§2)</span>. Durability remains the open question: episomal genomes dilute in dividing hepatocytes, an effect pronounced in juvenile models <a class="cite">[10]</a><span class="loc">(p.11,§5)</span>.</p>
-
-        <div class="pull">No paper in this corpus reports durability beyond 52 weeks in a dividing-liver model. Treat long-term claims as extrapolation.</div>
-
-        <h3>1.2 Lipid nanoparticles</h3>
-        <p>LNPs invert the trade-off — no capsid immunity, no integration risk, but a single transient exposure. LNP-delivered ABE8e corrected the splice-site mutation in 47% of hepatocytes <a class="cite">[2]</a><span class="loc">(p.8,§2)</span>, and re-dosing was tolerated where AAV re-administration was not <a class="cite">[2]</a><span class="loc">(p.14,§1)</span>.</p>
-
-        <h2>2 · Editor architecture</h2>
-        <p>Where payload exceeds AAV capacity, split-intein reconstitution restored full-length ATP7B protein in 35% of treated cells <a class="cite">[3]</a><span class="loc">(p.4,§1)</span>. Base editors avoid double-strand breaks entirely: in vivo adenine base editing rescued ornithine transcarbamylase deficiency with survival benefit at 12 weeks <a class="cite">[4]</a><span class="loc">(p.9,§2)</span>. Comparative work favors base editors on safety but nucleases on versatility <a class="cite">[5]</a><span class="loc">(p.15,§4)</span>.</p>
-
-        <div class="refs">
-          <h2>References</h2>
-          <div class="ref"><div class="n">[1]</div><div><div class="t">AAV9-mediated CRISPR correction of metabolic liver disease in mice</div><div class="s">Liu, W. et al. · Nature Gene Therapy · 2024 · 14 claims</div><div class="back">cited in <a>§1</a> · <a>§1.1</a> · <a>§3</a> — 5 times</div></div></div>
-          <div class="ref"><div class="n">[2]</div><div><div class="t">Lipid nanoparticle delivery of base editors for hereditary tyrosinemia</div><div class="s">Chen, R. &amp; Park, S. · Molecular Therapy · 2023 · 11 claims</div><div class="back">cited in <a>§1</a> · <a>§1.2</a> — 4 times</div></div></div>
-          <div class="ref"><div class="n">[3]</div><div><div class="t">Dual-AAV split-intein approach for large gene correction in Wilson disease</div><div class="s">Yamamoto, K. et al. · Cell Reports Medicine · 2024 · 9 claims</div><div class="back">cited in <a>§1</a> · <a>§2</a> — 3 times</div></div></div>
-          <div class="ref"><div class="n">[4]</div><div><div class="t">In vivo adenine base editing rescues ornithine transcarbamylase deficiency</div><div class="s">Okafor, A. et al. · JCI Insight · 2023 · 12 claims</div><div class="back">cited in <a>§2</a> · <a>§3</a> — 3 times</div></div></div>
-          <div class="ref" style="border-bottom:0"><div class="n">[5]</div><div><div class="t">Comparative efficacy of CRISPR nucleases for hepatic gene correction</div><div class="s">Rodriguez, M. &amp; Singh, P. · Nature Biotechnology · 2024 · 16 claims</div><div class="back">cited in <a>§1</a> · <a>§2</a> · <a>§3</a> — 6 times</div></div></div>
-        </div>
-      </article>
-    </div>
   </div>
 </div>
 
-<!-- ============ 4 · PAPER EXPLORER ============ -->
+<!-- ================================================================ 04 PAPER EXPLORER -->
 <div class="screen">
-  <div class="screen-label"><span class="num">04</span><h2>Paper Explorer</h2><span class="note">Corpus-level view · filter by theme, expand for receipts</span></div>
-  <div class="frame">
-    <div class="titlebar"><div class="dots"><i></i><i></i><i></i></div><span class="path">job_8f3a21 / papers</span><div class="spacer"></div><div class="mini-nav"><span class="on">Library</span><span>Pipeline</span><span>Review</span></div></div>
-    <div class="explorer">
-      <div class="exp-head">
-        <div><h3 style="font-size:1.2rem">40 papers · 187 claims</h3><div style="font-size:.82rem;color:var(--saurus-ink-secondary)">Sorted by claim density. Click any paper to see what was extracted.</div></div>
-        <div style="display:flex;gap:.5rem"><button class="btn btn-secondary btn-sm">Sort: density ▾</button><button class="btn btn-secondary btn-sm">Add papers</button></div>
+  <div class="title"><span class="idx">04</span><h2>Paper Explorer</h2><p>Corpus-level view. Filter by theme, expand a paper for its receipts — the extracted themes, the claims verbatim, and a jump straight to the PDF page. Sorted by claim density so the load-bearing papers surface first.</p></div>
+  <div class="board">
+
+    <!-- DESKTOP -->
+    <div class="frame f-d"><div class="cap"><b>Desktop</b><span>1100 × 780</span></div><div class="dev">
+      <div class="dsk">
+        <div data-nav="side" data-on="papers" data-job="done"></div>
+        <main class="main">
+          <div class="explorer">
+            <div class="exp-head">
+              <div><h3>40 papers · 187 claims</h3><div class="sub">Sorted by claim density. Click any paper to see what was extracted.</div></div>
+              <div style="display:flex;gap:.5rem"><button class="btn btn-secondary btn-sm">Sort: density ▾</button><button class="btn btn-secondary btn-sm">Add papers</button></div>
+            </div>
+            <div class="filters">
+              <span class="lbl">Themes</span>
+              <span class="chip-t c1">AAV Delivery Vectors <span class="n">4</span></span>
+              <span class="chip-t c2">Base Editing vs Nuclease <span class="n">3</span></span>
+              <span class="chip-t c3">Liver-Targeted Therapies <span class="n">5</span></span>
+              <span class="chip-t c4 off">Off-Target Effects <span class="n">3</span></span>
+              <span class="chip-t c5 off">Clinical Translation Barriers <span class="n">4</span></span>
+              <span class="chip-t c6 off">Lipid Nanoparticle Delivery <span class="n">2</span></span>
+            </div>
+            <div class="papers">
+              <div class="pcard open">
+                <div class="pcard-head"><div class="pnum">[1]</div><div><div class="ttl">AAV9-mediated CRISPR correction of metabolic liver disease in mice</div><div class="authors">Liu, W. et al. · Nature Gene Therapy · 2024 · 18 pages</div><div class="chips"><span class="chip-t c1">AAV Delivery Vectors</span><span class="chip-t c3">Liver-Targeted Therapies</span><span class="chip-t c4">Off-Target Effects</span></div></div><div class="count"><b>14</b>claims</div></div>
+                <div class="pcard-body">
+                  <div class="sec-h">Extracted themes</div>
+                  <div class="theme-line"><span class="chip-t c1">AAV Delivery Vectors</span><span class="muted">serotype 9 tropism, dose–response</span><span class="ev">6 claims</span></div>
+                  <div class="theme-line"><span class="chip-t c3">Liver-Targeted Therapies</span><span class="muted">hepatocyte-restricted promoter</span><span class="ev">5 claims</span></div>
+                  <div class="theme-line" style="border-bottom:0"><span class="chip-t c4">Off-Target Effects</span><span class="muted">GUIDE-seq, no detectable indels</span><span class="ev">3 claims</span></div>
+                  <div class="sec-h" style="margin-top:1rem">Claims</div>
+                  <div class="claim"><span class="mk">“</span><div class="q">AAV9 achieved 60% hepatocyte transduction efficiency at 1×10¹² vg/kg <span class="cite">[1]</span><span class="loc">(p.12,§3)</span></div></div>
+                  <div class="claim"><span class="mk">“</span><div class="q">Serum ammonia normalized within 14 days of a single systemic dose <span class="cite">[1]</span><span class="loc">(p.13,§1)</span></div></div>
+                  <div class="claim" style="border-bottom:0"><span class="mk">“</span><div class="q">GUIDE-seq detected no off-target indels above 0.1% at the top 12 predicted sites <span class="cite">[1]</span><span class="loc">(p.15,§2)</span></div></div>
+                  <div style="margin-top:.7rem"><button class="btn btn-ghost btn-sm">Show all 14 claims</button><button class="btn btn-ghost btn-sm">Open PDF at p.12</button></div>
+                </div>
+              </div>
+              <div class="pcard"><div class="pcard-head"><div class="pnum">[5]</div><div><div class="ttl">Comparative efficacy of CRISPR nucleases for hepatic gene correction</div><div class="authors">Rodriguez, M. &amp; Singh, P. · Nature Biotechnology · 2024 · 22 pages</div><div class="chips"><span class="chip-t c2">Base Editing vs Nuclease</span><span class="chip-t c4">Off-Target Effects</span><span class="chip-t c5">Clinical Translation Barriers</span></div></div><div class="count"><b>16</b>claims</div></div></div>
+              <div class="pcard"><div class="pcard-head"><div class="pnum">[2]</div><div><div class="ttl">Lipid nanoparticle delivery of base editors for hereditary tyrosinemia</div><div class="authors">Chen, R. &amp; Park, S. · Molecular Therapy · 2023 · 16 pages</div><div class="chips"><span class="chip-t c6">Lipid Nanoparticle Delivery</span><span class="chip-t c2">Base Editing vs Nuclease</span><span class="chip-t c3">Liver-Targeted Therapies</span></div></div><div class="count"><b>11</b>claims</div></div></div>
+              <div class="pcard"><div class="pcard-head"><div class="pnum">[4]</div><div><div class="ttl">In vivo adenine base editing rescues ornithine transcarbamylase deficiency</div><div class="authors">Okafor, A. et al. · JCI Insight · 2023 · 14 pages</div><div class="chips"><span class="chip-t c2">Base Editing vs Nuclease</span><span class="chip-t c3">Liver-Targeted Therapies</span></div></div><div class="count"><b>12</b>claims</div></div></div>
+              <div class="pcard"><div class="pcard-head"><div class="pnum">[3]</div><div><div class="ttl">Dual-AAV split-intein approach for large gene correction in Wilson disease</div><div class="authors">Yamamoto, K. et al. · Cell Reports Medicine · 2024 · 12 pages</div><div class="chips"><span class="chip-t c1">AAV Delivery Vectors</span><span class="chip-t c5">Clinical Translation Barriers</span></div></div><div class="count"><b>9</b>claims</div></div></div>
+            </div>
+          </div>
+        </main>
       </div>
-      <div class="filters">
-        <span class="lbl">Themes</span>
-        <span class="chip-t c1">AAV Delivery Vectors <span class="n">4</span></span>
-        <span class="chip-t c2">Base Editing vs Nuclease <span class="n">3</span></span>
-        <span class="chip-t c3">Liver-Targeted Therapies <span class="n">5</span></span>
-        <span class="chip-t c4 off">Off-Target Effects <span class="n">3</span></span>
-        <span class="chip-t c5 off">Clinical Translation Barriers <span class="n">4</span></span>
-        <span class="chip-t c6 off">Lipid Nanoparticle Delivery <span class="n">2</span></span>
+    </div></div>
+
+    <!-- TABLET -->
+    <div class="frame f-t"><div class="cap"><b>Tablet</b><span>768 × 960</span></div><div class="dev">
+      <div class="tab">
+        <div data-nav="top" data-on="papers" data-job="job_8f3a21 · done"></div>
+        <main class="main">
+          <div class="explorer">
+            <div class="exp-head">
+              <div><h3>40 papers · 187 claims</h3><div class="sub">Sorted by claim density. Tap a paper for its receipts.</div></div>
+              <div style="display:flex;gap:.5rem"><button class="btn btn-secondary btn-sm">Density ▾</button><button class="btn btn-secondary btn-sm">Add</button></div>
+            </div>
+            <div class="filters scroll">
+              <span class="lbl">Themes</span>
+              <span class="chip-t c1">AAV Delivery Vectors <span class="n">4</span></span>
+              <span class="chip-t c2">Base Editing vs Nuclease <span class="n">3</span></span>
+              <span class="chip-t c3">Liver-Targeted Therapies <span class="n">5</span></span>
+              <span class="chip-t c4 off">Off-Target Effects <span class="n">3</span></span>
+              <span class="chip-t c5 off">Clinical Translation <span class="n">4</span></span>
+              <span class="chip-t c6 off">LNP Delivery <span class="n">2</span></span>
+            </div>
+            <div class="papers">
+              <div class="pcard open">
+                <div class="pcard-head"><div class="pnum">[1]</div><div><div class="ttl">AAV9-mediated CRISPR correction of metabolic liver disease in mice</div><div class="authors">Liu, W. et al. · Nature Gene Therapy · 2024 · 18 pages</div><div class="chips"><span class="chip-t c1">AAV Delivery Vectors</span><span class="chip-t c3">Liver-Targeted Therapies</span><span class="chip-t c4">Off-Target Effects</span></div></div><div class="count"><b>14</b>claims</div></div>
+                <div class="pcard-body">
+                  <div class="sec-h">Extracted themes</div>
+                  <div class="theme-line"><span class="chip-t c1">AAV Delivery Vectors</span><span class="muted">serotype 9 tropism</span><span class="ev">6 claims</span></div>
+                  <div class="theme-line"><span class="chip-t c3">Liver-Targeted Therapies</span><span class="muted">hepatocyte promoter</span><span class="ev">5 claims</span></div>
+                  <div class="theme-line" style="border-bottom:0"><span class="chip-t c4">Off-Target Effects</span><span class="muted">GUIDE-seq</span><span class="ev">3 claims</span></div>
+                  <div class="sec-h" style="margin-top:1rem">Claims</div>
+                  <div class="claim"><span class="mk">“</span><div class="q">AAV9 achieved 60% hepatocyte transduction efficiency at 1×10¹² vg/kg <span class="cite">[1]</span><span class="loc">(p.12,§3)</span></div></div>
+                  <div class="claim"><span class="mk">“</span><div class="q">Serum ammonia normalized within 14 days of a single systemic dose <span class="cite">[1]</span><span class="loc">(p.13,§1)</span></div></div>
+                  <div class="claim" style="border-bottom:0"><span class="mk">“</span><div class="q">GUIDE-seq detected no off-target indels above 0.1% at the top 12 predicted sites <span class="cite">[1]</span><span class="loc">(p.15,§2)</span></div></div>
+                  <div style="margin-top:.7rem"><button class="btn btn-ghost btn-sm">Show all 14</button><button class="btn btn-ghost btn-sm">Open PDF at p.12</button></div>
+                </div>
+              </div>
+              <div class="pcard"><div class="pcard-head"><div class="pnum">[5]</div><div><div class="ttl">Comparative efficacy of CRISPR nucleases for hepatic gene correction</div><div class="authors">Rodriguez &amp; Singh · Nature Biotechnology · 2024</div><div class="chips"><span class="chip-t c2">Base Editing vs Nuclease</span><span class="chip-t c4">Off-Target Effects</span><span class="chip-t c5">Clinical Translation</span></div></div><div class="count"><b>16</b>claims</div></div></div>
+              <div class="pcard"><div class="pcard-head"><div class="pnum">[2]</div><div><div class="ttl">Lipid nanoparticle delivery of base editors for hereditary tyrosinemia</div><div class="authors">Chen &amp; Park · Molecular Therapy · 2023</div><div class="chips"><span class="chip-t c6">LNP Delivery</span><span class="chip-t c2">Base Editing vs Nuclease</span><span class="chip-t c3">Liver-Targeted</span></div></div><div class="count"><b>11</b>claims</div></div></div>
+              <div class="pcard"><div class="pcard-head"><div class="pnum">[4]</div><div><div class="ttl">In vivo adenine base editing rescues ornithine transcarbamylase deficiency</div><div class="authors">Okafor et al. · JCI Insight · 2023</div><div class="chips"><span class="chip-t c2">Base Editing vs Nuclease</span><span class="chip-t c3">Liver-Targeted</span></div></div><div class="count"><b>12</b>claims</div></div></div>
+              <div class="pcard"><div class="pcard-head"><div class="pnum">[3]</div><div><div class="ttl">Dual-AAV split-intein approach for large gene correction in Wilson disease</div><div class="authors">Yamamoto et al. · Cell Reports Medicine · 2024</div><div class="chips"><span class="chip-t c1">AAV Delivery Vectors</span><span class="chip-t c5">Clinical Translation</span></div></div><div class="count"><b>9</b>claims</div></div></div>
+            </div>
+          </div>
+        </main>
       </div>
+    </div></div>
 
-      <div class="papers">
-        <div class="pcard open">
-          <div class="pcard-head">
-            <div class="pnum">[1]</div>
-            <div>
-              <div class="ttl">AAV9-mediated CRISPR correction of metabolic liver disease in mice</div>
-              <div class="authors">Liu, W. et al. · Nature Gene Therapy · 2024 · 18 pages</div>
-              <div class="chips"><span class="chip-t c1">AAV Delivery Vectors</span><span class="chip-t c3">Liver-Targeted Therapies</span><span class="chip-t c4">Off-Target Effects</span></div>
+    <!-- MOBILE -->
+    <div class="frame f-m"><div class="cap"><b>Mobile</b><span>390 × 844</span></div><div class="dev">
+      <div class="mob">
+        <div data-nav="mtop" data-title="Papers" data-act="40 · 187 claims"></div>
+        <main class="main">
+          <div class="explorer m">
+            <div class="filters scroll" style="margin-bottom:.7rem;padding-bottom:.7rem">
+              <span class="chip-t c1">AAV Vectors <span class="n">4</span></span>
+              <span class="chip-t c2">Base vs Nuclease <span class="n">3</span></span>
+              <span class="chip-t c3">Liver-Targeted <span class="n">5</span></span>
+              <span class="chip-t c4 off">Off-Target <span class="n">3</span></span>
+              <span class="chip-t c5 off">Translation <span class="n">4</span></span>
+              <span class="chip-t c6 off">LNP <span class="n">2</span></span>
             </div>
-            <div class="count"><b>14</b>claims</div>
-          </div>
-          <div class="pcard-body">
-            <div class="sec-h">Extracted themes</div>
-            <div class="theme-line"><span class="chip-t c1">AAV Delivery Vectors</span><span style="color:var(--saurus-ink-secondary)">serotype 9 tropism, dose–response</span><span class="ev">6 claims</span></div>
-            <div class="theme-line"><span class="chip-t c3">Liver-Targeted Therapies</span><span style="color:var(--saurus-ink-secondary)">hepatocyte-restricted promoter</span><span class="ev">5 claims</span></div>
-            <div class="theme-line" style="border-bottom:0"><span class="chip-t c4">Off-Target Effects</span><span style="color:var(--saurus-ink-secondary)">GUIDE-seq, no detectable indels</span><span class="ev">3 claims</span></div>
-
-            <div class="sec-h" style="margin-top:1.2rem">Claims</div>
-            <div class="claim"><span class="mk">“</span><div><div class="q">AAV9 achieved 60% hepatocyte transduction efficiency at 1×10¹² vg/kg <a class="cite">[1]</a><span class="loc">(p.12,§3)</span></div></div></div>
-            <div class="claim"><span class="mk">“</span><div><div class="q">Serum ammonia normalized within 14 days of a single systemic dose <a class="cite">[1]</a><span class="loc">(p.13,§1)</span></div></div></div>
-            <div class="claim" style="border-bottom:0"><span class="mk">“</span><div><div class="q">GUIDE-seq detected no off-target indels above 0.1% at the top 12 predicted sites <a class="cite">[1]</a><span class="loc">(p.15,§2)</span></div></div></div>
-            <div style="margin-top:.8rem"><button class="btn btn-ghost btn-sm">Show all 14 claims</button><button class="btn btn-ghost btn-sm">Open PDF at p.12</button></div>
-          </div>
-        </div>
-
-        <div class="pcard">
-          <div class="pcard-head">
-            <div class="pnum">[5]</div>
-            <div>
-              <div class="ttl">Comparative efficacy of CRISPR nucleases for hepatic gene correction</div>
-              <div class="authors">Rodriguez, M. &amp; Singh, P. · Nature Biotechnology · 2024 · 22 pages</div>
-              <div class="chips"><span class="chip-t c2">Base Editing vs Nuclease</span><span class="chip-t c4">Off-Target Effects</span><span class="chip-t c5">Clinical Translation Barriers</span></div>
+            <div class="sub" style="font-size:.72rem;color:var(--saurus-ink-secondary);margin-bottom:.6rem;display:flex;justify-content:space-between"><span>Sorted by claim density</span><span style="color:var(--saurus-primary)">Density ▾</span></div>
+            <div class="papers">
+              <div class="pcard open">
+                <div class="pcard-head"><div><div class="ttl">AAV9-mediated CRISPR correction of metabolic liver disease in mice</div><div class="authors">Liu et al. · 2024</div><div class="chips"><span class="chip-t c1">AAV Vectors</span><span class="chip-t c3">Liver-Targeted</span><span class="chip-t c4">Off-Target</span></div></div><div class="count"><b>14</b>claims</div></div>
+                <div class="pcard-body">
+                  <div class="sec-h">Claims</div>
+                  <div class="claim"><span class="mk">“</span><div class="q" style="font-size:.84rem">AAV9 achieved 60% hepatocyte transduction efficiency at 1×10¹² vg/kg <span class="cite">[1]</span><span class="loc">(p.12,§3)</span></div></div>
+                  <div class="claim"><span class="mk">“</span><div class="q" style="font-size:.84rem">Serum ammonia normalized within 14 days of a single systemic dose <span class="cite">[1]</span><span class="loc">(p.13,§1)</span></div></div>
+                  <div class="claim" style="border-bottom:0"><span class="mk">“</span><div class="q" style="font-size:.84rem">GUIDE-seq detected no off-target indels above 0.1% <span class="cite">[1]</span><span class="loc">(p.15,§2)</span></div></div>
+                  <div style="margin-top:.6rem;display:flex;gap:.3rem"><button class="btn btn-ghost btn-sm">All 14</button><button class="btn btn-ghost btn-sm">PDF p.12</button></div>
+                </div>
+              </div>
+              <div class="pcard"><div class="pcard-head"><div><div class="ttl">Comparative efficacy of CRISPR nucleases for hepatic gene correction</div><div class="authors">Rodriguez &amp; Singh · 2024</div><div class="chips"><span class="chip-t c2">Base vs Nuclease</span><span class="chip-t c4">Off-Target</span></div></div><div class="count"><b>16</b>claims</div></div></div>
+              <div class="pcard"><div class="pcard-head"><div><div class="ttl">Lipid nanoparticle delivery of base editors for hereditary tyrosinemia</div><div class="authors">Chen &amp; Park · 2023</div><div class="chips"><span class="chip-t c6">LNP</span><span class="chip-t c2">Base vs Nuclease</span></div></div><div class="count"><b>11</b>claims</div></div></div>
+              <div class="pcard"><div class="pcard-head"><div><div class="ttl">In vivo adenine base editing rescues OTC deficiency</div><div class="authors">Okafor et al. · 2023</div><div class="chips"><span class="chip-t c2">Base vs Nuclease</span><span class="chip-t c3">Liver-Targeted</span></div></div><div class="count"><b>12</b>claims</div></div></div>
             </div>
-            <div class="count"><b>16</b>claims</div>
           </div>
-        </div>
-
-        <div class="pcard">
-          <div class="pcard-head">
-            <div class="pnum">[2]</div>
-            <div>
-              <div class="ttl">Lipid nanoparticle delivery of base editors for hereditary tyrosinemia</div>
-              <div class="authors">Chen, R. &amp; Park, S. · Molecular Therapy · 2023 · 16 pages</div>
-              <div class="chips"><span class="chip-t c6">Lipid Nanoparticle Delivery</span><span class="chip-t c2">Base Editing vs Nuclease</span><span class="chip-t c3">Liver-Targeted Therapies</span></div>
-            </div>
-            <div class="count"><b>11</b>claims</div>
-          </div>
-        </div>
-
-        <div class="pcard">
-          <div class="pcard-head">
-            <div class="pnum">[4]</div>
-            <div>
-              <div class="ttl">In vivo adenine base editing rescues ornithine transcarbamylase deficiency</div>
-              <div class="authors">Okafor, A. et al. · JCI Insight · 2023 · 14 pages</div>
-              <div class="chips"><span class="chip-t c2">Base Editing vs Nuclease</span><span class="chip-t c3">Liver-Targeted Therapies</span></div>
-            </div>
-            <div class="count"><b>12</b>claims</div>
-          </div>
-        </div>
-
-        <div class="pcard">
-          <div class="pcard-head">
-            <div class="pnum">[3]</div>
-            <div>
-              <div class="ttl">Dual-AAV split-intein approach for large gene correction in Wilson disease</div>
-              <div class="authors">Yamamoto, K. et al. · Cell Reports Medicine · 2024 · 12 pages</div>
-              <div class="chips"><span class="chip-t c1">AAV Delivery Vectors</span><span class="chip-t c5">Clinical Translation Barriers</span></div>
-            </div>
-            <div class="count"><b>9</b>claims</div>
-          </div>
-        </div>
+        </main>
+        <div data-nav="tabs" data-on="papers"></div>
       </div>
-    </div>
+    </div></div>
+
   </div>
 </div>
 
-<!-- ============ 5 · CHAT ASSISTANT ============ -->
+<!-- ================================================================ 05 CHAT ASSISTANT -->
 <div class="screen">
-  <div class="screen-label"><span class="num">05</span><h2>Chat Assistant</h2><span class="note">Docked panel · answers come with receipts</span></div>
-  <div class="frame">
-    <div class="titlebar"><div class="dots"><i></i><i></i><i></i></div><span class="path">job_8f3a21 / review.md — assistant open</span><div class="spacer"></div><div class="mini-nav"><span>Library</span><span>Pipeline</span><span class="on">Review</span></div></div>
-    <div class="chat-shell">
-      <div class="chat-context">
-        <h3>1.2 Lipid nanoparticles</h3>
-        <div style="font-size:.78rem;color:var(--saurus-ink-muted);font-family:var(--font-mono);margin-bottom:1rem">review.md · §1.2 · in view while you ask</div>
-        <p>LNPs invert the trade-off — no capsid immunity, no integration risk, but a single transient exposure. <span class="hl">LNP-delivered ABE8e corrected the splice-site mutation in 47% of hepatocytes <a class="cite">[2]</a><span class="loc">(p.8,§2)</span></span>, and re-dosing was tolerated where AAV re-administration was not <a class="cite">[2]</a><span class="loc">(p.14,§1)</span>.</p>
-        <p>Across the corpus, editing efficiency reported for LNP platforms clustered between 31% and 52%, measured by deep sequencing of whole-liver lysate rather than sorted hepatocytes <a class="cite">[2]</a><span class="loc">(p.9,§1)</span> <a class="cite">[8]</a><span class="loc">(p.7,§4)</span> — a methodological difference worth carrying into any comparison with the AAV literature.</p>
-        <div style="margin-top:1.5rem;padding:.85rem 1rem;border-left:3px solid var(--saurus-accent);background:var(--saurus-accent-bg);border-radius:var(--radius-sm);font-size:.85rem;color:var(--saurus-ink-secondary)">
-          Selected text is passed to the assistant as context. It answers only from claims in this corpus — if nothing supports an answer, it says so.
-        </div>
-      </div>
+  <div class="title"><span class="idx">05</span><h2>Chat Assistant</h2><p>Answers come with receipts. The assistant answers only from claims in this corpus — it distinguishes “tested less exhaustively” from “cleaner”, and flags a thin theme instead of dressing it up. Docked beside the review on desktop; full-screen with a context pill on mobile.</p></div>
+  <div class="board">
 
-      <aside class="chat">
-        <div class="chat-head">
-          <span class="mascot">
-            <svg viewBox="0 0 40 34" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 27c4-1 7-4 8-8 1-3 0-7 3-10 3-3 8-3 11-1 3 1 5 4 6 7"/>
-              <path d="M17 11c-1-2 0-5 2-6 2-1 5 0 6 2"/>
-              <circle cx="27" cy="9" r=".9" fill="currentColor"/>
-              <path d="M11 26c-1-2 0-5 1-6M20 27c0-2 1-4 2-5M8 27h5M17 27h5"/>
-            </svg>
-          </span>
-          <div><div class="t">The Saurus</div><div class="s">40 papers · 187 claims indexed</div></div>
-        </div>
-        <div class="chat-body">
-          <div class="msg me"><span class="who">You</span><div class="bubble">Do any of these papers disagree about off-target rates?</div></div>
-
-          <div class="msg bot"><span class="who">The Saurus</span><div class="bubble">
-            Two do, and the disagreement is methodological rather than substantive.
-            <br><br>Rodriguez &amp; Singh report measurable indels at predicted off-target sites for SpCas9 in hepatocytes <a class="cite">[5]</a><span class="loc">(p.15,§4)</span>. Okafor et al. found none detectable with adenine base editing <a class="cite">[4]</a><span class="loc">(p.9,§2)</span> — but they assayed only the top 8 computationally predicted sites, while <a class="cite">[5]</a> ran genome-wide GUIDE-seq <a class="cite">[5]</a><span class="loc">(p.16,§1)</span>.
-            <br><br>So the corpus does not establish that base editors are cleaner; it establishes that they were tested less exhaustively.
-            <div class="sources">
-              <span class="src-pill">[5] p.15 §4</span><span class="src-pill">[5] p.16 §1</span><span class="src-pill">[4] p.9 §2</span><span class="src-pill">[1] p.15 §2</span>
+    <!-- DESKTOP -->
+    <div class="frame f-d"><div class="cap"><b>Desktop</b><span>1100 × 780</span></div><div class="dev">
+      <div class="dsk">
+        <div data-nav="side" data-on="assistant" data-job="done"></div>
+        <main class="main">
+          <div class="chat-shell">
+            <div class="chat-context">
+              <h3>1.2 Lipid nanoparticles</h3>
+              <div class="path">review.md · §1.2 · in view while you ask</div>
+              <p>LNPs invert the trade-off — no capsid immunity, no integration risk, but a single transient exposure. <span class="hl">LNP-delivered ABE8e corrected the splice-site mutation in 47% of hepatocytes <span class="cite">[2]</span><span class="loc">(p.8,§2)</span></span>, and re-dosing was tolerated where AAV re-administration was not <span class="cite">[2]</span><span class="loc">(p.14,§1)</span>.</p>
+              <p>Across the corpus, editing efficiency reported for LNP platforms clustered between 31% and 52%, measured by deep sequencing of whole-liver lysate rather than sorted hepatocytes <span class="cite">[2]</span><span class="loc">(p.9,§1)</span> <span class="cite">[8]</span><span class="loc">(p.7,§4)</span> — a methodological difference worth carrying into any comparison with the AAV literature.</p>
+              <div class="ctx-note">Selected text is passed to the assistant as context. It answers only from claims in this corpus — if nothing supports an answer, it says so.</div>
             </div>
-          </div></div>
-
-          <div class="msg me"><span class="who">You</span><div class="bubble">Which theme has the thinnest evidence?</div></div>
-
-          <div class="msg bot"><span class="who">The Saurus</span><div class="bubble">
-            <span class="chip-t c6" style="margin-bottom:.4rem">Lipid Nanoparticle Delivery</span>
-            <br>Two papers, 6 claims total, and both come from the same group <a class="cite">[2]</a><span class="loc">(p.1,§1)</span> <a class="cite">[8]</a><span class="loc">(p.1,§1)</span>. Every efficiency figure in that theme traces to one assay method.
-            <br><br>I'd flag it in the review as under-supported. Want me to add a limitations note to §1.2?
-            <div class="sources"><span class="src-pill">[2] p.1 §1</span><span class="src-pill">[8] p.1 §1</span><span class="src-pill">theme_06</span></div>
-          </div></div>
-
-          <div class="thinking"><i></i><i></i><i></i> searching 187 claims…</div>
-        </div>
-        <div class="chat-foot">
-          <div class="suggest">
-            <span>What's missing from this corpus?</span><span>Summarize §3</span><span>Papers citing durability &gt;1yr</span>
+            <aside class="chat">
+              <div class="chat-head"><span class="mascot" data-mascot="small"></span><div><div class="t">The Saurus</div><div class="s">40 papers · 187 claims indexed</div></div></div>
+              <div class="chat-body">
+                <div class="msg me"><span class="who">You</span><div class="bubble">Do any of these papers disagree about off-target rates?</div></div>
+                <div class="msg bot"><span class="who">The Saurus</span><div class="bubble">Two do, and the disagreement is methodological rather than substantive.<br><br>Rodriguez &amp; Singh report measurable indels at predicted off-target sites for SpCas9 in hepatocytes <span class="cite">[5]</span><span class="loc">(p.15,§4)</span>. Okafor et al. found none detectable with adenine base editing <span class="cite">[4]</span><span class="loc">(p.9,§2)</span> — but they assayed only the top 8 computationally predicted sites, while <span class="cite">[5]</span> ran genome-wide GUIDE-seq <span class="cite">[5]</span><span class="loc">(p.16,§1)</span>.<br><br>So the corpus does not establish that base editors are cleaner; it establishes that they were tested less exhaustively.<div class="sources"><span class="src-pill">[5] p.15 §4</span><span class="src-pill">[5] p.16 §1</span><span class="src-pill">[4] p.9 §2</span><span class="src-pill">[1] p.15 §2</span></div></div></div>
+                <div class="msg me"><span class="who">You</span><div class="bubble">Which theme has the thinnest evidence?</div></div>
+                <div class="msg bot"><span class="who">The Saurus</span><div class="bubble"><span class="chip-t c6" style="margin-bottom:.4rem">Lipid Nanoparticle Delivery</span><br>Two papers, 6 claims total, and both come from the same group <span class="cite">[2]</span><span class="loc">(p.1,§1)</span> <span class="cite">[8]</span><span class="loc">(p.1,§1)</span>. Every efficiency figure in that theme traces to one assay method.<br><br>I'd flag it in the review as under-supported. Want me to add a limitations note to §1.2?<div class="sources"><span class="src-pill">[2] p.1 §1</span><span class="src-pill">[8] p.1 §1</span><span class="src-pill">theme_06</span></div></div></div>
+                <div class="thinking"><i></i><i></i><i></i> searching 187 claims…</div>
+              </div>
+              <div class="chat-foot">
+                <div class="suggest"><span>What's missing from this corpus?</span><span>Summarize §3</span><span>Durability &gt;1yr</span></div>
+                <div class="composer"><div class="input">Ask across 40 papers…</div><button class="send" aria-label="Send"><span data-ico="send"></span></button></div>
+                <div class="hint">answers cite or abstain · nothing invented</div>
+              </div>
+            </aside>
           </div>
-          <div class="composer">
-            <input class="input" placeholder="Ask across 40 papers…">
-            <button class="send" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        </main>
+      </div>
+    </div></div>
+
+    <!-- TABLET -->
+    <div class="frame f-t"><div class="cap"><b>Tablet</b><span>768 × 960</span></div><div class="dev">
+      <div class="tab">
+        <div data-nav="top" data-on="assistant" data-job="job_8f3a21 · done"></div>
+        <main class="main">
+          <div class="chat-stack">
+            <div class="chat-context">
+              <h3>1.2 Lipid nanoparticles</h3>
+              <div class="path">review.md · §1.2 · in view while you ask</div>
+              <p style="font-size:.9rem;line-height:1.7">LNPs invert the trade-off — no capsid immunity, no integration risk, but a single transient exposure. <span class="hl">LNP-delivered ABE8e corrected the splice-site mutation in 47% of hepatocytes <span class="cite">[2]</span><span class="loc">(p.8,§2)</span></span>, and re-dosing was tolerated where AAV re-administration was not <span class="cite">[2]</span><span class="loc">(p.14,§1)</span>.</p>
+            </div>
+            <aside class="chat full">
+              <div class="chat-head"><span class="mascot" data-mascot="small"></span><div><div class="t">The Saurus</div><div class="s">40 papers · 187 claims indexed</div></div></div>
+              <div class="chat-body">
+                <div class="msg me"><span class="who">You</span><div class="bubble">Do any of these papers disagree about off-target rates?</div></div>
+                <div class="msg bot"><span class="who">The Saurus</span><div class="bubble">Two do, and the disagreement is methodological rather than substantive.<br><br>Rodriguez &amp; Singh report measurable indels at predicted off-target sites for SpCas9 <span class="cite">[5]</span><span class="loc">(p.15,§4)</span>. Okafor et al. found none with adenine base editing <span class="cite">[4]</span><span class="loc">(p.9,§2)</span> — but they assayed only the top 8 predicted sites, while <span class="cite">[5]</span> ran genome-wide GUIDE-seq <span class="cite">[5]</span><span class="loc">(p.16,§1)</span>.<br><br>So the corpus does not establish that base editors are cleaner; it establishes that they were tested less exhaustively.<div class="sources"><span class="src-pill">[5] p.15 §4</span><span class="src-pill">[5] p.16 §1</span><span class="src-pill">[4] p.9 §2</span></div></div></div>
+                <div class="msg me"><span class="who">You</span><div class="bubble">Which theme has the thinnest evidence?</div></div>
+                <div class="msg bot"><span class="who">The Saurus</span><div class="bubble"><span class="chip-t c6" style="margin-bottom:.4rem">Lipid Nanoparticle Delivery</span><br>Two papers, 6 claims, both from the same group <span class="cite">[2]</span> <span class="cite">[8]</span>. Every efficiency figure traces to one assay method. Want me to add a limitations note to §1.2?<div class="sources"><span class="src-pill">[2] p.1 §1</span><span class="src-pill">[8] p.1 §1</span><span class="src-pill">theme_06</span></div></div></div>
+                <div class="thinking"><i></i><i></i><i></i> searching 187 claims…</div>
+              </div>
+              <div class="chat-foot">
+                <div class="suggest"><span>What's missing from this corpus?</span><span>Summarize §3</span><span>Durability &gt;1yr</span></div>
+                <div class="composer"><div class="input">Ask across 40 papers…</div><button class="send" aria-label="Send"><span data-ico="send"></span></button></div>
+                <div class="hint">answers cite or abstain · nothing invented</div>
+              </div>
+            </aside>
           </div>
-          <div class="hint">answers cite or abstain · nothing invented</div>
-        </div>
-      </aside>
-    </div>
+        </main>
+      </div>
+    </div></div>
+
+    <!-- MOBILE -->
+    <div class="frame f-m"><div class="cap"><b>Mobile</b><span>390 × 844</span></div><div class="dev">
+      <div class="mob">
+        <div data-nav="mtop" data-title="Assistant" data-act="187 claims"></div>
+        <main class="main">
+          <aside class="chat full" style="flex:1">
+            <div class="ctx-pill"><span data-ico="ctx"></span><span>Context:</span><b>review.md §1.2 · LNPs</b><span class="x">×</span></div>
+            <div class="chat-body" style="padding:.9rem .8rem">
+              <div class="msg me"><span class="who">You</span><div class="bubble">Do any of these papers disagree about off-target rates?</div></div>
+              <div class="msg bot"><span class="who">The Saurus</span><div class="bubble">Two do, and the disagreement is methodological rather than substantive.<br><br>Rodriguez &amp; Singh report measurable indels at predicted off-target sites <span class="cite">[5]</span><span class="loc">(p.15,§4)</span>. Okafor et al. found none with adenine base editing <span class="cite">[4]</span><span class="loc">(p.9,§2)</span> — but assayed only the top 8 predicted sites, while <span class="cite">[5]</span> ran genome-wide GUIDE-seq.<br><br>So the corpus does not establish that base editors are cleaner; it establishes that they were tested less exhaustively.<div class="sources"><span class="src-pill">[5] p.15 §4</span><span class="src-pill">[5] p.16 §1</span><span class="src-pill">[4] p.9 §2</span></div></div></div>
+              <div class="msg me"><span class="who">You</span><div class="bubble">Which theme has the thinnest evidence?</div></div>
+              <div class="msg bot"><span class="who">The Saurus</span><div class="bubble"><span class="chip-t c6" style="margin-bottom:.4rem">Lipid Nanoparticle Delivery</span><br>Two papers, 6 claims, both from the same group <span class="cite">[2]</span> <span class="cite">[8]</span>. I'd flag it as under-supported. Add a limitations note to §1.2?<div class="sources"><span class="src-pill">[2] p.1 §1</span><span class="src-pill">[8] p.1 §1</span></div></div></div>
+              <div class="thinking"><i></i><i></i><i></i> searching 187 claims…</div>
+            </div>
+            <div class="chat-foot" style="padding:.6rem .8rem">
+              <div class="suggest" style="flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none"><span>What's missing?</span><span>Summarize §3</span><span>Durability &gt;1yr</span></div>
+              <div class="composer"><div class="input">Ask across 40 papers…</div><button class="send" aria-label="Send"><span data-ico="send"></span></button></div>
+              <div class="hint">cite or abstain · nothing invented</div>
+            </div>
+          </aside>
+        </main>
+        <div data-nav="tabs" data-on="chat"></div>
+      </div>
+    </div></div>
+
   </div>
 </div>
 
 <footer class="end">
-  <span>the-saurus · mockups.html · round 1 · fable</span>
+  <span>the-saurus · mockups.html · round 2 · fable</span>
   <span>a chatbot gives you an answer · the saurus gives you the receipts</span>
 </footer>
+
+<script>
+// Navigation chrome, mascot SVGs and icons are stamped; every frame's layout is hand-written above.
+(function(){
+  var I={
+    upload:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>',
+    pipeline:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><path d="M7 12h3M14 12h3"/></svg>',
+    review:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h9l5 5v13H6z"/><path d="M14 3v6h6M9 13h7M9 17h7"/></svg>',
+    papers:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="7" height="14" rx="1.5"/><rect x="13" y="3" width="8" height="16" rx="1.5"/></svg>',
+    chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16v11H9l-5 4z"/></svg>',
+    tick:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>',
+    print:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9V2h12v7M6 18H4v-6h16v6h-2M8 22h8v-6H8z"/></svg>',
+    export:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>',
+    send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+    ctx:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l5 5v13H6z"/></svg>',
+    brand:'<svg viewBox="0 0 40 34" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 27c4-1 7-4 8-8 1-3 0-7 3-10 3-3 8-3 11-1 3 1 5 4 6 7"/><path d="M17 11c-1-2 0-5 2-6 2-1 5 0 6 2"/><circle cx="27" cy="9" r=".9" fill="currentColor"/><path d="M11 26c-1-2 0-5 1-6M20 27c0-2 1-4 2-5M8 27h5M17 27h5"/></svg>'
+  };
+  var MASCOT={
+    big:'<svg viewBox="0 0 200 130" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 104c14-3 24-13 29-28 4-12 2-26 10-36 9-12 26-13 39-8 11 4 18 13 23 23 4 8 5 16 12 21"/><path d="M64 44c-5-8-3-18 5-23 8-5 18-3 23 5"/><path d="M92 33c8-1 14 4 15 12l-2 6"/><path d="M105 51c5 3 12 3 17 0" stroke-width="1.2"/><circle cx="104" cy="31" r="1.8" fill="currentColor"/><path d="M44 100c-3-8 0-18 5-23M76 104c0-8 3-15 8-20"/><path d="M36 104h16M68 104h16"/><path d="M54 42l-4-7M64 34l-3-8M76 29l-2-8" stroke-width="1.1"/><g stroke-width="1.2"><rect x="136" y="46" width="30" height="38" rx="2"/><path d="M141 55h20M141 62h20M141 69h13"/><rect x="148" y="38" width="30" height="38" rx="2" fill="var(--saurus-paper)"/><path d="M153 47h20M153 54h20M153 61h13"/></g><path d="M8 118h184" stroke-dasharray="2 6" stroke-width="1"/></svg>',
+    small:I.brand
+  };
+  var JOB={
+    none:'<div class="job">No job open<b>—</b><div class="st"><span class="dot pending"></span>drop papers to start</div></div>',
+    running:'<div class="job">Current job<b>job_8f3a21</b><div class="st"><span class="dot active"></span>stage 2 of 4 · dedup</div></div>',
+    done:'<div class="job">Current job<b>job_8f3a21</b><div class="st"><span class="dot done"></span>40 papers · 6 themes</div></div>'
+  };
+  var on=function(k,a){return k===a?' class="on"':''};
+  var NAV={
+    side:function(d){var a=d.on;
+      return '<aside class="side"><div class="brand">'+I.brand+'The Saurus</div>'
+      +'<a'+on('upload',a)+'>'+I.upload+'Upload</a>'
+      +'<a'+on('pipeline',a)+'>'+I.pipeline+'Pipeline'+(d.job==='running'?'<span class="n">2/4</span>':'')+'</a>'
+      +'<a'+on('review',a)+'>'+I.review+'Review</a>'
+      +'<a'+on('papers',a)+'>'+I.papers+'Papers'+(d.job==='done'?'<span class="n">40</span>':'')+'</a>'
+      +'<a'+on('assistant',a)+'>'+I.chat+'Assistant</a>'
+      +'<div class="sp"></div>'+(JOB[d.job]||'')+'</aside>'},
+    top:function(d){var a=d.on;
+      return '<nav class="topnav"><span class="brand">'+I.brand+'The Saurus</span>'
+      +'<a'+on('upload',a)+'>Upload</a><a'+on('pipeline',a)+'>Pipeline</a><a'+on('review',a)+'>Review</a><a'+on('papers',a)+'>Papers</a><a'+on('assistant',a)+'>Assistant</a>'
+      +(d.job?'<span class="jb">'+d.job+'</span>':'')+'</nav>'},
+    mtop:function(d){return '<header class="mtop"><span class="brand">'+I.brand+'The Saurus</span>'+(d.title?'<span class="ttl">'+d.title+'</span>':'')+(d.act?'<span class="act">'+d.act+'</span>':'')+'</header>'},
+    tabs:function(d){var a=d.on;
+      return '<nav class="tabs"><a'+on('upload',a)+'>'+I.upload+'Upload</a><a'+on('pipeline',a)+'>'+I.pipeline+'Pipeline</a><a'+on('review',a)+'>'+I.review+'Review</a><a'+on('papers',a)+'>'+I.papers+'Papers</a><a'+on('chat',a)+'>'+I.chat+'Chat</a></nav>'}
+  };
+  document.querySelectorAll('[data-nav]').forEach(function(el){el.outerHTML=NAV[el.dataset.nav](el.dataset)});
+  document.querySelectorAll('[data-mascot]').forEach(function(el){el.innerHTML=MASCOT[el.dataset.mascot]});
+  document.querySelectorAll('[data-ico]').forEach(function(el){el.innerHTML=I[el.dataset.ico]});
+})();
+</script>
 </body>
 </html>
