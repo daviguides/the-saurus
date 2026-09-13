@@ -49,8 +49,8 @@ An EXTREMELY minimal logo icon — just the silhouette of a baby brontosaurus he
 
 ### Format
 - Square canvas (1:1)
-- SVG preferred (for web), also PNG at 512x512
-- Transparent background
+- PNG at 512x512 and 1024x1024
+- Background: SOLID PURE WHITE (#FFFFFF) — easy to remove in post-processing (magic wand / remove.bg). Do NOT use transparent, do NOT use cream/off-white, do NOT use gradients. Pure flat white.
 - The icon should occupy ~70% of the canvas
 - Must be LEGIBLE and RECOGNIZABLE at 16px (favicon size)
 
