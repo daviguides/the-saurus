@@ -26,13 +26,15 @@ A hand-drawn scientific diagram showing the pipeline of a literature review tool
 - Papers should feel like they're being PULLED into the mouth, not thrown
 
 ### CENTER: The Dinosaur (Digestion)
-- Friendly stegosaurus-like dinosaur, facing LEFT (toward the incoming papers)
+- A BRONTOSAURUS (sauropod/apatosaurus) — NOT a stegosaurus, NOT a T-Rex
+- CRITICAL body proportions: LONG elegant neck (the neck is the dominant feature, ~40% of total height), SMALL head at the top, SLIM elongated body, THIN legs, LONG thin tail. Think giraffe-like elegance, not hippo-like bulk.
+- The dinosaur is SLENDER and GRACEFUL — not round, not chubby, not fat. A lean, scholarly figure.
 - CRITICAL: the dinosaur's HEAD and MOUTH must point LEFT, toward the papers on the left side. The tail goes to the right. This is non-negotiable — the visual flow is papers (left) → mouth (left-facing) → body → output (right)
-- Mouth WIDE OPEN, actively receiving/chomping the nearest paper — paper halfway in the mouth
-- Body is round, slightly chubby — friendly, not fierce, not muscular
-- 3-5 small triangular dorsal plates along the spine
-- Thick tail curves behind to the right
-- Two sturdy short legs, standing on the baseline
+- Mouth open, actively receiving/chomping the nearest paper — paper halfway in the mouth
+- Small rounded head with a gentle curve — proportionally tiny compared to the long neck
+- 3-5 small triangular dorsal bumps along the spine (subtle, not prominent plates)
+- Long thin tail tapering to a point, extending to the right
+- Four slim legs, standing on the baseline — not thick or stumpy
 - Small monocle on the visible eye — thin gold CIRCULAR FRAME sitting in front of the eye, with a thin chain or cord that drapes DOWN along the neck (NOT a hoop earring, NOT dangling from the side — it sits on the eye like a proper monocle)
 - Expression: eager, hungry, slightly comedic — one eyebrow raised, eyes focused on the papers
 - Small comical details: tiny crumb-like paper scraps falling from the mouth
@@ -76,8 +78,10 @@ A hand-drawn scientific diagram showing the pipeline of a literature review tool
 
 ### What to AVOID
 - Do NOT make the dinosaur FACE RIGHT — it MUST face LEFT. Head on the left, tail on the right. This is the most common error.
-- Do NOT make the dinosaur look like a lizard, gecko, or crocodile — clearly a dinosaur (round body, dorsal plates, thick tail)
-- Do NOT make it muscular or fierce — round, soft, scholarly
+- Do NOT make the dinosaur look like a lizard, gecko, or crocodile
+- Do NOT make it a stegosaurus (too chunky) or T-Rex (too fierce) — it's a BRONTOSAURUS/sauropod with a long neck
+- Do NOT make it fat, round, chubby, or muscular — it must be SLIM and ELEGANT with a long graceful neck
+- Do NOT make the body wide or barrel-shaped — elongated oval, lean
 - Do NOT place the review book near the tail/rear end (reads as defecation) — float it high and far to the right, with generous separation from the body
 - Do NOT use thick cartoon outlines or bubble style
 - Do NOT add a landscape background (trees, sky, etc.) — this is a DIAGRAM, not a scene
